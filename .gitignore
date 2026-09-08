@@ -1,0 +1,19 @@
+# 依赖、构建产物和本地缓存
+node_modules/
+dist/
+.vite/
+coverage/
+*.log
+
+# 本地环境配置，不提交密钥
+.env
+.env.*
+!.env.example
+
+# IDE 和系统文件
+.idea/
+.vscode/
+.DS_Store
+
+# 临时上传
+server/uploads/

@@ -1,0 +1,6 @@
+<script setup lang="ts">
+import {useRoute,useRouter} from 'vue-router';import {admin,clearAuth,isDemo} from '../../shared/api';import {ElMessage} from 'element-plus'
+const route=useRoute(),router=useRouter(),nav=[['/','工作台'],['/pets','宠物管理'],['/orders','订单管理'],['/after-sales','售后处理'],['/knowledge','知识库'],['/shop','门店设置']]
+async function logout(){try{await admin('POST','/admin/auth/logout');clearAuth('admin');await router.replace('/login')}catch(e){ElMessage.error(e instanceof Error?e.message:'退出失败')}}
+</script>
+<template><RouterView v-if="route.path==='/login'"/><div v-else class="admin-shell"><aside class="sidebar"><RouterLink to="/" class="brand">暖爪</RouterLink><p class="console-label">STORE CONSOLE</p><nav aria-label="管理导航"><RouterLink v-for="item in nav" :key="item[0]" :to="item[0]" :class="{active:route.path===item[0]||(item[0]!=='/'&&route.path.startsWith(item[0]))}">{{item[1]}}</RouterLink></nav><div class="sidebar-bottom"><p>单店自营<br>店主 · 管理员</p><button @click="logout">退出登录</button></div></aside><div class="admin-body"><header class="admin-header"><h1>{{route.meta.title}}</h1><span>{{new Date().toLocaleDateString('zh-CN')}}</span></header><main><RouterView :key="route.path"/></main></div></div><div v-if="isDemo" class="admin-demo">演示环境 · 本地示例数据 · 不调用真实支付、短信或 AI 服务</div></template>

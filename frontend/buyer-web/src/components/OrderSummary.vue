@@ -1,0 +1,2 @@
+<script setup lang="ts">import {money} from '../../../shared/api';defineProps<{product:{name:string;breed:string;coverUrl:string};amount:number}>()</script>
+<template><div class="order-summary"><img :src="product.coverUrl" :alt="product.name" width="96" height="112"><div><h3>{{product.name}} · {{product.breed}}</h3><p>唯一个体 · 到店自提</p><strong class="price">{{money(amount)}}</strong></div></div></template>

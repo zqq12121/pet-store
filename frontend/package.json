@@ -1,0 +1,36 @@
+{
+  "name": "warm-paw-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k -n demo,buyer,admin \"npm:dev:demo\" \"npm:dev:buyer\" \"npm:dev:admin\"",
+    "dev:demo": "node server/demo.mjs",
+    "dev:buyer": "vite --config buyer-web/vite.config.ts --host 127.0.0.1",
+    "dev:admin": "vite --config admin-web/vite.config.ts --host 127.0.0.1",
+    "typecheck": "vue-tsc --noEmit",
+    "build": "npm run typecheck && vite build --config buyer-web/vite.config.ts && vite build --config admin-web/vite.config.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "axios": "^1.13.0",
+    "element-plus": "^2.11.0",
+    "pinia": "^3.0.3",
+    "qrcode": "^1.5.4",
+    "vue": "^3.5.22",
+    "vue-router": "^4.5.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.1",
+    "@types/node": "^24.0.0",
+    "@types/qrcode": "^1.5.6",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "concurrently": "^9.2.1",
+    "express": "^5.1.0",
+    "multer": "^2.0.2",
+    "typescript": "~5.9.3",
+    "vite": "^7.1.7",
+    "vitest": "^3.2.4",
+    "vue-tsc": "^3.1.0"
+  }
+}

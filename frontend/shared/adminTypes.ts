@@ -1,0 +1,10 @@
+import type {Shop,Order,AfterSale} from './types'
+export interface Asset {id:string;originalName:string;publicUrl:string|null;purpose:string}
+export interface ProductWrite {name:string;category:'cat'|'dog';breed:string;priceAmount:number;gender:'male'|'female';ageMonths:number;birthDate:string|null;weightKg:number;color:string;personalityTags:string[];vaccineStatus:string;dewormStatus:string;description:string;feedingNotes:string;healthDescription:string;imageFileIds:string[];videoFileId:string|null;quarantine:{certificateNo:string;publicImageFileIds:string[];originalFileIds:string[];validUntil:string|null}|null;isRecommended:boolean;recommendationOrder:number}
+export interface AdminPet extends ProductWrite {id:string;status:string;version:number;assets:Asset[];activeOrderId:string|null}
+export interface Dashboard {createdOrderCount:number;paidOrderCount:number;grossSalesAmount:number;onSalePetCount:number;aiSessionCount:number;pendingTasks:{pickupCount:number;afterSaleReviewCount:number};updatedAt:string}
+export interface PickupLookup {order:Order;contactName:string;contactPhoneMasked:string;buyerConfirmation:{id:string;confirmedAt:string;validUntil:string}|null;checksPassed:boolean;pickupAllowed:boolean;blockedReason:string|null}
+export interface AdminAfterSale extends AfterSale {version:number;order:Order;requestedAmount:number|null;diagnosisFileIds:string[];approvedAmount:number|null}
+export interface Knowledge {id:string;version:number;title:string;category:string;petType:string;format:'article'|'qa';content:string|null;question:string|null;answer:string|null;sourceName:string;sourceUrl:string|null;breedNames:string[];status:string;indexStatus:string}
+export interface Job {id:string;status:string;errorMessage?:string;totalCount?:number;successCount?:number;failedCount?:number;errors?:{row:number;message:string}[]}
+export interface ShopSettings extends Shop {version:number;paymentTimeoutMinutes:number;pickupRetentionHours:number;exchangeEnabled:boolean;banners:{id:string|null;title:string;imageFileId:string;linkType:'pet'|'notice'|'none';petId:string|null;noticeText:string|null;sortOrder:number;enabled:boolean}[]}
