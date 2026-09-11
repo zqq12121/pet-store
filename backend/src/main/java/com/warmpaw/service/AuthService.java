@@ -4,6 +4,7 @@ import static com.warmpaw.common.ApiException.require;
 import static com.warmpaw.common.Json.*;
 
 import com.warmpaw.common.*;
+import com.warmpaw.repository.BusinessRepository;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -24,14 +25,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
   public record Actor(String id, String role, String phone, String tokenHash) {}
 
-  private final Store store;
+  private final BusinessRepository store;
   private final TemporaryStore temp;
   private final boolean mock;
   private final SmsGateway smsGateway;
   private final SecureRandom random = new SecureRandom();
 
   public AuthService(
-      Store store,
+      BusinessRepository store,
       TemporaryStore temp,
       SmsGateway smsGateway,
       @Value("${app.mock-providers}") boolean mock) {
@@ -176,7 +177,7 @@ public class AuthService {
     Input in = new Input(body, "phone,smsRequestId,smsCode");
     String phone = in.phone("phone");
     checkSms(in.str("smsRequestId", 1, 64), in.str("smsCode", 6, 6), phone, "login", "");
-    store.mapper.lock();
+    store.lock();
     Map<String, Object> user = store.byKey("user", phone);
     if (user == null)
       user =

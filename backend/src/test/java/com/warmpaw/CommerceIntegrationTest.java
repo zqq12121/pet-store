@@ -4,6 +4,7 @@ import static com.warmpaw.common.Json.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.warmpaw.common.*;
+import com.warmpaw.repository.BusinessRepository;
 import com.warmpaw.service.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -44,8 +45,10 @@ import org.springframework.transaction.support.TransactionTemplate;
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class CommerceIntegrationTest {
-  @Autowired Store store;
-  @Autowired BusinessService business;
+  @Autowired BusinessRepository store;
+  @Autowired org.springframework.web.context.WebApplicationContext webContext;
+  ContractClient business;
+  final Map<String, String> tokens = new ConcurrentHashMap<>();
   @Autowired CatalogService catalog;
   @Autowired AuthService auth;
   @Autowired PaymentService payments;
@@ -62,9 +65,14 @@ class CommerceIntegrationTest {
   @BeforeEach
   void fixture() {
     tx = new TransactionTemplate(manager);
+    business =
+        new ContractClient(
+            org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup(
+                    webContext)
+                .build());
     tx.execute(
         s -> {
-          store.mapper.lock();
+          store.lock();
           Map<String, Object> a = store.byKey("admin", "admin");
           admin = new AuthService.Actor(text(a, "id"), "admin", null, "");
           String phone = "139000" + (counter++);
@@ -142,6 +150,66 @@ class CommerceIntegrationTest {
           }
           return null;
         });
+  }
+
+  /** 测试请求经过真实 Spring MVC 映射、认证与事务，不再绕过 Controller 调旧路由器。 */
+  private class ContractClient {
+    private final org.springframework.test.web.servlet.MockMvc mvc;
+
+    ContractClient(org.springframework.test.web.servlet.MockMvc mvc) {
+      this.mvc = mvc;
+    }
+
+    com.warmpaw.application.OperationResult execute(
+        String method,
+        String path,
+        Map<String, Object> body,
+        Map<String, Object> query,
+        String key,
+        AuthService.Actor actor,
+        String ip) {
+      try {
+        var request =
+            org.springframework.test.web.servlet.request.MockMvcRequestBuilders.request(
+                    org.springframework.http.HttpMethod.valueOf(method), "/api/v1" + path)
+                .contentType("application/json")
+                .content(write(body))
+                .with(
+                    req -> {
+                      req.setRemoteAddr(ip);
+                      return req;
+                    });
+        query.forEach((name, value) -> request.param(name, String.valueOf(value)));
+        if (key != null) request.header("Idempotency-Key", key);
+        if (actor != null) {
+          String token =
+              tokens.computeIfAbsent(
+                  actor.id(),
+                  id ->
+                      tx.execute(
+                          status ->
+                              text(
+                                  auth.login(
+                                      store.get(
+                                          actor.role().equals("admin") ? "admin" : "user", id),
+                                      actor.role()),
+                                  "accessToken")));
+          request.header("Authorization", "Bearer " + token);
+        }
+        var response = mvc.perform(request).andReturn().getResponse();
+        Map<String, Object> envelope =
+            read(response.getContentAsString(java.nio.charset.StandardCharsets.UTF_8));
+        if (response.getStatus() >= 400)
+          throw new ApiException(
+              response.getStatus(), text(envelope, "code"), text(envelope, "message"));
+        return new com.warmpaw.application.OperationResult(
+            response.getStatus(), envelope.get("data"));
+      } catch (ApiException e) {
+        throw e;
+      } catch (Exception e) {
+        throw new AssertionError("接口请求失败: " + method + " " + path, e);
+      }
+    }
   }
 
   @SuppressWarnings("unchecked")
@@ -365,7 +433,7 @@ class CommerceIntegrationTest {
       List<String> states = List.of(results.get(0).get(), results.get(1).get());
       assertEquals(1, states.stream().filter("OK"::equals).count());
       assertTrue(states.contains("PET_NOT_AVAILABLE"));
-      assertNotNull(store.mapper.occupation(text(p, "id")));
+      assertNotNull(store.occupation(text(p, "id")));
     }
   }
 
@@ -375,7 +443,12 @@ class CommerceIntegrationTest {
     String key = UUID.randomUUID().toString();
     var first = business.execute("POST", "/orders", b, map(), key, buyer, "test");
     var second = business.execute("POST", "/orders", b, map(), key, buyer, "test");
-    assertEquals(first.resource(), text((Map<String, Object>) second.data(), "id"));
+    // HTTP 响应不暴露内部幂等元数据，比较前后返回的真实订单 ID。
+    assertEquals(
+        text((Map<String, Object>) first.data(), "id"),
+        text((Map<String, Object>) second.data(), "id"));
+    assertEquals(201, first.status());
+    assertEquals(200, second.status());
     Map<String, Object> changed = copy(b);
     changed.put("remark", "different");
     assertCode(
@@ -391,7 +464,7 @@ class CommerceIntegrationTest {
     b.remove("userId");
     b.put("expectedAmount", 1);
     assertCode("PRICE_CHANGED", () -> call("POST", "/orders", b, buyer));
-    assertNull(store.mapper.occupation(text(p, "id")));
+    assertNull(store.occupation(text(p, "id")));
   }
 
   @Test
@@ -406,7 +479,7 @@ class CommerceIntegrationTest {
     Map<String, Object> o = createOrder();
     Map<String, Object> cancel = call("POST", "/orders/" + o.get("id") + "/cancel", map(), buyer);
     assertEquals("cancelled", cancel.get("status"));
-    assertNull(store.mapper.occupation(text(object(o, "product"), "id")));
+    assertNull(store.occupation(text(object(o, "product"), "id")));
   }
 
   @Test
@@ -424,7 +497,7 @@ class CommerceIntegrationTest {
     Map<String, Object> p =
         tx.execute(
             s -> {
-              store.mapper.lock();
+              store.lock();
               return payments.begin(store.get("order", text(o, "id")), map("scene", "h5"));
             });
     Map<String, Object> bad = payments.mockFact(p, o);
@@ -434,14 +507,14 @@ class CommerceIntegrationTest {
         () ->
             tx.execute(
                 s -> {
-                  store.mapper.lock();
+                  store.lock();
                   payments.paid(p, bad);
                   return null;
                 }));
     Map<String, Object> fact = payments.mockFact(p, o);
     tx.execute(
         s -> {
-          store.mapper.lock();
+          store.lock();
           payments.paid(p, fact);
           payments.paid(store.get("payment", text(p, "id")), fact);
           return null;
@@ -489,7 +562,7 @@ class CommerceIntegrationTest {
     Map<String, Object> confirmation = confirm(o);
     tx.execute(
         s -> {
-          store.mapper.lock();
+          store.lock();
           Map<String, Object> current = store.get("order", text(o, "id"));
           payments.refund(current, null, number(current, "amount"), "pickup_timeout");
           return null;
@@ -747,7 +820,7 @@ class CommerceIntegrationTest {
         () ->
             tx.execute(
                 status -> {
-                  store.mapper.lock();
+                  store.lock();
                   payments.refund(current, null, 9000, "treatment_share");
                   return null;
                 }));
@@ -771,7 +844,7 @@ class CommerceIntegrationTest {
   void exchangeLocksReplacementAndRefundExitReleasesOnlyReplacement() throws Exception {
     tx.execute(
         status -> {
-          store.mapper.lock();
+          store.lock();
           Map<String, Object> s = catalog.shop();
           s.put("exchangeEnabled", true);
           store.save(s);
@@ -844,7 +917,7 @@ class CommerceIntegrationTest {
     } finally {
       tx.execute(
           status -> {
-            store.mapper.lock();
+            store.lock();
             Map<String, Object> s = catalog.shop();
             s.put("exchangeEnabled", false);
             store.save(s);
@@ -858,7 +931,7 @@ class CommerceIntegrationTest {
     Map<String, Object> p = pet();
     tx.execute(
         status -> {
-          store.mapper.lock();
+          store.lock();
           Map<String, Object> current = store.get("pet", text(p, "id"));
           object(current, "quarantine").put("validUntil", LocalDate.now().minusDays(1).toString());
           store.save(current);
@@ -869,7 +942,7 @@ class CommerceIntegrationTest {
     Map<String, Object> c = confirm(o);
     tx.execute(
         status -> {
-          store.mapper.lock();
+          store.lock();
           Map<String, Object> current = store.get("order", text(o, "id"));
           object(current, "pickupEvidence")
               .put("validUntil", Instant.now().minusSeconds(1).toString());
@@ -898,7 +971,7 @@ class CommerceIntegrationTest {
     Map<String, Object> payment =
         tx.execute(
             status -> {
-              store.mapper.lock();
+              store.lock();
               return payments.begin(store.get("order", text(o, "id")), map("scene", "h5"));
             });
     call("POST", "/orders/" + o.get("id") + "/cancel", map(), buyer);
@@ -907,19 +980,19 @@ class CommerceIntegrationTest {
         call("POST", "/orders", orderBody(store.get("pet", text(p, "id")), other), other);
     tx.execute(
         status -> {
-          store.mapper.lock();
+          store.lock();
           payments.paid(store.get("payment", text(payment, "id")), payments.mockFact(payment, o));
           return null;
         });
     assertEquals("refunding", store.get("order", text(o, "id")).get("status"));
-    assertEquals(newOrder.get("id"), store.mapper.occupation(text(p, "id")));
+    assertEquals(newOrder.get("id"), store.occupation(text(p, "id")));
     Map<String, Object> refund =
         store.list("refund").stream()
             .filter(r -> Objects.equals(r.get("orderId"), o.get("id")))
             .findFirst()
             .orElseThrow();
     worker.processRefund(text(refund, "id"));
-    assertEquals(newOrder.get("id"), store.mapper.occupation(text(p, "id")));
+    assertEquals(newOrder.get("id"), store.occupation(text(p, "id")));
   }
 
   @Test
@@ -977,5 +1050,118 @@ class CommerceIntegrationTest {
     Map<String, Object> link = files.access(text(report, "id"), buyer);
     String token = text(link, "url").split("access=")[1];
     assertTrue(Files.exists(files.content(text(report, "id"), token)));
+  }
+
+  @Test
+  void splitControllersPreservePublicQueriesAndProfileUpdates() {
+    Map<String, Object> pet = pet();
+    assertEquals(pet.get("id"), call("GET", "/pets/" + pet.get("id"), map(), null).get("id"));
+    var pets =
+        business.execute(
+            "GET", "/pets", map(), map("category", "cat", "pageSize", 1), null, null, "test");
+    assertEquals(200, pets.status());
+    assertTrue(((Map<?, ?>) pets.data()).containsKey("items"));
+    assertEquals(
+        "live_pet_trade",
+        ((Map<?, ?>)
+                business
+                    .execute(
+                        "GET",
+                        "/agreements/current",
+                        map(),
+                        map("type", "live_pet_trade"),
+                        null,
+                        null,
+                        "test")
+                    .data())
+            .get("type"));
+    assertEquals("新的昵称", call("PATCH", "/me", map("nickname", "新的昵称"), buyer).get("nickname"));
+    assertEquals("新的昵称", call("GET", "/me", map(), buyer).get("nickname"));
+    assertCode("VALIDATION_ERROR", () -> call("PATCH", "/me", map("role", "admin"), buyer));
+    for (String path : List.of("/shop", "/payment-capabilities"))
+      assertEquals(200, business.execute("GET", path, map(), map(), null, null, "test").status());
+  }
+
+  @Test
+  void splitAdminControllersRequireAdminRole() {
+    for (String path :
+        List.of(
+            "/admin/pets",
+            "/admin/shop",
+            "/admin/orders",
+            "/admin/after-sales",
+            "/admin/agreements",
+            "/admin/dashboard")) {
+      assertCode("UNAUTHORIZED", () -> call("GET", path, map(), null));
+      assertCode("FORBIDDEN", () -> call("GET", path, map(), buyer));
+      assertEquals(200, business.execute("GET", path, map(), map(), null, admin, "test").status());
+    }
+    for (String path :
+        List.of(
+            "/admin/pets",
+            "/admin/agreements",
+            "/admin/pickups/lookup",
+            "/admin/after-sales/missing/review",
+            "/admin/orders/missing/pickup",
+            "/admin/refunds/missing/retry"))
+      assertCode("FORBIDDEN", () -> call("POST", path, map(), buyer));
+  }
+
+  @Test
+  void splitWriteControllersStillRequireIdempotencyKeys() {
+    for (String path :
+        List.of(
+            "/orders",
+            "/orders/missing/cancel",
+            "/orders/missing/payments",
+            "/orders/missing/pickup-confirmations",
+            "/orders/missing/after-sales",
+            "/after-sales/missing/exchange-confirmations"))
+      assertCode(
+          "VALIDATION_ERROR",
+          () -> business.execute("POST", path, map(), map(), null, buyer, "test"));
+    for (String path :
+        List.of(
+            "/admin/orders/missing/pickup",
+            "/admin/after-sales/missing/review",
+            "/admin/after-sales/missing/returns",
+            "/admin/after-sales/missing/exchange-delivery",
+            "/admin/after-sales/missing/exchange-refund",
+            "/admin/refunds/missing/retry"))
+      assertCode(
+          "VALIDATION_ERROR",
+          () -> business.execute("POST", path, map(), map(), null, admin, "test"));
+    assertCode(
+        "VALIDATION_ERROR",
+        () ->
+            business.execute(
+                "PUT", "/admin/after-sales/missing/exchange", map(), map(), null, admin, "test"));
+  }
+
+  @Test
+  void unknownRoutesAndUnsupportedMethodsRemainNotFound() {
+    assertCode("RESOURCE_NOT_FOUND", () -> call("GET", "/missing-api", map(), null));
+    assertCode("RESOURCE_NOT_FOUND", () -> call("POST", "/home", map(), null));
+    assertCode(
+        "RESOURCE_NOT_FOUND", () -> call("POST", "/orders/missing/unknown-action", map(), buyer));
+  }
+
+  @Test
+  void forgedPaymentCallbacksNeverChangePaymentFacts() throws Exception {
+    int before = store.list("payment_fact").size();
+    var mvc =
+        org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup(webContext)
+            .build();
+    var result =
+        mvc.perform(
+                org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post(
+                        "/api/v1/callbacks/wechat-pay/payments")
+                    .contentType("application/json")
+                    .content("{\"event_type\":\"TRANSACTION.SUCCESS\"}"))
+            .andReturn()
+            .getResponse();
+    assertEquals(400, result.getStatus());
+    assertEquals("FAIL", text(read(result.getContentAsString()), "code"));
+    assertEquals(before, store.list("payment_fact").size());
   }
 }

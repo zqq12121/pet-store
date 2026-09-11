@@ -4,6 +4,7 @@ import static com.warmpaw.common.ApiException.require;
 import static com.warmpaw.common.Json.*;
 
 import com.warmpaw.common.*;
+import com.warmpaw.repository.BusinessRepository;
 import java.net.*;
 import java.net.http.*;
 import java.nio.charset.StandardCharsets;
@@ -15,11 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
 /** 网页授权 state 与浏览器 HttpOnly Cookie 绑定，openid 仅由微信服务端换取。 */
 @Service
 public class WechatLoginService {
-  private final Store store;
+  private final BusinessRepository store;
   private final TemporaryStore temp;
   private final AuthService auth;
 
-  public WechatLoginService(Store store, TemporaryStore temp, AuthService auth) {
+  public WechatLoginService(BusinessRepository store, TemporaryStore temp, AuthService auth) {
     this.store = store;
     this.temp = temp;
     this.auth = auth;
@@ -120,7 +121,7 @@ public class WechatLoginService {
       throw new ApiException(502, "UPSTREAM_ERROR", "微信授权服务暂不可用");
     }
     String openid = text(result, "openid");
-    store.mapper.lock();
+    store.lock();
     Map<String, Object> identity = store.byKey("wechat_openid", app() + ":" + openid);
     if (pay) {
       require(
@@ -166,7 +167,7 @@ public class WechatLoginService {
     require(saved != null, 400, "WECHAT_AUTH_INVALID", "绑定凭证无效");
     auth.checkSms(
         in.str("smsRequestId", 1, 64), in.str("smsCode", 6, 6), phone, "wechat_bind", ticket);
-    store.mapper.lock();
+    store.lock();
     Map<String, Object> user = store.byKey("user", phone);
     if (user == null)
       user =

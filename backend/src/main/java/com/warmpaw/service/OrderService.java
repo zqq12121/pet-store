@@ -4,6 +4,7 @@ import static com.warmpaw.common.ApiException.require;
 import static com.warmpaw.common.Json.*;
 
 import com.warmpaw.common.*;
+import com.warmpaw.repository.BusinessRepository;
 import java.time.*;
 import java.util.*;
 import org.springframework.stereotype.Service;
@@ -11,11 +12,11 @@ import org.springframework.stereotype.Service;
 /** 订单是金额、协议和库存的事实来源。调用方在数据库事务中持有单店业务锁。 */
 @Service
 public class OrderService {
-  private final Store store;
+  private final BusinessRepository store;
   private final CatalogService catalog;
   private final AuthService auth;
 
-  public OrderService(Store store, CatalogService catalog, AuthService auth) {
+  public OrderService(BusinessRepository store, CatalogService catalog, AuthService auth) {
     this.store = store;
     this.catalog = catalog;
     this.auth = auth;
@@ -77,7 +78,7 @@ public class OrderService {
         409,
         "PRICE_CHANGED",
         "价格已更新，请重新结算");
-    Store.version(p, in.integer("productVersion", 1, Integer.MAX_VALUE));
+    BusinessRepository.version(p, in.integer("productVersion", 1, Integer.MAX_VALUE));
     Map<String, Object> a = catalog.currentAgreement("live_pet_trade");
     require(
         Objects.equals(a.get("version"), in.str("agreementVersion", 1, 32))
@@ -170,7 +171,7 @@ public class OrderService {
             "cancelReason",
             null);
     store.create("order", actor.id(), text(o, "orderNo"), o);
-    store.mapper.occupy(text(p, "id"), text(o, "id"));
+    store.occupy(text(p, "id"), text(o, "id"));
     p.put("status", "reserved");
     p.put("activeOrderId", o.get("id"));
     store.save(p);
@@ -193,7 +194,7 @@ public class OrderService {
   }
 
   public void pickupAllowed(Map<String, Object> o) {
-    Store.state(o, "paid");
+    BusinessRepository.state(o, "paid");
     require(
         !Instant.now().isAfter(Instant.parse(text(o, "pickupDeadlineAt"))),
         409,
@@ -303,7 +304,7 @@ public class OrderService {
 
   public void release(Map<String, Object> o) {
     String pet = text(o, "petId");
-    if (store.mapper.release(pet, text(o, "id")) > 0) {
+    if (store.release(pet, text(o, "id")) > 0) {
       Map<String, Object> p = store.get("pet", pet);
       p.put("activeOrderId", null);
       if (!"sold".equals(text(p, "status")) && !"off".equals(text(p, "status")))
@@ -463,7 +464,7 @@ public class OrderService {
         "买家确认已过期");
     Map<String, Object> p = store.get("pet", text(o, "petId"));
     require(
-        text(o, "id").equals(store.mapper.occupation(text(p, "id"))),
+        text(o, "id").equals(store.occupation(text(p, "id"))),
         409,
         "ORDER_STATE_CONFLICT",
         "库存占用不一致");
@@ -479,7 +480,7 @@ public class OrderService {
     o.put("pickup", null);
     p.put("status", "sold");
     p.put("activeOrderId", null);
-    store.mapper.release(text(p, "id"), text(o, "id"));
+    store.release(text(p, "id"), text(o, "id"));
     store.save(p);
     store.save(o);
     store.audit(actor.id(), "order.pickup", text(o, "id"));

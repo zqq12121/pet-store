@@ -4,6 +4,7 @@ import static com.warmpaw.common.ApiException.require;
 import static com.warmpaw.common.Json.*;
 
 import com.warmpaw.common.*;
+import com.warmpaw.repository.BusinessRepository;
 import java.awt.image.BufferedImage;
 import java.nio.file.*;
 import java.time.*;
@@ -17,14 +18,14 @@ import org.springframework.web.multipart.MultipartFile;
 /** 文件落在独立存储根目录；私有附件仅用短时随机授权，原始文件名不参与路径拼接。 */
 @Service
 public class FileService {
-  private final Store store;
+  private final BusinessRepository store;
   private final OrderService orders;
   private final TemporaryStore temp;
   private final AuthService auth;
   private final Path root;
 
   public FileService(
-      Store store,
+      BusinessRepository store,
       OrderService orders,
       TemporaryStore temp,
       AuthService auth,
@@ -34,6 +35,14 @@ public class FileService {
     this.temp = temp;
     this.auth = auth;
     this.root = Path.of(root).toAbsolutePath().normalize();
+  }
+
+  /** 访问令牌校验仍由 content 执行，Controller 只拿到已授权的下载描述。 */
+  public com.warmpaw.dto.FileDownload download(String fileId, String accessToken) {
+    Path path = content(fileId, accessToken);
+    Map<String, Object> file = store.get("file", fileId);
+    return new com.warmpaw.dto.FileDownload(
+        path, text(file, "mimeType"), "private".equals(text(file, "visibility")));
   }
 
   @org.springframework.transaction.annotation.Transactional

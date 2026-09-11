@@ -2,6 +2,7 @@ package com.warmpaw.config;
 
 import static com.warmpaw.common.Json.*;
 
+import com.warmpaw.repository.BusinessRepository;
 import com.warmpaw.service.*;
 import java.nio.file.*;
 import java.time.*;
@@ -16,14 +17,14 @@ import org.springframework.transaction.annotation.Transactional;
 /** 首次启动初始化单店与管理员。模拟数据仅存在 local/test profile，生产启动强制关闭模拟服务。 */
 @Component
 public class Bootstrap implements ApplicationRunner {
-  private final Store store;
+  private final BusinessRepository store;
   private final AuthService auth;
   private final Environment env;
   private final String username, password;
   private final org.springframework.jdbc.core.JdbcTemplate jdbc;
 
   public Bootstrap(
-      Store store,
+      BusinessRepository store,
       AuthService auth,
       Environment env,
       org.springframework.jdbc.core.JdbcTemplate jdbc,
@@ -41,19 +42,31 @@ public class Bootstrap implements ApplicationRunner {
   @Transactional
   public void run(ApplicationArguments args) throws Exception {
     // 防止旧H2/MySQL文件未迁移时，静默初始化一套空表并覆盖本地管理员密码。
-    boolean legacy = Boolean.TRUE.equals(jdbc.execute(
-        (org.springframework.jdbc.core.ConnectionCallback<Boolean>) connection -> {
-          try (var tables = connection.getMetaData().getTables(
-              connection.getCatalog(), connection.getSchema(), "resources", null)) {
-            return tables.next();
-          }
-        }));
-    if (legacy && jdbc.queryForObject("SELECT COUNT(*) FROM resources", Integer.class) > 0
-        && jdbc.queryForObject("SELECT COUNT(*) FROM schema_migrations WHERE version='relational_v2'", Integer.class) == 0)
-      throw new IllegalStateException("检测到未迁移的旧 resources 数据，请先备份并执行关系表迁移；不会初始化空业务库");
+    boolean legacy =
+        Boolean.TRUE.equals(
+            jdbc.execute(
+                (org.springframework.jdbc.core.ConnectionCallback<Boolean>)
+                    connection -> {
+                      try (var tables =
+                          connection
+                              .getMetaData()
+                              .getTables(
+                                  connection.getCatalog(),
+                                  connection.getSchema(),
+                                  "resources",
+                                  null)) {
+                        return tables.next();
+                      }
+                    }));
+    if (legacy
+        && jdbc.queryForObject("SELECT COUNT(*) FROM resources", Integer.class) > 0
+        && jdbc.queryForObject(
+                "SELECT COUNT(*) FROM schema_migrations WHERE version='relational_v2'",
+                Integer.class)
+            == 0) throw new IllegalStateException("检测到未迁移的旧 resources 数据，请先备份并执行关系表迁移；不会初始化空业务库");
     boolean local = env.matchesProfiles("local", "test");
     if (auth.local() && !local) throw new IllegalStateException("模拟服务只能在 local/test 环境启用");
-    store.mapper.lock();
+    store.lock();
     if (store.byKey("admin", username) == null) {
       String secret = password;
       if (secret.isBlank()) {

@@ -4,6 +4,7 @@ import static com.warmpaw.common.ApiException.require;
 import static com.warmpaw.common.Json.*;
 
 import com.warmpaw.common.*;
+import com.warmpaw.repository.BusinessRepository;
 import java.time.*;
 import java.util.*;
 import org.springframework.stereotype.Service;
@@ -11,12 +12,13 @@ import org.springframework.stereotype.Service;
 /** 先持久化意图，再由提交后的工作器访问平台；失败与未知结果均不释放库存。 */
 @Service
 public class PaymentService {
-  private final Store store;
+  private final BusinessRepository store;
   private final OrderService orders;
   private final AuthService auth;
   private final WechatGateway gateway;
 
-  public PaymentService(Store store, OrderService orders, AuthService auth, WechatGateway gateway) {
+  public PaymentService(
+      BusinessRepository store, OrderService orders, AuthService auth, WechatGateway gateway) {
     this.store = store;
     this.orders = orders;
     this.auth = auth;
@@ -52,7 +54,7 @@ public class PaymentService {
     Input in = new Input(body, "scene,returnPath");
     String scene = in.choice("scene", "jsapi,h5");
     if (in.has("returnPath")) safePath(in.str("returnPath", 1, 500));
-    Store.state(o, "pending_paid");
+    BusinessRepository.state(o, "pending_paid");
     require(
         !Instant.now().isAfter(Instant.parse(text(o, "expiresAt"))), 409, "ORDER_EXPIRED", "付款已超期");
     require(auth.local() || gateway.enabled(scene), 422, "PAYMENT_SCENE_UNAVAILABLE", "支付场景未开通");
@@ -150,7 +152,7 @@ public class PaymentService {
   }
 
   public void cancel(Map<String, Object> o, String reason) {
-    Store.state(o, "pending_paid");
+    BusinessRepository.state(o, "pending_paid");
     o.put("status", "closing");
     o.put("cancelReason", reason);
     store.save(o);
@@ -229,7 +231,7 @@ public class PaymentService {
         !List.of("pending_paid", "closing").contains(previous)
             || o.get("cancelReason") != null
             || paid.isAfter(Instant.parse(text(o, "expiresAt")))
-            || !text(o, "id").equals(store.mapper.occupation(text(o, "petId")));
+            || !text(o, "id").equals(store.occupation(text(o, "petId")));
     if (conflict) {
       store.save(o);
       refund(o, null, number(o, "amount"), "payment_conflict");

@@ -4,6 +4,7 @@ import static com.warmpaw.common.ApiException.require;
 import static com.warmpaw.common.Json.*;
 
 import com.warmpaw.common.*;
+import com.warmpaw.repository.BusinessRepository;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -12,10 +13,10 @@ import org.springframework.stereotype.Service;
 /** 商品、门店和协议；公开投影始终移除私有证明、归属和经营内部字段。 */
 @Service
 public class CatalogService {
-  private final Store store;
-  private final com.warmpaw.persistence.PetQueries petQueries;
+  private final BusinessRepository store;
+  private final com.warmpaw.repository.PetQueries petQueries;
 
-  public CatalogService(Store store, com.warmpaw.persistence.PetQueries petQueries) {
+  public CatalogService(BusinessRepository store, com.warmpaw.repository.PetQueries petQueries) {
     this.store = store;
     this.petQueries = petQueries;
   }
@@ -103,7 +104,7 @@ public class CatalogService {
     return "on_sale".equals(text(pet, "status"))
         && validQuarantine(pet)
         && number(pet, "priceAmount") > 0
-        && store.mapper.occupation(text(pet, "id")) == null;
+        && store.occupation(text(pet, "id")) == null;
   }
 
   public Map<String, Object> card(Map<String, Object> p) {
@@ -285,7 +286,9 @@ public class CatalogService {
         "VALIDATION_ERROR",
         "排序方式不正确");
     Map<String, Object> result = petQueries.page(q, admin);
-    result.put("items", objects(result, "items").stream().map(admin ? this::adminPet : this::card).toList());
+    result.put(
+        "items",
+        objects(result, "items").stream().map(admin ? this::adminPet : this::card).toList());
     return result;
   }
 
@@ -323,8 +326,8 @@ public class CatalogService {
                 + (id == null ? "" : ",version"));
     Map<String, Object> old = id == null ? null : store.get("pet", id);
     if (old != null) {
-      Store.version(old, in.integer("version", 1, Integer.MAX_VALUE));
-      Store.state(old, "off", "on_sale");
+      BusinessRepository.version(old, in.integer("version", 1, Integer.MAX_VALUE));
+      BusinessRepository.state(old, "off", "on_sale");
     }
     Map<String, Object> p = new LinkedHashMap<>();
     for (String key :
@@ -434,13 +437,13 @@ public class CatalogService {
         new Input(
             body,
             publish ? "version,healthyForSale,quarantineVerified,reviewNote" : "version,reason");
-    Store.version(p, in.integer("version", 1, Integer.MAX_VALUE));
-    Store.state(p, publish ? "off" : "on_sale");
+    BusinessRepository.version(p, in.integer("version", 1, Integer.MAX_VALUE));
+    BusinessRepository.state(p, publish ? "off" : "on_sale");
     if (publish) {
       in.yes("healthyForSale");
       in.yes("quarantineVerified");
       require(validQuarantine(p), 422, "QUARANTINE_REQUIRED", "请补充有效检疫证明");
-      require(store.mapper.occupation(id) == null, 409, "PET_NOT_AVAILABLE", "宠物仍被订单占用");
+      require(store.occupation(id) == null, 409, "PET_NOT_AVAILABLE", "宠物仍被订单占用");
       for (Map<String, Object> sale : store.list("after_sale"))
         if (id.equals(text(sale, "petId")) && sale.get("returnRecord") != null)
           require(
@@ -531,7 +534,7 @@ public class CatalogService {
             body,
             "name,address,latitude,longitude,coordinateSystem,phone,wechat,businessHours,pickupInstructions,version,banners,paymentTimeoutMinutes,pickupRetentionHours,exchangeEnabled");
     Map<String, Object> s = shop();
-    Store.version(s, in.integer("version", 1, Integer.MAX_VALUE));
+    BusinessRepository.version(s, in.integer("version", 1, Integer.MAX_VALUE));
     for (String key :
         List.of("name", "address", "phone", "wechat", "businessHours", "pickupInstructions"))
       s.put(

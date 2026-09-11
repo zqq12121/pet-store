@@ -3,6 +3,7 @@ package com.warmpaw.service;
 import static com.warmpaw.common.Json.*;
 
 import com.warmpaw.common.*;
+import com.warmpaw.repository.BusinessRepository;
 import java.time.*;
 import java.util.*;
 import java.util.function.Supplier;
@@ -14,14 +15,14 @@ import org.springframework.transaction.support.TransactionTemplate;
 /** 外部调用位于数据库提交之后；稳定支付/退款单号使进程重启后仍可查单恢复。 */
 @Component
 public class PaymentWorker {
-  private final Store store;
+  private final BusinessRepository store;
   private final PaymentService payments;
   private final WechatGateway gateway;
   private final AuthService auth;
   private final TransactionTemplate tx;
 
   public PaymentWorker(
-      Store store,
+      BusinessRepository store,
       PaymentService payments,
       WechatGateway gateway,
       AuthService auth,
@@ -36,7 +37,7 @@ public class PaymentWorker {
   private <T> T locked(Supplier<T> callback) {
     return tx.execute(
         s -> {
-          store.mapper.lock();
+          store.lock();
           return callback.get();
         });
   }

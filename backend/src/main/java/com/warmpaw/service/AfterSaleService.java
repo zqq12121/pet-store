@@ -2,8 +2,10 @@ package com.warmpaw.service;
 
 import static com.warmpaw.common.ApiException.require;
 import static com.warmpaw.common.Json.*;
+import static com.warmpaw.common.TimeRange.parseInstant;
 
 import com.warmpaw.common.*;
+import com.warmpaw.repository.BusinessRepository;
 import java.time.*;
 import java.util.*;
 import org.springframework.stereotype.Service;
@@ -11,13 +13,16 @@ import org.springframework.stereotype.Service;
 /** 售后与财务退款分开记录；退回宠物保持下架，不能因退款自动重新出售。 */
 @Service
 public class AfterSaleService {
-  private final Store store;
+  private final BusinessRepository store;
   private final CatalogService catalog;
   private final OrderService orders;
   private final PaymentService payments;
 
   public AfterSaleService(
-      Store store, CatalogService catalog, OrderService orders, PaymentService payments) {
+      BusinessRepository store,
+      CatalogService catalog,
+      OrderService orders,
+      PaymentService payments) {
     this.store = store;
     this.catalog = catalog;
     this.orders = orders;
@@ -168,19 +173,11 @@ public class AfterSaleService {
     return s;
   }
 
-  public static Instant parseInstant(String value) {
-    try {
-      return OffsetDateTime.parse(value).toInstant();
-    } catch (Exception e) {
-      throw new ApiException(400, "VALIDATION_ERROR", "时间须为带时区的 ISO 8601 格式");
-    }
-  }
-
   public Map<String, Object> review(
       Map<String, Object> s, Map<String, Object> body, AuthService.Actor actor) {
     Input in = new Input(body, "version,decision,reason,resolution,approvedAmount");
-    Store.version(s, in.integer("version", 1, Integer.MAX_VALUE));
-    Store.state(s, "pending_review");
+    BusinessRepository.version(s, in.integer("version", 1, Integer.MAX_VALUE));
+    BusinessRepository.state(s, "pending_review");
     String decision = in.choice("decision", "approve,reject"), reason = in.str("reason", 1, 1000);
     s.put("reviewReason", reason);
     s.put("reviewedAt", Instant.now().toString());
@@ -229,8 +226,8 @@ public class AfterSaleService {
   public Map<String, Object> returned(
       Map<String, Object> s, Map<String, Object> body, AuthService.Actor actor) {
     Input in = new Input(body, "version,received,conditionNotes,evidenceFileIds");
-    Store.version(s, in.integer("version", 1, Integer.MAX_VALUE));
-    Store.state(s, "awaiting_return");
+    BusinessRepository.version(s, in.integer("version", 1, Integer.MAX_VALUE));
+    BusinessRepository.state(s, "awaiting_return");
     in.yes("received");
     List<String> evidence = in.has("evidenceFileIds") ? in.ids("evidenceFileIds", 0, 9) : List.of();
     for (String id : evidence)
@@ -272,8 +269,8 @@ public class AfterSaleService {
       Map<String, Object> s, Map<String, Object> body, AuthService.Actor actor) {
     exchangeEnabled();
     Input in = new Input(body, "version,replacementPetId");
-    Store.version(s, in.integer("version", 1, Integer.MAX_VALUE));
-    Store.state(s, "awaiting_exchange");
+    BusinessRepository.version(s, in.integer("version", 1, Integer.MAX_VALUE));
+    BusinessRepository.state(s, "awaiting_exchange");
     require(s.get("returnRecord") != null, 409, "RETURN_REQUIRED", "请先验收原宠退回");
     String id = in.str("replacementPetId", 1, 64);
     Map<String, Object> o = store.get("order", text(s, "orderId")), p = store.get("pet", id);
@@ -288,7 +285,7 @@ public class AfterSaleService {
       return old;
     require(catalog.purchasable(p), 409, "PET_NOT_AVAILABLE", "替换宠不可购买");
     releaseReplacement(s);
-    store.mapper.occupy(id, text(o, "id"));
+    store.occupy(id, text(o, "id"));
     p.put("status", "reserved");
     p.put("activeOrderId", o.get("id"));
     store.save(p);
@@ -320,7 +317,7 @@ public class AfterSaleService {
   public String exchangeScope(Map<String, Object> s) {
     Map<String, Object> e = object(s, "exchange");
     exchangeEnabled();
-    Store.state(s, "awaiting_exchange");
+    BusinessRepository.state(s, "awaiting_exchange");
     require("reserved".equals(text(e, "status")), 409, "ORDER_STATE_CONFLICT", "没有有效换宠方案");
     return text(s, "id") + ":" + text(e, "id") + ":" + text(e, "replacementPetId");
   }
@@ -347,7 +344,7 @@ public class AfterSaleService {
       Map<String, Object> s, Map<String, Object> body, AuthService.Actor actor) {
     exchangeScope(s);
     Input in = new Input(body, "version,confirmationId,quarantineVerified,deliveryQuarantine");
-    Store.version(s, in.integer("version", 1, Integer.MAX_VALUE));
+    BusinessRepository.version(s, in.integer("version", 1, Integer.MAX_VALUE));
     in.yes("quarantineVerified");
     Map<String, Object> e = object(s, "exchangeEvidence"), x = object(s, "exchange");
     require(
@@ -362,7 +359,7 @@ public class AfterSaleService {
         "确认已过期");
     Map<String, Object> p = store.get("pet", text(x, "replacementPetId"));
     require(
-        text(s, "orderId").equals(store.mapper.occupation(text(p, "id"))),
+        text(s, "orderId").equals(store.occupation(text(p, "id"))),
         409,
         "ORDER_STATE_CONFLICT",
         "替换宠占用异常");
@@ -373,7 +370,7 @@ public class AfterSaleService {
     x.put("deliveredAt", Instant.now().toString());
     p.put("status", "sold");
     p.put("activeOrderId", null);
-    store.mapper.release(text(p, "id"), text(s, "orderId"));
+    store.release(text(p, "id"), text(s, "orderId"));
     store.save(p);
     s.put("status", "resolved");
     timeline(s, "exchange_delivered", "替换宠已交付", null, "admin");
@@ -385,7 +382,7 @@ public class AfterSaleService {
     Map<String, Object> x = object(s, "exchange");
     if (!"reserved".equals(text(x, "status"))) return;
     Map<String, Object> p = store.get("pet", text(x, "replacementPetId"));
-    if (store.mapper.release(text(p, "id"), text(s, "orderId")) > 0) {
+    if (store.release(text(p, "id"), text(s, "orderId")) > 0) {
       p.put("status", catalog.validQuarantine(p) ? "on_sale" : "off");
       p.put("activeOrderId", null);
       store.save(p);
@@ -399,8 +396,8 @@ public class AfterSaleService {
   public Map<String, Object> exchangeRefund(
       Map<String, Object> s, Map<String, Object> body, AuthService.Actor actor) {
     Input in = new Input(body, "version,reason,buyerConsentFileIds");
-    Store.version(s, in.integer("version", 1, Integer.MAX_VALUE));
-    Store.state(s, "awaiting_exchange");
+    BusinessRepository.version(s, in.integer("version", 1, Integer.MAX_VALUE));
+    BusinessRepository.state(s, "awaiting_exchange");
     require(s.get("returnRecord") != null, 409, "RETURN_REQUIRED", "原宠尚未退回");
     for (String id : in.ids("buyerConsentFileIds", 1, 5))
       catalog.asset(id, "after_sale_evidence", actor.id(), text(s, "orderId"));

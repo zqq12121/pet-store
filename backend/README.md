@@ -90,8 +90,11 @@ Redis 密码用 `PAW_REDIS_PASSWORD`，生产通过 Redis 执行临时凭证、�
 
 ## 代码入口与验收
 
-- `web/ApiController`：HTTP、统一响应、身份和原始微信通知。
-- `service/BusinessService`：接口编排、事务和幂等。
+- `controller/`：按公开、买家和管理员拆分的明确接口方法；独立登录、文件及支付回调入口。
+- `application/`：按业务模块组织用例；`BusinessOperationExecutor` 统一事务、权限和幂等。
+- `repository/BusinessRepository`：业务数据访问门面，隐藏底层 Mapper。
+- `controller/support/`：统一响应、身份适配和全局异常处理。
+- [后端结构与阅读指南](ARCHITECTURE.md)：目录职责、调用链和扩展约定。
 - `CatalogService`：商品、门店、协议与公开投影。
 - `OrderService` / `AfterSaleService`：库存、快照、自提和退换货。
 - `PaymentService` / `PaymentWorker`：支付事实、退款意图和提交后对账。
@@ -138,3 +141,12 @@ sh scripts/start-docker-local.sh
 ## 2026-09-11 关系表改造
 
 运行库现使用独立业务表，已完成备份、副本演练及26条旧记录的逐字段迁移校验。旧订单/ID/协议内容保留，旧表名为 `resources_legacy`，后端不再使用它。参见 [数据库设计与验收](DATABASE.md)。AI/知识库仅建立表结构，未实现模型或向量检索业务。
+
+## 后端结构重构验收（2026-09-11）
+
+- 单一 Controller 和字符串路径分发已替换为按模块的显式接口；应用编排、业务规则、数据访问、DTO 和 HTTP 公共处理分层，详见 [阅读指南](ARCHITECTURE.md)。
+- `mvn clean package` 通过：27 项 HTTP/业务集成测试、4 项关系存储/迁移测试，共 31 项。
+- 新 JAR 已使用原有 local,docker 配置在 8080 启动；通过 Nginx 对比重启前后的首页、门店、分类、宠物列表、支付能力、当前协议，6 个接口的数据一致。
+- 未登录访问后台宠物和个人资料返回 401，未知接口返回 404；买家页与管理页返回 200。
+- 实际 MySQL 核对仍为 51 张表、3 条宠物和 3 条订单。本次没有执行建表或数据迁移脚本。
+- 完整交易回归在隔离 H2 测试库运行；本轮实际 MySQL/Redis/Nginx 验证为启动和只读接口检查，不等同于第三方支付或生产性能验收。

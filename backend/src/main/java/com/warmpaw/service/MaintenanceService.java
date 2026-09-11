@@ -2,6 +2,7 @@ package com.warmpaw.service;
 
 import static com.warmpaw.common.Json.*;
 
+import com.warmpaw.repository.BusinessRepository;
 import java.nio.file.*;
 import java.time.*;
 import java.util.*;
@@ -13,10 +14,10 @@ import org.springframework.transaction.annotation.Transactional;
 /** 每日只清理未被业务引用的临时文件；历史订单、退回证据和快照优先保留。 */
 @Service
 public class MaintenanceService {
-  private final Store store;
+  private final BusinessRepository store;
   private final Path root;
 
-  public MaintenanceService(Store store, @Value("${app.storage}") String storage) {
+  public MaintenanceService(BusinessRepository store, @Value("${app.storage}") String storage) {
     this.store = store;
     this.root = Path.of(storage).toAbsolutePath().normalize();
   }
@@ -24,7 +25,7 @@ public class MaintenanceService {
   @Scheduled(fixedDelay = 86400000, initialDelay = 86400000)
   @Transactional
   public void cleanTemporaryFiles() {
-    store.mapper.lock();
+    store.lock();
     Instant cutoff = Instant.now().minusSeconds(86400);
     Set<String> references = new HashSet<>();
     for (String kind : List.of("pet", "order", "after_sale", "shop", "confirmation", "user"))
