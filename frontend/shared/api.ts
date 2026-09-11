@@ -1,5 +1,7 @@
 import axios from 'axios'
 export const isDemo = import.meta.env.VITE_DEMO_MODE === 'true' || (import.meta.env.DEV && import.meta.env.VITE_DEMO_MODE !== 'false')
+// 区分 Node 固定验证码演示与 Java 随机验证码联调。
+export const isJavaLocal = isDemo && import.meta.env.VITE_JAVA_LOCAL === 'true'
 export type Role = 'buyer' | 'admin'
 export class ApiError extends Error { constructor(message: string, public code = 'NETWORK_ERROR', public status = 0) { super(message) } }
 const storageKey = (role: Role) => `warmpaw:${role}:auth`

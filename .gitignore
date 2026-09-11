@@ -17,3 +17,10 @@ coverage/
 
 # 临时上传
 server/uploads/
+
+/backend/data/
+/backend/target/
+/output/
+*.iml
+__pycache__/
+*.pyc

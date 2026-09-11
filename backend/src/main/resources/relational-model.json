@@ -1,0 +1,2778 @@
+{
+  "models": [
+    {
+      "kind": "admin",
+      "table": "admins",
+      "label": "管理员",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "username",
+          "column": "username",
+          "sql": "VARCHAR(32)",
+          "json": false
+        },
+        {
+          "field": "passwordHash",
+          "column": "password_hash",
+          "sql": "VARCHAR(255)",
+          "json": false
+        }
+      ],
+      "children": [],
+      "constraints": [
+        "UNIQUE (username)"
+      ]
+    },
+    {
+      "kind": "user",
+      "table": "users",
+      "label": "买家用户",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "phone",
+          "column": "phone",
+          "sql": "VARCHAR(11)",
+          "json": false
+        },
+        {
+          "field": "nickname",
+          "column": "nickname",
+          "sql": "VARCHAR(30)",
+          "json": false
+        },
+        {
+          "field": "avatarUrl",
+          "column": "avatar_url",
+          "sql": "VARCHAR(2048)",
+          "json": false
+        }
+      ],
+      "children": [],
+      "constraints": [
+        "UNIQUE (phone)"
+      ]
+    },
+    {
+      "kind": "wechat",
+      "table": "wechat_accounts",
+      "label": "微信账号绑定",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "appId",
+          "column": "app_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "openid",
+          "column": "openid",
+          "sql": "VARCHAR(128)",
+          "json": false
+        }
+      ],
+      "children": [],
+      "constraints": [
+        "UNIQUE (app_id,openid)",
+        "UNIQUE (app_id,owner_id)",
+        "FOREIGN KEY (owner_id) REFERENCES users(id)"
+      ]
+    },
+    {
+      "kind": "wechat_openid",
+      "table": "wechat_openid_claims",
+      "label": "微信身份唯一归属",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "appId",
+          "column": "app_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        }
+      ],
+      "children": [],
+      "constraints": [
+        "FOREIGN KEY (owner_id) REFERENCES users(id)"
+      ]
+    },
+    {
+      "kind": "session",
+      "table": "auth_sessions",
+      "label": "可撤销登录会话",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "role",
+          "column": "role",
+          "sql": "VARCHAR(16)",
+          "json": false
+        },
+        {
+          "field": "expiresAt",
+          "column": "expires_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        }
+      ],
+      "children": [],
+      "constraints": []
+    },
+    {
+      "kind": "file",
+      "table": "file_assets",
+      "label": "文件元数据及访问权限",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "orderId",
+          "column": "order_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "originalName",
+          "column": "original_name",
+          "sql": "VARCHAR(255)",
+          "json": false
+        },
+        {
+          "field": "mimeType",
+          "column": "mime_type",
+          "sql": "VARCHAR(100)",
+          "json": false
+        },
+        {
+          "field": "sizeBytes",
+          "column": "size_bytes",
+          "sql": "BIGINT",
+          "json": false
+        },
+        {
+          "field": "purpose",
+          "column": "purpose",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "visibility",
+          "column": "visibility",
+          "sql": "VARCHAR(16)",
+          "json": false
+        },
+        {
+          "field": "publicUrl",
+          "column": "public_url",
+          "sql": "VARCHAR(2048)",
+          "json": false
+        }
+      ],
+      "children": [],
+      "constraints": []
+    },
+    {
+      "kind": "shop",
+      "table": "shops",
+      "label": "门店",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "name",
+          "column": "name",
+          "sql": "VARCHAR(80)",
+          "json": false
+        },
+        {
+          "field": "address",
+          "column": "address",
+          "sql": "VARCHAR(200)",
+          "json": false
+        },
+        {
+          "field": "latitude",
+          "column": "latitude",
+          "sql": "DECIMAL(12,8)",
+          "json": false
+        },
+        {
+          "field": "longitude",
+          "column": "longitude",
+          "sql": "DECIMAL(12,8)",
+          "json": false
+        },
+        {
+          "field": "coordinateSystem",
+          "column": "coordinate_system",
+          "sql": "VARCHAR(16)",
+          "json": false
+        },
+        {
+          "field": "phone",
+          "column": "phone",
+          "sql": "VARCHAR(200)",
+          "json": false
+        },
+        {
+          "field": "wechat",
+          "column": "wechat",
+          "sql": "VARCHAR(200)",
+          "json": false
+        },
+        {
+          "field": "businessHours",
+          "column": "business_hours",
+          "sql": "VARCHAR(200)",
+          "json": false
+        },
+        {
+          "field": "pickupInstructions",
+          "column": "pickup_instructions",
+          "sql": "LONGTEXT",
+          "json": false
+        },
+        {
+          "field": "paymentTimeoutMinutes",
+          "column": "payment_timeout_minutes",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "pickupRetentionHours",
+          "column": "pickup_retention_hours",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "exchangeEnabled",
+          "column": "exchange_enabled",
+          "sql": "BOOLEAN",
+          "json": false
+        }
+      ],
+      "children": [
+        {
+          "table": "shop_banners",
+          "path": "banners",
+          "fields": [
+            {
+              "field": "id",
+              "column": "id",
+              "sql": "VARCHAR(64)",
+              "json": false
+            },
+            {
+              "field": "title",
+              "column": "title",
+              "sql": "VARCHAR(80)",
+              "json": false
+            },
+            {
+              "field": "imageFileId",
+              "column": "image_file_id",
+              "sql": "VARCHAR(64)",
+              "json": false
+            },
+            {
+              "field": "linkType",
+              "column": "link_type",
+              "sql": "VARCHAR(16)",
+              "json": false
+            },
+            {
+              "field": "petId",
+              "column": "pet_id",
+              "sql": "VARCHAR(64)",
+              "json": false
+            },
+            {
+              "field": "noticeText",
+              "column": "notice_text",
+              "sql": "LONGTEXT",
+              "json": false
+            },
+            {
+              "field": "sortOrder",
+              "column": "sort_order",
+              "sql": "INT",
+              "json": false
+            },
+            {
+              "field": "enabled",
+              "column": "enabled",
+              "sql": "BOOLEAN",
+              "json": false
+            }
+          ],
+          "mode": "list",
+          "children": [],
+          "scalar": null
+        }
+      ],
+      "constraints": []
+    },
+    {
+      "kind": "pet",
+      "table": "pets",
+      "label": "宠物个体档案",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "name",
+          "column": "name",
+          "sql": "VARCHAR(80)",
+          "json": false
+        },
+        {
+          "field": "category",
+          "column": "category",
+          "sql": "VARCHAR(8)",
+          "json": false
+        },
+        {
+          "field": "breed",
+          "column": "breed",
+          "sql": "VARCHAR(50)",
+          "json": false
+        },
+        {
+          "field": "gender",
+          "column": "gender",
+          "sql": "VARCHAR(8)",
+          "json": false
+        },
+        {
+          "field": "priceAmount",
+          "column": "price_amount",
+          "sql": "BIGINT",
+          "json": false
+        },
+        {
+          "field": "ageMonths",
+          "column": "age_months",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "birthDate",
+          "column": "birth_date",
+          "sql": "DATE",
+          "json": false
+        },
+        {
+          "field": "weightKg",
+          "column": "weight_kg",
+          "sql": "DECIMAL(12,2)",
+          "json": false
+        },
+        {
+          "field": "color",
+          "column": "color",
+          "sql": "VARCHAR(30)",
+          "json": false
+        },
+        {
+          "field": "vaccineStatus",
+          "column": "vaccine_status",
+          "sql": "VARCHAR(500)",
+          "json": false
+        },
+        {
+          "field": "dewormStatus",
+          "column": "deworm_status",
+          "sql": "VARCHAR(500)",
+          "json": false
+        },
+        {
+          "field": "description",
+          "column": "description",
+          "sql": "LONGTEXT",
+          "json": false
+        },
+        {
+          "field": "feedingNotes",
+          "column": "feeding_notes",
+          "sql": "LONGTEXT",
+          "json": false
+        },
+        {
+          "field": "healthDescription",
+          "column": "health_description",
+          "sql": "LONGTEXT",
+          "json": false
+        },
+        {
+          "field": "videoFileId",
+          "column": "video_file_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "isRecommended",
+          "column": "is_recommended",
+          "sql": "BOOLEAN",
+          "json": false
+        },
+        {
+          "field": "recommendationOrder",
+          "column": "recommendation_order",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "activeOrderId",
+          "column": "active_order_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "reviewedAt",
+          "column": "reviewed_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "lastSaleReviewNote",
+          "column": "last_sale_review_note",
+          "sql": "LONGTEXT",
+          "json": false
+        },
+        {
+          "field": "publishedAt",
+          "column": "published_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        }
+      ],
+      "children": [
+        {
+          "table": "pet_images",
+          "path": "imageFileIds",
+          "fields": [
+            {
+              "field": "fileId",
+              "column": "file_id",
+              "sql": "VARCHAR(64)",
+              "json": false
+            }
+          ],
+          "mode": "list",
+          "children": [],
+          "scalar": "fileId"
+        },
+        {
+          "table": "pet_personality_tags",
+          "path": "personalityTags",
+          "fields": [
+            {
+              "field": "tag",
+              "column": "tag",
+              "sql": "VARCHAR(20)",
+              "json": false
+            }
+          ],
+          "mode": "list",
+          "children": [],
+          "scalar": "tag"
+        },
+        {
+          "table": "pet_quarantine_certificates",
+          "path": "quarantine",
+          "fields": [
+            {
+              "field": "certificateNo",
+              "column": "certificate_no",
+              "sql": "VARCHAR(100)",
+              "json": false
+            },
+            {
+              "field": "validUntil",
+              "column": "valid_until",
+              "sql": "DATE",
+              "json": false
+            }
+          ],
+          "mode": "object",
+          "children": [
+            {
+              "table": "pet_quarantine_public_files",
+              "path": "publicImageFileIds",
+              "fields": [
+                {
+                  "field": "fileId",
+                  "column": "file_id",
+                  "sql": "VARCHAR(64)",
+                  "json": false
+                }
+              ],
+              "mode": "list",
+              "children": [],
+              "scalar": "fileId"
+            },
+            {
+              "table": "pet_quarantine_original_files",
+              "path": "originalFileIds",
+              "fields": [
+                {
+                  "field": "fileId",
+                  "column": "file_id",
+                  "sql": "VARCHAR(64)",
+                  "json": false
+                }
+              ],
+              "mode": "list",
+              "children": [],
+              "scalar": "fileId"
+            }
+          ],
+          "scalar": null
+        }
+      ],
+      "constraints": [
+        "CHECK (price_amount > 0)",
+        "CHECK (category IN ('cat','dog'))",
+        "CHECK (gender IN ('male','female'))",
+        "CHECK (age_months BETWEEN 0 AND 360)",
+        "CHECK (weight_kg > 0 AND weight_kg <= 200)",
+        "CHECK (status IN ('off','on_sale','reserved','sold'))",
+        "INDEX idx_pets_filter (status,category,price_amount)",
+        "INDEX idx_pets_breed (category,breed)",
+        "INDEX idx_pets_published (published_at,id)"
+      ]
+    },
+    {
+      "kind": "agreement",
+      "table": "agreement_versions",
+      "label": "协议不可变版本",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "VARCHAR(32)",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "type",
+          "column": "type",
+          "sql": "VARCHAR(32)",
+          "json": false
+        },
+        {
+          "field": "title",
+          "column": "title",
+          "sql": "VARCHAR(100)",
+          "json": false
+        },
+        {
+          "field": "content",
+          "column": "content",
+          "sql": "LONGTEXT",
+          "json": false
+        },
+        {
+          "field": "contentFormat",
+          "column": "content_format",
+          "sql": "VARCHAR(16)",
+          "json": false
+        },
+        {
+          "field": "contentHash",
+          "column": "content_hash",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "healthGuaranteeDays",
+          "column": "health_guarantee_days",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "publishedAt",
+          "column": "published_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        }
+      ],
+      "children": [],
+      "constraints": [
+        "UNIQUE (type,version)"
+      ]
+    },
+    {
+      "kind": "order",
+      "table": "orders",
+      "label": "单宠订单",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "orderNo",
+          "column": "order_no",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "petId",
+          "column": "pet_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "amount",
+          "column": "amount",
+          "sql": "BIGINT",
+          "json": false
+        },
+        {
+          "field": "refundedAmount",
+          "column": "refunded_amount",
+          "sql": "BIGINT",
+          "json": false
+        },
+        {
+          "field": "currency",
+          "column": "currency",
+          "sql": "VARCHAR(3)",
+          "json": false
+        },
+        {
+          "field": "contactName",
+          "column": "contact_name",
+          "sql": "VARCHAR(30)",
+          "json": false
+        },
+        {
+          "field": "contactPhone",
+          "column": "contact_phone",
+          "sql": "VARCHAR(11)",
+          "json": false
+        },
+        {
+          "field": "remark",
+          "column": "remark",
+          "sql": "VARCHAR(500)",
+          "json": false
+        },
+        {
+          "field": "expiresAt",
+          "column": "expires_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "pickupRetentionHours",
+          "column": "pickup_retention_hours",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "healthGuaranteeDays",
+          "column": "health_guarantee_days",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "paidAt",
+          "column": "paid_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "pickupDeadlineAt",
+          "column": "pickup_deadline_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "completedAt",
+          "column": "completed_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "healthGuaranteeExpiresAt",
+          "column": "health_guarantee_expires_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "pickedUpAt",
+          "column": "picked_up_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "closedAt",
+          "column": "closed_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "cancelledAt",
+          "column": "cancelled_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "cancelReason",
+          "column": "cancel_reason",
+          "sql": "VARCHAR(500)",
+          "json": false
+        },
+        {
+          "field": "refundPreviousStatus",
+          "column": "refund_previous_status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        }
+      ],
+      "children": [
+        {
+          "table": "order_snapshots",
+          "path": "snapshots",
+          "fields": [
+            {
+              "field": "product",
+              "column": "product",
+              "sql": "LONGTEXT",
+              "json": true
+            },
+            {
+              "field": "priceSnapshot",
+              "column": "price_snapshot",
+              "sql": "LONGTEXT",
+              "json": true
+            },
+            {
+              "field": "productSnapshot",
+              "column": "product_snapshot",
+              "sql": "LONGTEXT",
+              "json": true
+            },
+            {
+              "field": "shopSnapshot",
+              "column": "shop_snapshot",
+              "sql": "LONGTEXT",
+              "json": true
+            },
+            {
+              "field": "agreement",
+              "column": "agreement",
+              "sql": "LONGTEXT",
+              "json": true
+            }
+          ],
+          "mode": "embedded",
+          "children": [],
+          "scalar": null
+        },
+        {
+          "table": "order_payment_state",
+          "path": "payment",
+          "fields": [
+            {
+              "field": "paymentId",
+              "column": "payment_id",
+              "sql": "VARCHAR(64)",
+              "json": false
+            },
+            {
+              "field": "status",
+              "column": "status",
+              "sql": "VARCHAR(40)",
+              "json": false
+            },
+            {
+              "field": "paidAmount",
+              "column": "paid_amount",
+              "sql": "BIGINT",
+              "json": false
+            },
+            {
+              "field": "paidAt",
+              "column": "paid_at",
+              "sql": "VARCHAR(40)",
+              "json": false
+            }
+          ],
+          "mode": "object",
+          "children": [],
+          "scalar": null
+        },
+        {
+          "table": "pickup_credentials",
+          "path": "pickup",
+          "fields": [
+            {
+              "field": "code",
+              "column": "code",
+              "sql": "VARCHAR(8)",
+              "json": false
+            },
+            {
+              "field": "qrPayload",
+              "column": "qr_payload",
+              "sql": "VARCHAR(128)",
+              "json": false
+            },
+            {
+              "field": "expiresAt",
+              "column": "expires_at",
+              "sql": "VARCHAR(40)",
+              "json": false
+            },
+            {
+              "field": "buyerConfirmedAt",
+              "column": "buyer_confirmed_at",
+              "sql": "VARCHAR(40)",
+              "json": false
+            }
+          ],
+          "mode": "object",
+          "children": [],
+          "scalar": null
+        },
+        {
+          "table": "order_delivery_evidence",
+          "path": "delivery",
+          "fields": [
+            {
+              "field": "pickupEvidence",
+              "column": "pickup_evidence",
+              "sql": "LONGTEXT",
+              "json": true
+            },
+            {
+              "field": "deliveryQuarantine",
+              "column": "delivery_quarantine",
+              "sql": "LONGTEXT",
+              "json": true
+            }
+          ],
+          "mode": "embedded",
+          "children": [],
+          "scalar": null
+        },
+        {
+          "table": "order_delivery_original_files",
+          "path": "deliveryOriginalFileIds",
+          "fields": [
+            {
+              "field": "fileId",
+              "column": "file_id",
+              "sql": "VARCHAR(64)",
+              "json": false
+            }
+          ],
+          "mode": "list",
+          "children": [],
+          "scalar": "fileId"
+        }
+      ],
+      "constraints": [
+        "UNIQUE (order_no)",
+        "FOREIGN KEY (owner_id) REFERENCES users(id)",
+        "FOREIGN KEY (pet_id) REFERENCES pets(id)",
+        "CHECK (amount > 0)",
+        "CHECK (refunded_amount >= 0 AND refunded_amount <= amount)",
+        "INDEX idx_orders_owner (owner_id,status,created_at)",
+        "INDEX idx_orders_pet (pet_id)",
+        "INDEX idx_orders_expiry (status,expires_at)",
+        "INDEX idx_orders_contact (contact_phone,created_at)"
+      ]
+    },
+    {
+      "kind": "payment",
+      "table": "payments",
+      "label": "支付请求及对账状态",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "outTradeNo",
+          "column": "out_trade_no",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "orderId",
+          "column": "order_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "scene",
+          "column": "scene",
+          "sql": "VARCHAR(16)",
+          "json": false
+        },
+        {
+          "field": "expiresAt",
+          "column": "expires_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "providerCreated",
+          "column": "provider_created",
+          "sql": "BOOLEAN",
+          "json": false
+        },
+        {
+          "field": "providerAttempted",
+          "column": "provider_attempted",
+          "sql": "BOOLEAN",
+          "json": false
+        },
+        {
+          "field": "lastQueryAt",
+          "column": "last_query_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "transactionId",
+          "column": "transaction_id",
+          "sql": "VARCHAR(128)",
+          "json": false
+        },
+        {
+          "field": "lastProviderError",
+          "column": "last_provider_error",
+          "sql": "VARCHAR(100)",
+          "json": false
+        },
+        {
+          "field": "h5Url",
+          "column": "h5_url",
+          "sql": "VARCHAR(2048)",
+          "json": false
+        },
+        {
+          "field": "prepayId",
+          "column": "prepay_id",
+          "sql": "VARCHAR(128)",
+          "json": false
+        },
+        {
+          "field": "invokeParams",
+          "column": "invoke_params",
+          "sql": "LONGTEXT",
+          "json": true
+        }
+      ],
+      "children": [],
+      "constraints": [
+        "UNIQUE (out_trade_no)",
+        "UNIQUE (transaction_id)",
+        "FOREIGN KEY (order_id) REFERENCES orders(id)",
+        "INDEX idx_payments_order (order_id)",
+        "INDEX idx_payments_state (status,last_query_at)"
+      ]
+    },
+    {
+      "kind": "payment_fact",
+      "table": "payment_transactions",
+      "label": "已核实的支付流水",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "paymentId",
+          "column": "payment_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "orderId",
+          "column": "order_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "paidAt",
+          "column": "paid_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "amount",
+          "column": "amount",
+          "sql": "BIGINT",
+          "json": false
+        }
+      ],
+      "children": [],
+      "constraints": [
+        "FOREIGN KEY (payment_id) REFERENCES payments(id)",
+        "FOREIGN KEY (order_id) REFERENCES orders(id)",
+        "INDEX idx_payment_paid (paid_at)"
+      ]
+    },
+    {
+      "kind": "after_sale",
+      "table": "after_sales",
+      "label": "售后申请与审核",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "orderId",
+          "column": "order_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "petId",
+          "column": "pet_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "type",
+          "column": "type",
+          "sql": "VARCHAR(32)",
+          "json": false
+        },
+        {
+          "field": "requestedResolution",
+          "column": "requested_resolution",
+          "sql": "VARCHAR(32)",
+          "json": false
+        },
+        {
+          "field": "approvedResolution",
+          "column": "approved_resolution",
+          "sql": "VARCHAR(32)",
+          "json": false
+        },
+        {
+          "field": "reason",
+          "column": "reason",
+          "sql": "LONGTEXT",
+          "json": false
+        },
+        {
+          "field": "diagnosisAt",
+          "column": "diagnosis_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "requestedAmount",
+          "column": "requested_amount",
+          "sql": "BIGINT",
+          "json": false
+        },
+        {
+          "field": "approvedAmount",
+          "column": "approved_amount",
+          "sql": "BIGINT",
+          "json": false
+        },
+        {
+          "field": "reviewReason",
+          "column": "review_reason",
+          "sql": "LONGTEXT",
+          "json": false
+        },
+        {
+          "field": "reviewedAt",
+          "column": "reviewed_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "refundId",
+          "column": "refund_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "exchangeEvidence",
+          "column": "exchange_evidence",
+          "sql": "LONGTEXT",
+          "json": true
+        }
+      ],
+      "children": [
+        {
+          "table": "after_sale_diagnosis_files",
+          "path": "diagnosisFileIds",
+          "fields": [
+            {
+              "field": "fileId",
+              "column": "file_id",
+              "sql": "VARCHAR(64)",
+              "json": false
+            }
+          ],
+          "mode": "list",
+          "children": [],
+          "scalar": "fileId"
+        },
+        {
+          "table": "after_sale_evidence_files",
+          "path": "evidenceFileIds",
+          "fields": [
+            {
+              "field": "fileId",
+              "column": "file_id",
+              "sql": "VARCHAR(64)",
+              "json": false
+            }
+          ],
+          "mode": "list",
+          "children": [],
+          "scalar": "fileId"
+        },
+        {
+          "table": "after_sale_consent_files",
+          "path": "buyerConsentFileIds",
+          "fields": [
+            {
+              "field": "fileId",
+              "column": "file_id",
+              "sql": "VARCHAR(64)",
+              "json": false
+            }
+          ],
+          "mode": "list",
+          "children": [],
+          "scalar": "fileId"
+        },
+        {
+          "table": "exchange_original_files",
+          "path": "exchangeOriginalFileIds",
+          "fields": [
+            {
+              "field": "fileId",
+              "column": "file_id",
+              "sql": "VARCHAR(64)",
+              "json": false
+            }
+          ],
+          "mode": "list",
+          "children": [],
+          "scalar": "fileId"
+        },
+        {
+          "table": "after_sale_timeline",
+          "path": "timeline",
+          "fields": [
+            {
+              "field": "event",
+              "column": "event",
+              "sql": "VARCHAR(40)",
+              "json": false
+            },
+            {
+              "field": "label",
+              "column": "label",
+              "sql": "VARCHAR(255)",
+              "json": false
+            },
+            {
+              "field": "note",
+              "column": "note",
+              "sql": "LONGTEXT",
+              "json": false
+            },
+            {
+              "field": "occurredAt",
+              "column": "occurred_at",
+              "sql": "VARCHAR(40)",
+              "json": false
+            },
+            {
+              "field": "actorType",
+              "column": "actor_type",
+              "sql": "VARCHAR(16)",
+              "json": false
+            }
+          ],
+          "mode": "list",
+          "children": [],
+          "scalar": null
+        },
+        {
+          "table": "after_sale_returns",
+          "path": "returnRecord",
+          "fields": [
+            {
+              "field": "id",
+              "column": "id",
+              "sql": "VARCHAR(64)",
+              "json": false
+            },
+            {
+              "field": "receivedAt",
+              "column": "received_at",
+              "sql": "VARCHAR(40)",
+              "json": false
+            },
+            {
+              "field": "conditionNotes",
+              "column": "condition_notes",
+              "sql": "LONGTEXT",
+              "json": false
+            },
+            {
+              "field": "operatorId",
+              "column": "operator_id",
+              "sql": "VARCHAR(64)",
+              "json": false
+            }
+          ],
+          "mode": "object",
+          "children": [
+            {
+              "table": "after_sale_return_files",
+              "path": "evidenceFileIds",
+              "fields": [
+                {
+                  "field": "fileId",
+                  "column": "file_id",
+                  "sql": "VARCHAR(64)",
+                  "json": false
+                }
+              ],
+              "mode": "list",
+              "children": [],
+              "scalar": "fileId"
+            }
+          ],
+          "scalar": null
+        },
+        {
+          "table": "exchange_plans",
+          "path": "exchange",
+          "fields": [
+            {
+              "field": "id",
+              "column": "id",
+              "sql": "VARCHAR(64)",
+              "json": false
+            },
+            {
+              "field": "replacementPetId",
+              "column": "replacement_pet_id",
+              "sql": "VARCHAR(64)",
+              "json": false
+            },
+            {
+              "field": "productSnapshot",
+              "column": "product_snapshot",
+              "sql": "LONGTEXT",
+              "json": true
+            },
+            {
+              "field": "status",
+              "column": "status",
+              "sql": "VARCHAR(32)",
+              "json": false
+            },
+            {
+              "field": "confirmationId",
+              "column": "confirmation_id",
+              "sql": "VARCHAR(64)",
+              "json": false
+            },
+            {
+              "field": "confirmedAt",
+              "column": "confirmed_at",
+              "sql": "VARCHAR(40)",
+              "json": false
+            },
+            {
+              "field": "deliveredAt",
+              "column": "delivered_at",
+              "sql": "VARCHAR(40)",
+              "json": false
+            },
+            {
+              "field": "deliveryQuarantine",
+              "column": "delivery_quarantine",
+              "sql": "LONGTEXT",
+              "json": true
+            }
+          ],
+          "mode": "object",
+          "children": [],
+          "scalar": null
+        }
+      ],
+      "constraints": [
+        "FOREIGN KEY (order_id) REFERENCES orders(id)",
+        "FOREIGN KEY (pet_id) REFERENCES pets(id)",
+        "FOREIGN KEY (owner_id) REFERENCES users(id)",
+        "INDEX idx_after_sales_order (order_id,status)",
+        "INDEX idx_after_sales_owner (owner_id,created_at)"
+      ]
+    },
+    {
+      "kind": "refund",
+      "table": "refunds",
+      "label": "原路退款请求",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "refundNo",
+          "column": "refund_no",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "orderId",
+          "column": "order_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "afterSaleId",
+          "column": "after_sale_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "reason",
+          "column": "reason",
+          "sql": "VARCHAR(100)",
+          "json": false
+        },
+        {
+          "field": "amount",
+          "column": "amount",
+          "sql": "BIGINT",
+          "json": false
+        },
+        {
+          "field": "succeededAt",
+          "column": "succeeded_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "failureReason",
+          "column": "failure_reason",
+          "sql": "LONGTEXT",
+          "json": false
+        },
+        {
+          "field": "attempted",
+          "column": "attempted",
+          "sql": "BOOLEAN",
+          "json": false
+        },
+        {
+          "field": "providerAccepted",
+          "column": "provider_accepted",
+          "sql": "BOOLEAN",
+          "json": false
+        }
+      ],
+      "children": [],
+      "constraints": [
+        "UNIQUE (refund_no)",
+        "FOREIGN KEY (order_id) REFERENCES orders(id)",
+        "FOREIGN KEY (after_sale_id) REFERENCES after_sales(id)",
+        "CHECK (amount > 0)",
+        "INDEX idx_refunds_order (order_id,status)"
+      ]
+    },
+    {
+      "kind": "refund_fact",
+      "table": "refund_transactions",
+      "label": "已核实退款流水",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "refundId",
+          "column": "refund_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "amount",
+          "column": "amount",
+          "sql": "BIGINT",
+          "json": false
+        },
+        {
+          "field": "succeededAt",
+          "column": "succeeded_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        }
+      ],
+      "children": [],
+      "constraints": [
+        "FOREIGN KEY (refund_id) REFERENCES refunds(id)"
+      ]
+    },
+    {
+      "kind": "confirmation",
+      "table": "pickup_confirmations",
+      "label": "买家现场确认记录",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "confirmationId",
+          "column": "confirmation_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "textVersion",
+          "column": "text_version",
+          "sql": "VARCHAR(32)",
+          "json": false
+        },
+        {
+          "field": "textHash",
+          "column": "text_hash",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "confirmationText",
+          "column": "confirmation_text",
+          "sql": "LONGTEXT",
+          "json": false
+        },
+        {
+          "field": "confirmedAt",
+          "column": "confirmed_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "validUntil",
+          "column": "valid_until",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "method",
+          "column": "method",
+          "sql": "VARCHAR(16)",
+          "json": false
+        },
+        {
+          "field": "operatorId",
+          "column": "operator_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "deliveredAt",
+          "column": "delivered_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "phoneHash",
+          "column": "phone_hash",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "smsRequestId",
+          "column": "sms_request_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "scope",
+          "column": "scope",
+          "sql": "VARCHAR(255)",
+          "json": false
+        },
+        {
+          "field": "healthGuaranteeExpiresAt",
+          "column": "health_guarantee_expires_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        }
+      ],
+      "children": [
+        {
+          "table": "pickup_health_checks",
+          "path": "checks",
+          "fields": [
+            {
+              "field": "mentalState",
+              "column": "mental_state",
+              "sql": "BOOLEAN",
+              "json": false
+            },
+            {
+              "field": "eyesAndNose",
+              "column": "eyes_and_nose",
+              "sql": "BOOLEAN",
+              "json": false
+            },
+            {
+              "field": "coat",
+              "column": "coat",
+              "sql": "BOOLEAN",
+              "json": false
+            },
+            {
+              "field": "excretion",
+              "column": "excretion",
+              "sql": "BOOLEAN",
+              "json": false
+            }
+          ],
+          "mode": "object",
+          "children": [],
+          "scalar": null
+        }
+      ],
+      "constraints": [
+        "UNIQUE (confirmation_id)"
+      ]
+    },
+    {
+      "kind": "event",
+      "table": "analytics_events",
+      "label": "访问统计事件",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "eventId",
+          "column": "event_id",
+          "sql": "VARCHAR(36)",
+          "json": false
+        },
+        {
+          "field": "eventType",
+          "column": "event_type",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "occurredAt",
+          "column": "occurred_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "pagePath",
+          "column": "page_path",
+          "sql": "VARCHAR(200)",
+          "json": false
+        },
+        {
+          "field": "petId",
+          "column": "pet_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        }
+      ],
+      "children": [
+        {
+          "table": "analytics_event_properties",
+          "path": "properties",
+          "fields": [
+            {
+              "field": "page",
+              "column": "page",
+              "sql": "VARCHAR(16)",
+              "json": false
+            },
+            {
+              "field": "pathDepth",
+              "column": "path_depth",
+              "sql": "INT",
+              "json": false
+            },
+            {
+              "field": "keyword",
+              "column": "keyword",
+              "sql": "VARCHAR(50)",
+              "json": false
+            }
+          ],
+          "mode": "object",
+          "children": [],
+          "scalar": null
+        }
+      ],
+      "constraints": [
+        "UNIQUE (owner_id,event_id)",
+        "INDEX idx_analytics_pet (pet_id,event_type,occurred_at)"
+      ]
+    },
+    {
+      "kind": "ai_session",
+      "table": "ai_sessions",
+      "label": "AI会话（待实现业务）",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "ownerType",
+          "column": "owner_type",
+          "sql": "VARCHAR(16)",
+          "json": false
+        },
+        {
+          "field": "productId",
+          "column": "product_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "title",
+          "column": "title",
+          "sql": "VARCHAR(50)",
+          "json": false
+        },
+        {
+          "field": "lastMessageAt",
+          "column": "last_message_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "closedAt",
+          "column": "closed_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "hadNegativeFeedback",
+          "column": "had_negative_feedback",
+          "sql": "BOOLEAN",
+          "json": false
+        },
+        {
+          "field": "contactedShop",
+          "column": "contacted_shop",
+          "sql": "BOOLEAN",
+          "json": false
+        }
+      ],
+      "children": [],
+      "constraints": [
+        "INDEX idx_ai_session_owner (owner_id,last_message_at)"
+      ]
+    },
+    {
+      "kind": "ai_message",
+      "table": "ai_messages",
+      "label": "AI消息与引用快照（待实现业务）",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "sessionId",
+          "column": "session_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "sequence",
+          "column": "sequence",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "role",
+          "column": "role",
+          "sql": "VARCHAR(16)",
+          "json": false
+        },
+        {
+          "field": "clientMessageId",
+          "column": "client_message_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "content",
+          "column": "content",
+          "sql": "LONGTEXT",
+          "json": false
+        },
+        {
+          "field": "intent",
+          "column": "intent",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "outcome",
+          "column": "outcome",
+          "sql": "VARCHAR(32)",
+          "json": false
+        },
+        {
+          "field": "feedback",
+          "column": "feedback",
+          "sql": "VARCHAR(8)",
+          "json": false
+        },
+        {
+          "field": "disclaimer",
+          "column": "disclaimer",
+          "sql": "LONGTEXT",
+          "json": false
+        },
+        {
+          "field": "errorCode",
+          "column": "error_code",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "completedAt",
+          "column": "completed_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "sources",
+          "column": "sources",
+          "sql": "LONGTEXT",
+          "json": true
+        },
+        {
+          "field": "productCards",
+          "column": "product_cards",
+          "sql": "LONGTEXT",
+          "json": true
+        },
+        {
+          "field": "orderCards",
+          "column": "order_cards",
+          "sql": "LONGTEXT",
+          "json": true
+        },
+        {
+          "field": "actions",
+          "column": "actions",
+          "sql": "LONGTEXT",
+          "json": true
+        },
+        {
+          "field": "suggestedQuestions",
+          "column": "suggested_questions",
+          "sql": "LONGTEXT",
+          "json": true
+        },
+        {
+          "field": "firstTokenMs",
+          "column": "first_token_ms",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "generationMs",
+          "column": "generation_ms",
+          "sql": "INT",
+          "json": false
+        }
+      ],
+      "children": [],
+      "constraints": [
+        "FOREIGN KEY (session_id) REFERENCES ai_sessions(id)",
+        "UNIQUE (session_id,sequence)",
+        "UNIQUE (session_id,client_message_id,role)"
+      ]
+    },
+    {
+      "kind": "knowledge",
+      "table": "knowledge_entries",
+      "label": "知识条目（待实现业务）",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "title",
+          "column": "title",
+          "sql": "VARCHAR(120)",
+          "json": false
+        },
+        {
+          "field": "category",
+          "column": "category",
+          "sql": "VARCHAR(16)",
+          "json": false
+        },
+        {
+          "field": "petType",
+          "column": "pet_type",
+          "sql": "VARCHAR(8)",
+          "json": false
+        },
+        {
+          "field": "format",
+          "column": "format",
+          "sql": "VARCHAR(16)",
+          "json": false
+        },
+        {
+          "field": "content",
+          "column": "content",
+          "sql": "LONGTEXT",
+          "json": false
+        },
+        {
+          "field": "question",
+          "column": "question",
+          "sql": "LONGTEXT",
+          "json": false
+        },
+        {
+          "field": "answer",
+          "column": "answer",
+          "sql": "LONGTEXT",
+          "json": false
+        },
+        {
+          "field": "sourceName",
+          "column": "source_name",
+          "sql": "VARCHAR(200)",
+          "json": false
+        },
+        {
+          "field": "sourceUrl",
+          "column": "source_url",
+          "sql": "VARCHAR(2048)",
+          "json": false
+        },
+        {
+          "field": "indexStatus",
+          "column": "index_status",
+          "sql": "VARCHAR(16)",
+          "json": false
+        },
+        {
+          "field": "indexedVersion",
+          "column": "indexed_version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "indexErrorCode",
+          "column": "index_error_code",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "deletedAt",
+          "column": "deleted_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        }
+      ],
+      "children": [
+        {
+          "table": "knowledge_breeds",
+          "path": "breedNames",
+          "fields": [
+            {
+              "field": "breedName",
+              "column": "breed_name",
+              "sql": "VARCHAR(50)",
+              "json": false
+            }
+          ],
+          "mode": "list",
+          "children": [],
+          "scalar": "breedName"
+        }
+      ],
+      "constraints": [
+        "INDEX idx_knowledge_search (status,category,pet_type,index_status)"
+      ]
+    },
+    {
+      "kind": "knowledge_job",
+      "table": "knowledge_jobs",
+      "label": "知识导入及索引任务（待实现业务）",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "type",
+          "column": "type",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "fileId",
+          "column": "file_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "totalCount",
+          "column": "total_count",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "successCount",
+          "column": "success_count",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "failedCount",
+          "column": "failed_count",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "errorMessage",
+          "column": "error_message",
+          "sql": "LONGTEXT",
+          "json": false
+        },
+        {
+          "field": "startedAt",
+          "column": "started_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "completedAt",
+          "column": "completed_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        }
+      ],
+      "children": [
+        {
+          "table": "knowledge_job_errors",
+          "path": "errors",
+          "fields": [
+            {
+              "field": "sourceRow",
+              "column": "source_row",
+              "sql": "INT",
+              "json": false
+            },
+            {
+              "field": "message",
+              "column": "message",
+              "sql": "LONGTEXT",
+              "json": false
+            }
+          ],
+          "mode": "list",
+          "children": [],
+          "scalar": null
+        }
+      ],
+      "constraints": []
+    },
+    {
+      "kind": "ai_timing",
+      "table": "ai_timings",
+      "label": "AI客户端耗时（待实现业务）",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "eventId",
+          "column": "event_id",
+          "sql": "VARCHAR(36)",
+          "json": false
+        },
+        {
+          "field": "sessionId",
+          "column": "session_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "messageId",
+          "column": "message_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "firstRenderedMs",
+          "column": "first_rendered_ms",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "completedRenderedMs",
+          "column": "completed_rendered_ms",
+          "sql": "INT",
+          "json": false
+        }
+      ],
+      "children": [],
+      "constraints": [
+        "UNIQUE (owner_id,event_id)",
+        "FOREIGN KEY (session_id) REFERENCES ai_sessions(id)",
+        "FOREIGN KEY (message_id) REFERENCES ai_messages(id)"
+      ]
+    }
+  ]
+}

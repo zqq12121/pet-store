@@ -1,0 +1,10 @@
+{
+  "fileUrl": "https://www.figma.com/design/2P7oqPkLhdwdkpbGnyFNWZ",
+  "desktopHomeNodeId": "16:25",
+  "confirmedScreens": 73,
+  "confirmedClickConnections": 477,
+  "visibleComponentCount": 14,
+  "evidence": "Figma plugin UI returned screens 73 and wired 477; native canvas screenshots inspected for desktop home and checkout state.",
+  "motionPlaybackVerified": false,
+  "allScreensVisuallyVerified": false
+}

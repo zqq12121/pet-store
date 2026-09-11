@@ -8,6 +8,7 @@ const router=createRouter({history:createWebHistory(import.meta.env.BASE_URL),ro
  {path:'/orders',component:()=>import('./views/Orders.vue'),meta:{title:'订单管理'}},
  {path:'/after-sales',component:()=>import('./views/AfterSales.vue'),meta:{title:'售后处理'}},
  {path:'/knowledge',component:()=>import('./views/Knowledge.vue'),meta:{title:'知识库'}},
+ {path:'/agreements',component:()=>import('./views/Agreements.vue'),meta:{title:'协议管理'}},
  {path:'/shop',component:()=>import('./views/Shop.vue'),meta:{title:'门店设置'}},
  {path:'/:pathMatch(.*)*',redirect:'/'}
 ]})
