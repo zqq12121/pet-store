@@ -44,8 +44,8 @@
 ### 代码入口
 
 - `scripts/generate_schema.py`：显式字段、表、关系与约束定义。
-- `src/main/resources/schema.sql`：生成的新库建表SQL，包含字段注释。只建表，不迁移旧数据。
-- `src/main/resources/relational-model.json`：与SQL一起生成的字段白名单；不是业务数据。
+- `common/src/main/resources/schema.sql`：生成的新库建表SQL，包含字段注释。只建表，不迁移旧数据。
+- `common/src/main/resources/relational-model.json`：与SQL一起生成的字段白名单；不是业务数据。
 - `repository/RelationalRepository`：将现有业务Map映射到关系列与关联表，使用参数绑定；未知非空字段明确拒绝，不悄悄丢弃。
 - `repository/BusinessRepository`：保持原业务接口，实际通过新持久层读写，不再查询resources。
 - `repository/PetQueries`：宠物条件筛选、价格/年龄区间、排序和分页在SQL中完成。其他业务列表仍有内存筛选，未宣称已达到生产压测指标。

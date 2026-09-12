@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: order-server
+  profiles:
+    default: local
+  config:
+    import: classpath:application-common.yml
+server:
+  address: ${SERVER_ADDRESS:127.0.0.1}
+  port: ${SERVER_PORT:8081}

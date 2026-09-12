@@ -14,13 +14,14 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser()
 parser.add_argument('--base', default='http://127.0.0.1:8080/api/v1')
 parser.add_argument('--phone', default='13800138000')
+parser.add_argument('--state-dir', type=pathlib.Path, default=ROOT / 'data')
 args = parser.parse_args()
 if not args.base.startswith(('http://127.0.0.1:', 'http://localhost:')):
     raise SystemExit('只允许连接本机开发服务')
 
 
-def request(method, path, body=None, token=None, raw=None, content_type=None):
-    headers = {'Idempotency-Key': str(uuid.uuid4())}
+def request(method, path, body=None, token=None, raw=None, content_type=None, idempotency_key=None):
+    headers = {'Idempotency-Key': idempotency_key or str(uuid.uuid4())}
     if token:
         headers['Authorization'] = 'Bearer ' + token
     if raw is not None:
@@ -44,7 +45,7 @@ def request(method, path, body=None, token=None, raw=None, content_type=None):
 
 
 def local_code(kind, identifier):
-    return (ROOT / 'data' / 'local-inbox' / f'{kind}-{identifier}.txt').read_text().strip()
+    return (args.state_dir / 'local-inbox' / f'{kind}-{identifier}.txt').read_text().strip()
 
 
 def upload(purpose, token):
@@ -77,7 +78,7 @@ def upload(purpose, token):
 
 
 captcha = request('GET', '/auth/captchas?purpose=admin_login')
-password = (ROOT / 'data' / 'local-admin-password.txt').read_text().strip()
+password = (args.state_dir / 'local-admin-password.txt').read_text().strip()
 admin = request('POST', '/admin/auth/login', {'username': 'admin', 'password': password,
                  'captchaId': captcha['captchaId'], 'captchaCode': local_code('captcha', captcha['captchaId'])})['accessToken']
 for kind in ('live_pet_trade', 'pickup_confirmation'):
@@ -120,8 +121,13 @@ confirmation = request('POST', '/orders/' + order['id'] + '/pickup-confirmations
     'accepted': True, 'checks': {'mentalState': True, 'eyesAndNose': True, 'coat': True, 'excretion': True}}, buyer)
 lookup = request('POST', '/admin/pickups/lookup', {'pickupCode': order['pickup']['code']}, admin)
 assert lookup['pickupAllowed']
-request('POST', '/admin/orders/' + order['id'] + '/pickup', {'confirmationId': confirmation['confirmationId'],
-        'pickupCode': order['pickup']['code'], 'quarantineVerified': True}, admin)
+# 相同幂等键经 Gateway → admin-server → Feign → order-server 重放，不重复核销。
+pickup_key = str(uuid.uuid4())
+pickup_body = {'confirmationId': confirmation['confirmationId'],
+               'pickupCode': order['pickup']['code'], 'quarantineVerified': True}
+pickup_path = '/admin/orders/' + order['id'] + '/pickup'
+first_pickup = request('POST', pickup_path, pickup_body, admin, idempotency_key=pickup_key)
+assert request('POST', pickup_path, pickup_body, admin, idempotency_key=pickup_key) == first_pickup
 order = request('GET', '/orders/' + order['id'], token=buyer)
 assert order['status'] == 'completed' and order['pickup'] is None
 assert 'phoneHash' not in order['pickupEvidence']

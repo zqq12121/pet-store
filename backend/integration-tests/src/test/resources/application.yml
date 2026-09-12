@@ -1,0 +1,9 @@
+spring:
+  config:
+    import: classpath:application-common.yml
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+    discovery:
+      enabled: false

@@ -105,6 +105,6 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
  version VARCHAR(64) PRIMARY KEY, applied_at VARCHAR(40) NOT NULL, source_count INT NOT NULL
 );
 ''']
-    (ROOT/'src/main/resources/schema.sql').write_text('\n'.join(statements))
-    (ROOT/'src/main/resources/relational-model.json').write_text(json.dumps({'models':models},ensure_ascii=False,indent=2)+'\n')
+    (ROOT/'common/src/main/resources/schema.sql').write_text('\n'.join(statements))
+    (ROOT/'common/src/main/resources/relational-model.json').write_text(json.dumps({'models':models},ensure_ascii=False,indent=2)+'\n')
 if __name__=='__main__':generate()

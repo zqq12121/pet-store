@@ -1,0 +1,23 @@
+# 只新增本机注册中心；沿用已有 MySQL、Redis 和 Nginx，不重建它们。
+services:
+  nacos:
+    image: nacos/nacos-server:v3.1.1
+    env_file:
+      - ../.nacos.env
+    environment:
+      MODE: standalone
+      NACOS_AUTH_ENABLE: "false"
+      JVM_XMS: 256m
+      JVM_XMX: 512m
+      JVM_XMN: 128m
+    ports:
+      - "127.0.0.1:8848:8848"
+      - "127.0.0.1:9848:9848"
+      - "127.0.0.1:8088:8080"
+    volumes:
+      - nacos-data:/home/nacos/data
+      - nacos-logs:/home/nacos/logs
+    restart: unless-stopped
+volumes:
+  nacos-data:
+  nacos-logs:

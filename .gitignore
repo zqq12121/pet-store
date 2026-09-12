@@ -20,6 +20,8 @@ server/uploads/
 
 /backend/data/
 /backend/target/
+/backend/*/target/
+/backend/.nacos.env
 /output/
 *.iml
 __pycache__/

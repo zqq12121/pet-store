@@ -1,0 +1,36 @@
+server:
+  address: ${SERVER_ADDRESS:0.0.0.0}
+  port: ${SERVER_PORT:8080}
+spring:
+  application:
+    name: gateway-server
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        group: ${NACOS_GROUP:WARMPAW}
+        ip: ${SERVICE_IP:127.0.0.1}
+        username: ${NACOS_USERNAME:}
+        password: ${NACOS_PASSWORD:}
+    gateway:
+      server:
+        webflux:
+          routes:
+            # 所有后台请求先到管理服务，后台交易请求再经 Feign 调用订单服务。
+            - id: admin-api
+              uri: lb://admin-server
+              predicates:
+                - Path=/api/v1/admin/**
+            - id: order-api
+              uri: lb://order-server
+              predicates:
+                - Path=/api/v1/orders,/api/v1/orders/**,/api/v1/after-sales,/api/v1/after-sales/**,/api/v1/payments/**,/api/v1/payment-capabilities,/api/v1/callbacks/**,/api/v1/demo/orders/**,/api/v1/dev/orders/**
+            - id: catalog-account-files
+              uri: lb://admin-server
+              predicates:
+                - Path=/api/**
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

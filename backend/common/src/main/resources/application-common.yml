@@ -1,0 +1,47 @@
+# 两个业务服务共享原 MySQL 和 Redis；禁止启动时自动建表或覆盖现有数据。
+spring:
+  datasource:
+    url: ${PAW_DB_URL:jdbc:mysql://127.0.0.1:3306/warmpaw?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai}
+    username: ${PAW_DB_USERNAME:warmpaw}
+    password: ${PAW_DB_PASSWORD:}
+  sql:
+    init:
+      mode: never
+  data:
+    redis:
+      host: ${PAW_REDIS_HOST:127.0.0.1}
+      port: ${PAW_REDIS_PORT:6380}
+      password: ${PAW_REDIS_PASSWORD:}
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 101MB
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        group: ${NACOS_GROUP:WARMPAW}
+        ip: ${SERVICE_IP:127.0.0.1}
+        username: ${NACOS_USERNAME:}
+        password: ${NACOS_PASSWORD:}
+app:
+  storage: ${PAW_STORAGE:./data/files}
+  admin-username: ${PAW_ADMIN_USERNAME:admin}
+  admin-password: ${PAW_ADMIN_PASSWORD:}
+  mock-providers: ${PAW_MOCK_PROVIDERS:false}
+  redis-enabled: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+app:
+  mock-providers: true

@@ -1,71 +1,80 @@
-# 后端结构与阅读指南
+# 微服务结构与阅读指南
 
-本次重构保持已有 MySQL 表、API 路径、成功响应字段和核心交易规则不变。原先的单一 ApiController 和基于字符串路由的 BusinessService 已移除，每个业务接口现在都有明确的 Controller 方法。
+项目使用 Java 21、Spring Boot 4.0.7、Spring Cloud 2025.1.3、Spring Cloud Alibaba 2025.1.0.0。后台交易通过 OpenFeign 调用订单服务，服务地址由 Nacos 发现；前端 API 路径和响应格式保持原样。
 
-## 目录职责
+## 模块与运行位置
 
-以下路径均相对于 src/main/java/com/warmpaw：
+| 模块 | 职责 | 默认端口 | 运行位置 |
+|---|---|---|---|
+| `gateway-server` | 对外统一 API 入口、按路径路由 | 8080 | Mac / IDEA，独立 JVM |
+| `order-server` | 订单、支付、退款、自提、售后、交易统计 | 8081 | Mac / IDEA，独立 JVM |
+| `admin-server` | 商品、门店、协议、账号、文件、后台入口 | 8082 | Mac / IDEA，独立 JVM |
+| `common` | 共享校验、身份、Redis、关系存储、目录快照读取、事务接口 | 无 | 两个业务服务依赖的普通 JAR |
+| `integration-tests` | 原有完整业务回归和离线迁移工具 | 随机测试端口 | 测试时运行，不部署 |
+| Nacos | 服务注册与发现；控制台独立端口 | 8848 / 9848 / 控制台 8088 | 新增的 Docker 容器 |
 
-| 目录 | 职责 | 主要入口 |
-|---|---|---|
-| controller/publicapi | 首页、宠物、门店、协议等公开查询；事件上报单独校验访客身份 | PetController、HomeController、ShopController |
-| controller/buyer | 需要买家身份的个人资料、订单和售后 | AccountController、OrderController、AfterSaleController |
-| controller/admin | 后台宠物、订单、自提、售后、协议、退款、统计 | AdminPetController、AdminOrderController |
-| controller/dev | 受本地模拟服务开关限制的联调接口 | LocalPaymentController |
-| controller | 登录、文件、支付通知等独立协议入口 | AuthController、FileController、PaymentCallbackController |
-| controller/support | HTTP 身份适配、成功响应、全局异常处理 | ApiRequestExecutor、ApiResponses、GlobalExceptionHandler |
-| application | 按业务模块组织的用例及公共事务边界，不做 URL 路由 | OrderApplicationService、BusinessOperationExecutor |
-| service | 库存、状态机、支付验真、文件权限等业务规则 | OrderService、AfterSaleService、PaymentService |
-| repository | 业务数据访问门面、关系表映射和宠物 SQL 查询 | BusinessRepository、RelationalRepository、PetQueries |
-| mapper | MyBatis 的事务锁、库存占用、幂等记录及审计 SQL | ResourceMapper |
-| dto | 明确的数据传输结构 | ApiResponse、FileDownload |
-| common | 字段校验、时间范围、JSON、业务异常 | Input、TimeRange、ApiException |
-| config | 应用启动校验和首次初始化 | Bootstrap |
-| tools | 显式运行的离线迁移工具 | MigrateLegacy |
+Nginx、MySQL、Redis 沿用原有 Docker 容器。Nginx 继续将 `/api/` 转发给宿主机 8080，此端口现在由网关提供。
 
-这里没有仅用于转发的 Service 接口与 Impl，也没有修改数据库来迎合目录命名。ResourceMapper 只负责基础设施 SQL；业务表读写实际由 RelationalRepository 完成。
+```text
+浏览器 → Nginx → gateway-server
+                    ├─ 买家订单 / 支付 / 售后 → order-server
+                    └─ 商品 / 账号 / 文件 / 后台 → admin-server
+                                                   └─ 后台订单、退款、核销、交易统计
+                                                      → OpenFeign → order-server
 
-## 推荐阅读顺序：查询一只宠物
+三个服务注册到 Nacos；业务服务共享原 warmpaw 库及 Redis。
+```
 
-1. controller/publicapi/PetController.detail：声明 GET /api/v1/pets/{petId}，传递路径参数，显式标注公开访问。
-2. controller/support/ApiRequestExecutor.execute：解析 Authorization，创建 RequestContext；即使是公开接口，伪造的 Token 也不会被当成匿名请求放行。
-3. application/BusinessOperationExecutor.execute：检查访问级别，建立事务，调用明确的业务方法。
-4. application/CatalogApplicationService.pet：编排公开宠物查询。
-5. service/CatalogService.publicPet：检查展示资格并生成公开字段。
-6. repository/BusinessRepository → RelationalRepository：读取 MySQL 的 pets 及关联表。
-7. controller/support/ApiResponses：包装 code、message、data、requestId、serverTime。
+## 业务边界
 
-新增接口时，在对应 Controller 增加明确的映射，并调用对应 application 方法；不要重新增加接收任意路径的 dispatch 方法。
+- 商品、门店、协议的写入实现 `CatalogService` 只在 `admin-server`。订单、支付和售后的实现只在 `order-server`，管理服务不依赖订单服务 JAR。
+- `admin-server/remote/OrderAdminClient` 显式声明后台交易接口；`AdminTransactionController` 校验管理员身份后透传原 Token、查询参数、请求体与 `Idempotency-Key`。不开放任意 URL 转发。
+- 订单服务收到请求后再次校验身份、角色和资源归属。网关不会凭空授予管理员身份，也不会把客户端传入的用户 ID 当成认证结果。
+- 下游业务 HTTP 状态保持原样；无法连接订单服务返回 503，不自动重试核销和退款。
+- 订单服务停止时，后台订单操作不可用，商品和门店等管理功能仍由管理服务提供。
+- 账号与文件暂由管理服务对外提供，共享身份组件供订单服务验证会话；上传凭证的订单归属检查由共享仓储完成。
 
-## 交易边界
+## 为什么暂时仍共享数据库
 
-- Controller 负责请求与响应适配，不执行 SQL、支付验签或入账。
-- 普通业务通过 BusinessOperationExecutor 开启事务。ApplicationService 使用 MANDATORY，要求调用方已经建立事务，避免内部调用意外绕开事务。
-- 写请求先鉴权，再获取单店事务锁。要求幂等键的接口显式传入 true，UUID 校验、请求内容比较和结果保存由公共执行器负责。
-- 幂等作用域保留用户、请求方式、原始路径和键。读取原路径仅用于保持既有幂等记录兼容，不用于业务路由。
-- 买家订单和售后操作继续检查资源归属；管理员接口明确使用 ADMIN 权限。
-- 预支付意图先提交事务，再由 PaymentWorker 调用外部平台；网络失败不能导致已经创建的支付意图消失。
-- 微信支付通知由 PaymentCallbackService 处理：原始报文验签、解密后，在事务中检查商户及支付/退款事实。通知响应保持平台要求，不套用买家成功响应。
-- 文件下载由 FileService 先检查访问令牌，再返回 FileDownload 描述；Controller 不读取数据库，也不把磁盘路径发给客户端。
-- 时间、金额、版本号、退款及库存的校验规则沿用原实现。
+本阶段按约定不分库、不建新业务表、不迁移运行数据。所有服务默认 `spring.sql.init.mode=never`。
 
-## 验证与维护
+`CatalogReader` 是不含目录写入的共享读取与快照投影。订单需要在持有数据库事务锁时检查价格、检疫状态和库存，因此直接读取同一数据库快照，不在锁内远程调用管理服务。订单服务仍负责宠物交易状态及 `pet_occupancy` 的原子变更；管理服务负责商品资料和上下架，两者沿用同一 `business_lock` 锁序。
 
-在 backend 目录执行：
+这是独立进程、明确交易职责的微服务第一阶段，数据库尚未按领域隔离。后续若分库，需要单独设计库存预留、失败补偿与数据一致性，不能直接把当前本地事务换成 HTTP 调用。
 
-    mvn clean test
-    mvn package
-    sh scripts/start-docker-local.sh
+## 事务、幂等与定时任务
 
-测试默认使用独立 H2 内存库，不连接或修改运行中的 warmpaw 数据库。CommerceIntegrationTest 的业务请求改为经过 Spring MVC、真实认证和事务执行器；RelationalPersistenceTest 继续验证关系存储与旧数据迁移。
+- `common/application/BusinessOperationExecutor` 保留认证后的事务、数据库锁和幂等记录；幂等范围仍为用户、方法、原始业务路径及幂等键。
+- `BusinessHooks` 解耦公共执行器与交易实现。只有订单服务装配 `OrderBusinessHooks`，负责交易状态回放与事务提交后的支付处理。
+- `PaymentWorker` 只存在于订单服务，避免管理服务重复对账、取消超时订单或推进退款。
+- `MaintenanceService` 只存在于管理服务，负责上传文件清理。
+- 两个业务服务必须连接同一 Redis，验证码、限流和临时凭证才可跨服务使用。不要给实际微服务配置分别关闭 Redis；只有聚合单 JVM 测试使用内存替代。
 
-本轮 31 项测试覆盖：公开查询、资料更新、管理员隔离、未知接口、幂等键、重复请求、并发下单、越权、付款事实、交付、退换货、文件和迁移。运行环境和第三方验证以 README 中的验收记录为准。
+## 代码阅读入口
 
-## 当前边界
+各模块源码目录都是 `src/main/java`：
 
-此次完成后端结构重构，不代表所有生产能力已经实现：
+- `order-server/com/warmpaw/boot/order/OrderServerApplication.java`
+- `admin-server/com/warmpaw/boot/admin/AdminServerApplication.java`
+- `gateway-server/com/warmpaw/gateway/GatewayServerApplication.java`
+- `admin-server/com/warmpaw/remote/`：Feign 客户端、后台交易转发和故障处理。
+- `common/com/warmpaw/service/CatalogReader.java`：共享读取；目录写入在管理模块的 `CatalogService`。
+- 原 Controller → ApplicationService → Service → Repository 的层次保留，源文件按业务迁入对应模块。
 
-- 业务请求和领域数据仍有 Map<String,Object>，沿用 Input 的未知字段及范围校验；统一响应与下载描述使用 record DTO。尚未将全部领域改成强类型 Entity/Request/Response。
-- 关系表和动态映射白名单保持原样；宠物筛选已执行 SQL，部分其他列表仍在内存筛选。
-- 单店事务锁继续保留，未把已有并发策略改成多租户或分布式架构。
-- 微信支付、短信、AI/RAG 及生产压测不因代码重构而变为已验收。
+Nacos 当前只负责服务发现；业务配置继续来自本地 `.env` 和 YAML，不把密码提交到仓库。Nacos 客户端注册端口只绑定本机，容器采用独立持久卷；控制台初次使用按页面提示初始化管理员。
+
+## 验证
+
+在 `backend` 执行：
+
+```bash
+mvn package
+python3 scripts/microservices_smoke.py
+```
+
+- Maven 保留原 31 项 HTTP、竞态、权限、持久化与迁移测试，默认独立内存 H2；`WarmPawApplication` 现在仅是集成测试聚合上下文，不是生产启动入口。
+- `microservices_smoke.py` 启动三个真实 JVM、临时 H2 TCP 数据库和独立 Redis，通过独立 Nacos 分组验证服务发现、网关、Feign、登录、验证码、上传、订单、模拟支付、核销、错误状态及订单服务故障。仅需先启动 Nacos，不使用现有 MySQL。
+- 冒烟日志保存在输出的临时目录；脚本结束会停止它自己创建的 JVM 和 Redis，不停止 Nacos，也不删除现有容器或卷。
+- `pom.xml` 显式固定 MyBatis Starter 4.0.1，防止 Alibaba BOM 将传递依赖降为不兼容 Boot 4 的 3.x。
+
+当前未增加消息队列、Seata、独立认证服务或数据库拆分。真实微信/短信、AI、生产扩容和多实例支付任务协调不在本次实现范围。

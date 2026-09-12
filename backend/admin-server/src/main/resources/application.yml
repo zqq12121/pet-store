@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: admin-server
+  profiles:
+    default: local
+  config:
+    import: classpath:application-common.yml
+server:
+  address: ${SERVER_ADDRESS:127.0.0.1}
+  port: ${SERVER_PORT:8082}
+# 写操作不做自动重试，避免跨服务故障时重复核销或退款。
+spring.cloud.openfeign.client.config.order-server:
+  connectTimeout: 3000
+  readTimeout: 15000

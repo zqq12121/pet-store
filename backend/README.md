@@ -1,27 +1,79 @@
 # 暖爪宠物门店后端
 
-按根目录《宠物门店电商网站接口文档》v0.9 实现非 AI 业务。Java 21、Spring Boot 4.0.7、MyBatis、MySQL 8、Redis；本地开发使用 H2 文件库和随机验证码收件箱，无需先安装 MySQL/Redis。AI 会话、问答、知识库、向量索引和 AI 耗时埋点没有实现。
+后端已拆分为 `order-server`、`admin-server` 和 `gateway-server`，接入 Nacos 服务发现及 OpenFeign 调用。保留原 MySQL `warmpaw` 数据、Redis 与前端 API。Java 服务运行在 Mac / IDEA，Nacos、MySQL、Redis、Nginx 运行在 Docker。
 
-## 启动与验证
+## 启动与停止
 
-在 `backend` 目录执行：
+从项目根目录进入后端后运行：
 
 ```bash
-mvn clean test
+cd backend
 mvn package
-java -jar target/warmpaw-backend-1.0.0.jar
+sh scripts/start-microservices.sh
 ```
 
-默认监听 `http://127.0.0.1:8080`，接口前缀 `/api/v1`。默认 profile 为 `local`，数据在 `backend/data/`。当前项目已切换MySQL，请使用下文 `start-docker-local.sh`；原H2旧文件未迁移，启动检查会阻止静默初始化空业务数据。默认测试使用独立H2，只有显式指定测试库参数才连接MySQL。
+首次启动会创建独立 Nacos 容器。现有 MySQL、Redis、Nginx 需处于运行状态；连接凭证从已忽略的 `backend/.env` 读取。先停止原来占用 8080 的单体后端。脚本发现端口冲突会退出，不自动杀死别的进程。
 
-首次启动预置 `admin`。如果没有设置 `PAW_ADMIN_PASSWORD`，本地生成随机密码保存在 `data/local-admin-password.txt`（仅当前用户可读）；不会在日志打印密码。指定初始密码至少12位；已有账号不会因重启覆盖密码。
+| 入口 | 地址 |
+|---|---|
+| 买家网站 | http://localhost/ |
+| 管理网站 | http://localhost/admin/ |
+| API 网关 | http://localhost:8080/api/v1/ |
+| 订单服务健康检查 | http://localhost:8081/actuator/health |
+| 管理服务健康检查 | http://localhost:8082/actuator/health |
+| Nacos 控制台 | http://localhost:8088/ |
+
+查看日志：`backend/data/logs/`。停止本次启动脚本管理的 Java 服务：
 
 ```bash
-curl http://127.0.0.1:8080/api/v1/home
-python3 scripts/local_smoke.py
+sh scripts/stop-microservices.sh
 ```
 
-`local_smoke.py` 通过真实 HTTP 创建**醒目标记 TEST ONLY 的模拟材料**、测试协议、测试商品，并完成模拟付款与现场交付，数据持久保留。脚本不打印密码、Token 或自提码。脚本创建的协议和材料不能用于真实经营。测试脚本需要从 `backend` 启动服务，并使用首次随机管理员密码；如自行配置了初始密码，请通过接口手动联调。
+这不会停止或删除 Nacos、MySQL、Redis、Nginx 及数据卷。原 `sh scripts/start-docker-local.sh` 已兼容转到微服务启动脚本。
+
+## 在 IDEA 中开发
+
+1. 重新加载 **`backend/pom.xml`**，应看到 `common`、`order-server`、`admin-server`、`gateway-server`、`integration-tests` 五个子模块，JDK 选 21。
+2. 三个主类分别是 `OrderServerApplication`、`AdminServerApplication`、`GatewayServerApplication`。工作目录统一设置为项目的 **backend 目录**，分别使用各自模块的 classpath。
+3. 业务服务的环境变量使用 `backend/.env` 中的 MySQL、Redis 配置，活动 profile 设为 `local`。若 IDEA 支持导入 `.env`，直接选该文件；否则在运行配置的环境变量中配置，勿把密钥写进 Java/YAML。
+4. 先启动 Nacos，再分别启动订单 8081、管理 8082、网关 8080。不要同时运行脚本启动的服务与 IDEA 中相同端口的服务。
+
+也可先在 IDEA 的终端用已验证的脚本启动单个服务，它会自动加载 `.env`：
+
+```bash
+sh scripts/run-service.sh order-server
+```
+
+在其他终端分别运行 `admin-server` 与 `gateway-server`。原 `WarmPawApplication` 已迁为测试专用入口，不再作为后端运行。
+
+首次运行需要单独启动 Nacos 时：
+
+```bash
+python3 scripts/init-nacos-env.py
+docker compose -p warmpaw-micro -f deploy/compose-microservices.yml up -d
+```
+
+## 测试与数据
+
+`mvn package` 默认使用独立 H2 执行业务回归。完整微服务联调：
+
+```bash
+python3 scripts/microservices_smoke.py
+```
+
+该脚本使用临时数据库和独立 Redis，验证真实跨进程调用，不向运行中的 MySQL 写测试订单。不要把测试数据库参数设置为实际运行库。
+
+本次改造没有建表、迁移或清空数据。此前插入的 20 条猫狗示例仍保持未上架，宠物展示任务按要求暂停。详细职责、事务边界和验证方式见 [微服务结构](ARCHITECTURE.md)。
+
+## 微服务实测结果（2026-09-12）
+
+- `mvn package` 通过，原 31 项测试全部通过。
+- 三个独立 JVM 在隔离 H2 + 独立 Redis 环境中跑通完整交易：Gateway 路由、Nacos 发现、登录、上传、下单、模拟付款、Feign 核销、同键重复核销与最终完成。
+- 验证后台 401/403/404、查询参数透传；停止订单服务时后台返回 503，目录服务仍可访问。
+- 已将本机原网站切换至网关 8080；三个服务在 Nacos 的 WARMPAW 分组中健康注册。
+- 运行库只读核验：6 个公开接口切换前后数据一致；23 条宠物（20 条示例仍未上架）、3 条原订单保持；原有宠物摘要一致。未向运行库创建测试订单。
+- 启动脚本使用独立进程会话，命令退出后 Java 服务继续运行；原单体 JAR 保留在旧 `target` 目录，未删除数据。
+- 业务表 SQL 和字段映射文件与拆分前逐字节一致。真实微信/短信、生产容量及跨主机部署没有在本次验证。
 
 ## 本地短信和付款
 
@@ -50,7 +102,7 @@ VITE_DEMO_MODE=true
 
 ## MySQL 与 Redis
 
-生产连接独立数据库；不要把建表脚本直接执行到不属于本项目的现有库。先创建 UTF-8 的专用 MySQL 8 数据库，再执行 `src/main/resources/schema.sql`。
+生产连接独立数据库；不要把建表脚本直接执行到不属于本项目的现有库。先创建 UTF-8 的专用 MySQL 8 数据库，再执行 `common/src/main/resources/schema.sql`。
 
 ```bash
 export SPRING_PROFILES_ACTIVE=prod
@@ -59,7 +111,8 @@ export PAW_DB_USERNAME='warmpaw'
 # PAW_DB_PASSWORD、PAW_ADMIN_PASSWORD 通过终端环境/IDE/部署密钥设置，不提交源码。
 export PAW_REDIS_HOST='127.0.0.1'
 export PAW_REDIS_PORT='6379'
-java -jar target/warmpaw-backend-1.0.0.jar
+sh scripts/run-service.sh order-server
+# 另开终端启动 admin-server 和 gateway-server
 ```
 
 Redis 密码用 `PAW_REDIS_PASSWORD`，生产通过 Redis 执行临时凭证、原子消费和限流。本地内存验证码会在重启后失效，订单、支付和会话凭证摘要仍持久化。
@@ -80,7 +133,7 @@ Redis 密码用 `PAW_REDIS_PASSWORD`，生产通过 Redis 执行临时凭证、�
 
 微信实现使用**微信支付公钥模式**，不是动态平台证书轮换模式。上线前需核验公众号/商户绑定、授权域名、支付域名、通知、公钥轮换、查单及异常退款行为。生产失败退款重试目前要求先确认平台允许重试；未确认的异常退款保持失败/处理中，不盲目创建新退款单号。
 
-## 本次已执行验证
+## 历史单体版本验证记录（重构前）
 
 - `mvn package` 成功；22 项集成测试通过，0 失败、0 错误。
 - 使用打包后的 JAR 监听本机8080，真实 HTTP 跑通：管理员登录 → 上传 PNG → 发布测试协议 → 商品上架 → 买家随机短信登录 → 结算/下单 → 模拟付款 → 买家短信确认 → 店主查码/核销 → 订单 completed。
@@ -106,7 +159,7 @@ Redis 密码用 `PAW_REDIS_PASSWORD`，生产通过 Redis 执行临时凭证、�
 详见 [接口实现清单](API_STATUS.md)。本地测试不等于 MySQL/Redis 实例实测，也不等于第三方或生产环境验收。
 
 
-## Docker 本机联调（2026-09-10 已验证）
+## 历史 Docker 本机联调记录（2026-09-10）
 
 当前买家入口：http://localhost/ ，管理入口：http://localhost/admin/ 。Nginx 提供构建后的页面并代理 `/api/` 到宿主机 Java 8080。MySQL 为 8.4（3306），Redis 为 8.2（宿主机6380）。
 
@@ -142,7 +195,7 @@ sh scripts/start-docker-local.sh
 
 运行库现使用独立业务表，已完成备份、副本演练及26条旧记录的逐字段迁移校验。旧订单/ID/协议内容保留，旧表名为 `resources_legacy`，后端不再使用它。参见 [数据库设计与验收](DATABASE.md)。AI/知识库仅建立表结构，未实现模型或向量检索业务。
 
-## 后端结构重构验收（2026-09-11）
+## 历史单体结构重构验收（2026-09-11）
 
 - 单一 Controller 和字符串路径分发已替换为按模块的显式接口；应用编排、业务规则、数据访问、DTO 和 HTTP 公共处理分层，详见 [阅读指南](ARCHITECTURE.md)。
 - `mvn clean package` 通过：27 项 HTTP/业务集成测试、4 项关系存储/迁移测试，共 31 项。
