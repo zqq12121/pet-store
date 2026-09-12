@@ -227,6 +227,7 @@ public class CatalogService extends CatalogReader {
       s.put(
           key,
           in.str(key, 1, key.equals("pickupInstructions") ? 1000 : key.equals("name") ? 80 : 200));
+    com.warmpaw.common.AppointmentHours.parse(text(s, "businessHours"));
     s.put("latitude", in.decimal("latitude", -90, 90));
     s.put("longitude", in.decimal("longitude", -180, 180));
     s.put("coordinateSystem", in.choice("coordinateSystem", "gcj02"));

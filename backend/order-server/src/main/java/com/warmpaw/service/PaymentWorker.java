@@ -20,13 +20,15 @@ public class PaymentWorker {
   private final WechatGateway gateway;
   private final AuthService auth;
   private final TransactionTemplate tx;
+  private final AppointmentService appointments;
 
   public PaymentWorker(
       BusinessRepository store,
       PaymentService payments,
       WechatGateway gateway,
       AuthService auth,
-      PlatformTransactionManager manager) {
+      PlatformTransactionManager manager, AppointmentService appointments) {
+    this.appointments = appointments;
     this.store = store;
     this.payments = payments;
     this.gateway = gateway;
@@ -194,6 +196,7 @@ public class PaymentWorker {
   public void reconcile() {
     locked(
         () -> {
+          appointments.expire(Instant.now());
           for (Map<String, Object> o : store.list("order")) {
             if ("pending_paid".equals(text(o, "status"))
                 && Instant.now().isAfter(Instant.parse(text(o, "expiresAt"))))

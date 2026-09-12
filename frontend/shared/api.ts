@@ -33,7 +33,7 @@ export const buyer=client('buyer'), admin=client('admin')
 // 同一逻辑提交在超时后保留原幂等键；内容变化才生成新键。
 export function mutationKey() { let fingerprint='',key=''; return (path:string,body:unknown) => {const next=path+JSON.stringify(body);if(next!==fingerprint){fingerprint=next;key=crypto.randomUUID()}return key} }
 export const money=(amount:number) => new Intl.NumberFormat('zh-CN',{style:'currency',currency:'CNY',maximumFractionDigits:2}).format(amount/100)
-export const date=(value:string|null|undefined) => value?new Date(value).toLocaleString('zh-CN',{hour12:false,month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'—'
+export const date=(value:string|null|undefined) => value?new Date(value).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false,month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'—'
 export function safeUrl(value:string) { try { const url=new URL(value,location.origin);return ['http:','https:'].includes(url.protocol)?url.href:'#' } catch { return '#' } }
 export async function upload(role:Role,file:File,purpose:string,orderId?:string) {
   const limit=purpose==='pet_video'?100:10

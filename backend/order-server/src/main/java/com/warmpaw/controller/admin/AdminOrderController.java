@@ -20,6 +20,15 @@ public class AdminOrderController {
     this.service = service;
   }
 
+  /** 预约确认、取消、线下收款交付：只允许管理员操作。 */
+  @PostMapping("/admin/orders/{orderId}/appointment/{action}")
+  public ResponseEntity<Object> appointment(@PathVariable String orderId, @PathVariable String action,
+      @RequestBody(required = false) Map<String, Object> requestBody, HttpServletRequest request) {
+    Map<String, Object> body = requestBody == null ? Map.of() : requestBody;
+    return requests.execute(request, body, AccessLevel.ADMIN, true,
+        context -> service.appointmentAction(orderId, action, body, context.actor()));
+  }
+
   /** GET /admin/orders；访问级别：ADMIN。 */
   @GetMapping("/admin/orders")
   public ResponseEntity<Object> list(

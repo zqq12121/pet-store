@@ -33,6 +33,12 @@ public class AdminTransactionController {
       return result.body(response.body() == null ? new byte[0] : response.body().asInputStream().readAllBytes());
     }
   }
+  /** 预约操作转发到持有库存事务的订单服务。 */
+  @PostMapping("/admin/orders/{orderId}/appointment/{action}")
+  public ResponseEntity<byte[]> appointment(@PathVariable String orderId, @PathVariable String action,
+      @RequestBody(required = false) Map<String, Object> body, HttpServletRequest request) throws java.io.IOException {
+    return relay(orders.appointment(orderId, action, body == null ? Map.of() : body, headers(request)));
+  }
   /** GET /admin/orders：由订单服务执行并再次校验管理员身份。 */
   @GetMapping("/admin/orders")
   public ResponseEntity<byte[]> orders(@RequestParam Map<String, Object> query, HttpServletRequest request) throws java.io.IOException {

@@ -199,7 +199,7 @@ public class OrderService {
 
   public Map<String, Object> eligibility(Map<String, Object> o) {
     List<String> types = new ArrayList<>(), resolutions = new ArrayList<>();
-    if (!blocked(o) && number(o, "refundedAmount") < number(o, "amount")) {
+    if (!o.containsKey("appointment") && !blocked(o) && number(o, "refundedAmount") < number(o, "amount")) {
       if ("paid".equals(text(o, "status"))) {
         types.add("refund_before_pickup");
         resolutions.add("full_refund");
@@ -226,11 +226,14 @@ public class OrderService {
     Map<String, Object> r =
         CatalogReader.select(
             o,
-            "id,orderNo,status,product,amount,refundedAmount,currency,createdAt,expiresAt,paidAt,pickupDeadlineAt,completedAt");
+            "id,orderNo,status,product,amount,refundedAmount,currency,createdAt,expiresAt,paidAt,pickupDeadlineAt,completedAt,appointment");
     r.put(
         "statusText",
         switch (text(o, "status")) {
-          case "pending_paid" -> "待付款";
+          case "pending_confirmation" -> "预约待确认";
+          case "reservation_confirmed" -> "已确认 · 待到店";
+          case "expired" -> "预约已过期";
+          case "pending_paid" -> "历史待付款";
           case "closing" -> "关单处理中";
           case "cancelled" -> "已取消";
           case "paid" -> "待自提";
@@ -242,7 +245,7 @@ public class OrderService {
     List<Map<String, Object>> sales = sales(o);
     r.put("afterSaleStatus", sales.isEmpty() ? "none" : sales.getFirst().get("status"));
     List<String> actions = new ArrayList<>(List.of("contact_shop"));
-    if ("pending_paid".equals(text(o, "status"))) actions.addAll(List.of("pay", "cancel"));
+    if (List.of("pending_paid", "pending_confirmation", "reservation_confirmed").contains(text(o, "status"))) actions.add("cancel");
     if ("paid".equals(text(o, "status"))
         && !blocked(o)
         && !Instant.now().isAfter(Instant.parse(text(o, "pickupDeadlineAt")))) {

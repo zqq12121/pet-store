@@ -11,12 +11,15 @@ public class TransactionDashboardService {
   public TransactionDashboardService(BusinessRepository store) { this.store = store; }
   public Map<String, Object> dashboard() {
     LocalDate today = LocalDate.now(ZoneId.of("Asia/Shanghai"));
+    // 线下收款按店长实际登记时间统计，不伪造微信支付流水。
+    var offline = store.list("order").stream()
+        .filter(o -> "offline_received".equals(text(object(o, "payment"), "status")) && day(o, "paidAt", today)).toList();
     long
         gross =
             store.list("payment_fact").stream()
                 .filter(p -> day(p, "paidAt", today))
                 .mapToLong(p -> number(p, "amount"))
-                .sum(),
+                .sum() + offline.stream().mapToLong(o -> number(o, "amount")).sum(),
         refund =
             store.list("refund").stream()
                 .filter(r -> "succeeded".equals(text(r, "status")) && day(r, "succeededAt", today))
@@ -28,7 +31,7 @@ public class TransactionDashboardService {
         "createdOrderCount",
         store.list("order").stream().filter(o -> day(o, "createdAt", today)).count(),
         "paidOrderCount",
-        store.list("payment_fact").stream().filter(p -> day(p, "paidAt", today)).count(),
+        store.list("payment_fact").stream().filter(p -> day(p, "paidAt", today)).count() + offline.size(),
         "grossSalesAmount",
         gross,
         "refundAmount",
@@ -41,6 +44,10 @@ public class TransactionDashboardService {
         0,
         "pendingTasks",
         map(
+            "appointmentCount",
+            store.list("order").stream().filter(o -> "pending_confirmation".equals(text(o, "status"))).count(),
+            "arrivalCount",
+            store.list("order").stream().filter(o -> "reservation_confirmed".equals(text(o, "status"))).count(),
             "pickupCount",
             store.list("order").stream().filter(o -> "paid".equals(text(o, "status"))).count(),
             "afterSaleReviewCount",

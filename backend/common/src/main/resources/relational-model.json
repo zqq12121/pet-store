@@ -1074,6 +1074,39 @@
       ],
       "children": [
         {
+          "table": "order_appointments",
+          "path": "appointment",
+          "fields": [
+            {
+              "field": "visitAt",
+              "column": "visit_at",
+              "sql": "VARCHAR(40)",
+              "json": false
+            },
+            {
+              "field": "confirmationDeadlineAt",
+              "column": "confirmation_deadline_at",
+              "sql": "VARCHAR(40)",
+              "json": false
+            },
+            {
+              "field": "confirmedAt",
+              "column": "confirmed_at",
+              "sql": "VARCHAR(40)",
+              "json": false
+            },
+            {
+              "field": "completedBy",
+              "column": "completed_by",
+              "sql": "VARCHAR(64)",
+              "json": false
+            }
+          ],
+          "mode": "object",
+          "children": [],
+          "scalar": null
+        },
+        {
           "table": "order_snapshots",
           "path": "snapshots",
           "fields": [

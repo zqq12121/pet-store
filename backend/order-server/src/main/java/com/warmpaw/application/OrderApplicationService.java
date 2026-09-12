@@ -26,13 +26,15 @@ public class OrderApplicationService {
   private final PaymentService payments;
   private final AuthService auth;
   private final TemporaryStore temp;
+  private final com.warmpaw.service.AppointmentService appointments;
 
   public OrderApplicationService(
       BusinessRepository store,
       OrderService orders,
       PaymentService payments,
       AuthService auth,
-      TemporaryStore temp) {
+      TemporaryStore temp, com.warmpaw.service.AppointmentService appointments) {
+    this.appointments = appointments;
     this.store = store;
     this.orders = orders;
     this.payments = payments;
@@ -45,7 +47,7 @@ public class OrderApplicationService {
   }
 
   public OperationResult create(Map<String, Object> body, AuthService.Actor actor) {
-    Map<String, Object> order = orders.create(body, actor);
+    Map<String, Object> order = appointments.create(body, actor);
     return new OperationResult(201, orders.detail(order, false), "order", text(order, "id"));
   }
 
@@ -69,7 +71,8 @@ public class OrderApplicationService {
   public OperationResult cancel(String orderId, Map<String, Object> body, AuthService.Actor actor) {
     Map<String, Object> order = orders.owned(orderId, actor);
     new Input(body, "reason").optional("reason", 200);
-    payments.cancel(order, "user_cancelled");
+    if (order.containsKey("appointment")) appointments.cancel(order, "user_cancelled", actor.id());
+    else payments.cancel(order, "user_cancelled");
     return new OperationResult(202, cancelResult(order), "order", orderId);
   }
 
@@ -79,8 +82,15 @@ public class OrderApplicationService {
 
   public OperationResult beginPayment(
       String orderId, Map<String, Object> body, AuthService.Actor actor) {
-    Map<String, Object> payment = payments.begin(orders.owned(orderId, actor), body);
-    return new OperationResult(201, payments.view(payment), "payment", text(payment, "id"));
+    orders.owned(orderId, actor);
+    throw new ApiException(409, "ONLINE_PAYMENT_DISABLED", "已改为预约到店付款，请联系门店处理旧订单");
+  }
+
+  /** 店长操作仍经过请求执行器的鉴权、幂等及库存事务锁。 */
+  public OperationResult appointmentAction(String orderId, String action, Map<String, Object> body, AuthService.Actor actor) {
+    Map<String, Object> order = store.get("order", orderId);
+    appointments.process(order, action, body, actor);
+    return new OperationResult(200, orders.detail(order, true), "order", orderId);
   }
 
   public OperationResult pickupCode(
@@ -151,7 +161,7 @@ public class OrderApplicationService {
     validateRange(q, "createdFrom", "createdTo");
     String tab = Objects.toString(q.get("tab"), "all");
     require(
-        List.of("all", "pending_paid", "pending_pickup", "completed", "after_sale").contains(tab),
+        List.of("all", "pending_confirmation", "reservation_confirmed", "pending_paid", "pending_pickup", "completed", "after_sale").contains(tab),
         400,
         "VALIDATION_ERROR",
         "订单标签不正确");
@@ -173,6 +183,7 @@ public class OrderApplicationService {
             .filter(
                 o ->
                     switch (tab) {
+                      case "pending_confirmation", "reservation_confirmed" -> tab.equals(text(o, "status"));
                       case "pending_paid" ->
                           List.of("pending_paid", "closing").contains(text(o, "status"));
                       case "pending_pickup" -> "paid".equals(text(o, "status"));
@@ -183,7 +194,11 @@ public class OrderApplicationService {
                               || "refunding".equals(text(o, "status"));
                       default -> true;
                     })
-            .map(orders::summary)
+            .map(o -> {
+              Map<String, Object> result = orders.summary(o);
+              if (admin) result.putAll(CatalogReader.select(o, "contactName,contactPhone,remark"));
+              return result;
+            })
             .toList(),
         q);
   }

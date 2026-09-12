@@ -37,11 +37,9 @@ public class PaymentService {
                         "scene",
                         s,
                         "enabled",
-                        gateway.enabled(s),
+                        false,
                         "disabledReason",
-                        gateway.enabled(s)
-                            ? null
-                            : auth.local() ? "本地模拟环境，使用开发测试支付接口" : "微信支付场景未配置或未开通"))
+                        "线上支付已停用，请预约到店付款"))
             .toList());
   }
 

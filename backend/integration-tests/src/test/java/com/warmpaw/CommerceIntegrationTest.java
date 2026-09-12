@@ -75,6 +75,9 @@ class CommerceIntegrationTest {
           store.lock();
           Map<String, Object> a = store.byKey("admin", "admin");
           admin = new AuthService.Actor(text(a, "id"), "admin", null, "");
+          Map<String, Object> shop = catalog.shop();
+          shop.put("businessHours", "每天 10:00-20:00");
+          store.save(shop);
           String phone = "139000" + (counter++);
           Map<String, Object> u =
               store.create(
@@ -290,6 +293,8 @@ class CommerceIntegrationTest {
   Map<String, Object> orderBody(Map<String, Object> p, AuthService.Actor actor) {
     Map<String, Object> preview = call("POST", "/orders/preview", map("petId", p.get("id")), actor);
     return map(
+        "visitAt",
+        LocalDate.now(AppointmentHours.ZONE).plusDays(1).atTime(12, 0).atZone(AppointmentHours.ZONE).toOffsetDateTime().toString(),
         "petId",
         p.get("id"),
         "productVersion",
@@ -310,7 +315,17 @@ class CommerceIntegrationTest {
 
   Map<String, Object> createOrder() {
     Map<String, Object> p = pet();
-    return call("POST", "/orders", orderBody(p, buyer), buyer);
+    return legacyOrder(p, buyer);
+  }
+
+  /** 历史支付/退款回归使用迁移前订单夹具；新建预约仍通过真实 HTTP 测试。 */
+  Map<String, Object> legacyOrder(Map<String, Object> pet, AuthService.Actor actor) {
+    Map<String, Object> body = orderBody(pet, actor);
+    body.remove("visitAt");
+    return tx.execute(status -> {
+      store.lock();
+      return orders.detail(orders.create(body, actor), false);
+    });
   }
 
   Map<String, Object> pay(Map<String, Object> o) {
@@ -485,7 +500,7 @@ class CommerceIntegrationTest {
   @Test
   void frontendPaymentRequestDoesNotMarkPaid() {
     Map<String, Object> o = createOrder();
-    call("POST", "/orders/" + o.get("id") + "/payments", map("scene", "h5"), buyer);
+    assertCode("ONLINE_PAYMENT_DISABLED", () -> call("POST", "/orders/" + o.get("id") + "/payments", map("scene", "h5"), buyer));
     Map<String, Object> state = call("GET", "/orders/" + o.get("id"), map(), buyer);
     assertEquals("pending_paid", state.get("status"));
     assertNull(state.get("pickup"));
@@ -967,7 +982,7 @@ class CommerceIntegrationTest {
 
   @Test
   void latePaymentNeverStealsNewOccupancy() {
-    Map<String, Object> p = pet(), o = call("POST", "/orders", orderBody(p, buyer), buyer);
+    Map<String, Object> p = pet(), o = legacyOrder(p, buyer);
     Map<String, Object> payment =
         tx.execute(
             status -> {
@@ -1164,4 +1179,107 @@ class CommerceIntegrationTest {
     assertEquals("FAIL", text(read(result.getContentAsString()), "code"));
     assertEquals(before, store.list("payment_fact").size());
   }
+  Map<String, Object> appointment() {
+    Map<String, Object> pet = pet();
+    return call("POST", "/orders", orderBody(pet, buyer), buyer);
+  }
+
+  String appointmentPath(Map<String, Object> order, String action) {
+    return "/admin/orders/" + order.get("id") + "/appointment/" + action;
+  }
+
+  @Test
+  void appointmentCompletesOfflineOnceAndShowsContactToAdmin() {
+    Map<String, Object> o = appointment();
+    String id = text(o, "id"), pet = text(object(o, "product"), "id");
+    assertEquals("pending_confirmation", o.get("status"));
+    assertEquals(id, store.occupation(pet));
+    assertEquals("offline_unpaid", text(object(o, "payment"), "status"));
+    assertTrue(object(store.get("order", id), "appointment").containsKey("visitAt"));
+    var adminView = call("GET", "/admin/orders/" + id, map(), admin);
+    assertEquals(buyer.phone(), adminView.get("contactPhone"));
+    assertEquals("测试本人", adminView.get("contactName"));
+    assertCode("FORBIDDEN", () -> call("POST", appointmentPath(o, "confirm"), map(), buyer));
+    assertCode("RESOURCE_NOT_FOUND", () -> call("POST", "/orders/" + id + "/cancel", map(), other));
+    assertCode("ONLINE_PAYMENT_DISABLED", () -> call("POST", "/orders/" + id + "/payments", map("scene", "h5"), buyer));
+    call("POST", appointmentPath(o, "confirm"), map(), admin);
+    assertEquals("reserved", store.get("pet", pet).get("status"));
+    assertCode("VALIDATION_ERROR", () -> call("POST", appointmentPath(o, "complete"), map(), admin));
+    var dashboardBefore = call("GET", "/admin/dashboard", map(), admin);
+    Map<String, Object> body = map("paymentReceived", true, "deliveryConfirmed", true, "quarantineVerified", true);
+    String key = UUID.randomUUID().toString();
+    business.execute("POST", appointmentPath(o, "complete"), body, map(), key, admin, "test");
+    business.execute("POST", appointmentPath(o, "complete"), body, map(), key, admin, "test");
+    var saved = store.get("order", id);
+    assertEquals("completed", saved.get("status"));
+    assertEquals("offline_received", object(saved, "payment").get("status"));
+    assertEquals(admin.id(), object(saved, "appointment").get("completedBy"));
+    var dashboardAfter = call("GET", "/admin/dashboard", map(), admin);
+    assertEquals(number(dashboardBefore, "grossSalesAmount") + number(o, "amount"), number(dashboardAfter, "grossSalesAmount"));
+    assertEquals(number(dashboardBefore, "paidOrderCount") + 1, number(dashboardAfter, "paidOrderCount"));
+    assertEquals("sold", store.get("pet", pet).get("status"));
+    assertNull(store.occupation(pet));
+    assertTrue(strings(orders.eligibility(saved), "allowedTypes").isEmpty());
+    assertTrue(store.list("payment").stream().noneMatch(payment -> id.equals(payment.get("orderId"))));
+    assertCode("ORDER_STATE_CONFLICT", () -> call("POST", "/orders/" + id + "/cancel", map(), buyer));
+  }
+
+  @Test
+  void appointmentLimitAndCancelReleaseInventory() {
+    var first = appointment();
+    var secondPet = pet();
+    assertCode("ACTIVE_APPOINTMENT_EXISTS", () -> call("POST", "/orders", orderBody(secondPet, buyer), buyer));
+    call("POST", appointmentPath(first, "confirm"), map(), admin);
+    call("POST", "/orders/" + first.get("id") + "/cancel", map(), buyer);
+    String firstPet = text(object(first, "product"), "id");
+    assertNull(store.occupation(firstPet));
+    assertEquals("on_sale", store.get("pet", firstPet).get("status"));
+    var next = call("POST", "/orders", orderBody(secondPet, buyer), buyer);
+    call("POST", appointmentPath(next, "cancel"), map("reason", "门店临时休息"), admin);
+    assertEquals("门店临时休息", store.get("order", text(next, "id")).get("cancelReason"));
+    assertNull(store.occupation(text(secondPet, "id")));
+  }
+
+  @Test
+  void appointmentDeadlinesExpirePendingAndConfirmed() {
+    for (boolean confirmed : List.of(false, true)) {
+      var o = appointment();
+      if (confirmed) call("POST", appointmentPath(o, "confirm"), map(), admin);
+      var current = store.get("order", text(o, "id"));
+      Instant visit = Instant.parse(text(object(current, "appointment"), "visitAt"));
+      if (confirmed) assertEquals(visit.plus(Duration.ofHours(2)).toString(), current.get("expiresAt"));
+      else assertTrue(!Instant.parse(text(current, "expiresAt")).isAfter(visit));
+      tx.execute(status -> {
+        store.lock();
+        current.put("expiresAt", Instant.now().minusSeconds(1).toString());
+        store.save(current);
+        return null;
+      });
+      assertCode("APPOINTMENT_EXPIRED", () -> call("POST", appointmentPath(o, confirmed ? "complete" : "confirm"), map(), admin));
+      worker.reconcile();
+      assertEquals("expired", store.get("order", text(o, "id")).get("status"));
+      assertNull(store.occupation(text(object(o, "product"), "id")));
+    }
+  }
+
+  @Test
+  void appointmentRejectsInvalidTimesBeforeOccupyingStock() {
+    var pet = pet();
+    var body = orderBody(pet, buyer);
+    for (String visit : List.of("invalid", Instant.now().minusSeconds(60).toString(),
+        Instant.now().plus(Duration.ofDays(8)).toString(),
+        LocalDate.now(AppointmentHours.ZONE).plusDays(1).atTime(22, 0).atOffset(ZoneOffset.ofHours(8)).toString())) {
+      body.put("visitAt", visit);
+      assertCode("VALIDATION_ERROR", () -> call("POST", "/orders", body, buyer));
+      assertNull(store.occupation(text(pet, "id")));
+    }
+    // 不含时区、恰好闭店的时刻和未配置营业时间都不能默许预约。
+    assertThrows(ApiException.class, () -> AppointmentHours.validateVisit("2026-09-12T12:00:00", "每天 10:00-20:00", Instant.now()));
+    assertThrows(ApiException.class, () -> AppointmentHours.parse("请联系门店确认"));
+    assertThrows(ApiException.class, () -> AppointmentHours.parse("周一至周五 10:00-20:00"));
+    Instant now = Instant.parse("2026-09-12T00:00:00Z");
+    assertThrows(ApiException.class, () -> AppointmentHours.validateVisit("2026-09-12T20:00:00+08:00", "每天 10:00-20:00", now));
+    assertEquals(Instant.parse("2026-09-12T02:00:00Z"), AppointmentHours.validateVisit("2026-09-12T10:00:00+08:00", "每天 10:00-20:00", now));
+  }
+
 }

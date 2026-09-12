@@ -35,14 +35,54 @@ api.get('/shop',(req,res)=>ok(res,shop));api.get('/pet-categories',(req,res)=>ok
 api.get('/pets',(req,res)=>ok(res,page(filtered(pets.filter(p=>p.status!=='off'),req.query).map(publicPet),req.query)))
 api.get('/pets/:id',(req,res)=>{const p=pets.find(p=>p.id===req.params.id&&p.status!=='off');return p?ok(res,publicPet(p)):fail(res,'宠物不存在或已下架',404)})
 api.get('/agreements/current',(req,res)=>ok(res,agreement(req.query.type||'live_pet_trade')))
-const labels={pending_paid:'待付款',paid:'待自提',completed:'已完成',cancelled:'已取消',refunding:'退款中',refunded:'已退款'}
-function orderView(o){return {...o,userId:undefined,pickup:o.status==='paid'&&!o.afterSale?o.pickup:null,statusText:labels[o.status],availableActions:o.status==='pending_paid'?['pay','cancel']:o.status==='paid'?['view_pickup','confirm_health','apply_after_sale']:o.status==='completed'?['apply_after_sale']:[],afterSaleEligibility:{allowedTypes:o.afterSale?[]:o.status==='paid'?['refund_before_pickup']:o.status==='completed'?['health_issue']:[],allowedResolutions:o.afterSale?[]:o.status==='paid'?['full_refund']:o.status==='completed'?['full_refund','treatment_share']:[],blockedReason:o.afterSale?'已有售后申请':null},afterSaleStatus:o.afterSale?.status||'none'}}
+const labels={pending_confirmation:'预约待确认',reservation_confirmed:'已确认 · 待到店',expired:'预约已过期',pending_paid:'待付款',paid:'待自提',completed:'已完成',cancelled:'已取消',refunding:'退款中',refunded:'已退款'}
+function orderView(o){if(o.appointment)return {...o,userId:undefined,statusText:labels[o.status],availableActions:['pending_confirmation','reservation_confirmed'].includes(o.status)?['cancel']:[],afterSaleEligibility:{allowedTypes:[],allowedResolutions:[],blockedReason:'线下付款售后请联系门店'},afterSaleStatus:'none'};return {...o,userId:undefined,pickup:o.status==='paid'&&!o.afterSale?o.pickup:null,statusText:labels[o.status],availableActions:o.status==='pending_paid'?['pay','cancel']:o.status==='paid'?['view_pickup','confirm_health','apply_after_sale']:o.status==='completed'?['apply_after_sale']:[],afterSaleEligibility:{allowedTypes:o.afterSale?[]:o.status==='paid'?['refund_before_pickup']:o.status==='completed'?['health_issue']:[],allowedResolutions:o.afterSale?[]:o.status==='paid'?['full_refund']:o.status==='completed'?['full_refund','treatment_share']:[],blockedReason:o.afterSale?'已有售后申请':null},afterSaleStatus:o.afterSale?.status||'none'}}
 function owned(req,res){const o=orders.find(o=>o.id===req.params.id&&(req.identity?.role==='admin'||o.userId===req.identity?.id));if(!o)fail(res,'订单不存在',404);return o}
 api.post('/orders/preview',buyerOnly,(req,res)=>{const p=pets.find(p=>p.id===req.body.petId);if(!p)return fail(res,'宠物不存在',404);const a=agreement('live_pet_trade');ok(res,{product:publicPet(p),productVersion:p.version,amount:p.priceAmount,currency:'CNY',shop,agreementVersion:a.version,agreementContentHash:a.contentHash,paymentTimeoutMinutes:shop.paymentTimeoutMinutes,pickupRetentionHours:shop.pickupRetentionHours,healthGuaranteeDays:7,purchaseAllowed:p.status==='on_sale',blockedReason:p.status==='on_sale'?null:'宠物已被预订或售出'})})
-api.post('/orders',buyerOnly,(req,res)=>{const b=req.body,p=pets.find(p=>p.id===b.petId),a=agreement('live_pet_trade');if(!p||p.status!=='on_sale'||p.version!==b.productVersion||p.priceAmount!==b.expectedAmount)return fail(res,'商品状态或价格已变更，请刷新',409);if(!b.agreementAccepted||b.agreementVersion!==a.version||b.agreementContentHash!==a.contentHash||b.contactPhone!==req.identity.user.phone||!b.contactName?.trim())return fail(res,'请核对本人手机号、姓名并同意协议');const o={id:id('order'),orderNo:'WP'+Date.now(),userId:req.identity.id,status:'pending_paid',product:{id:p.id,name:p.name,breed:p.breed,coverUrl:p.coverUrl},amount:p.priceAmount,refundedAmount:0,createdAt:now(),expiresAt:new Date(Date.now()+shop.paymentTimeoutMinutes*60000).toISOString(),paidAt:null,pickupDeadlineAt:null,completedAt:null,shopSnapshot:structuredClone(shop),contactName:b.contactName,contactPhoneMasked:mask(b.contactPhone),remark:b.remark||'',agreement:{...a,signedAt:now()},pickup:null,healthGuaranteeExpiresAt:null,afterSale:null,refunds:[]};orders.unshift(o);p.status='reserved';p.version++;p.activeOrderId=o.id;ok(res,orderView(o),201)})
+// 演示预约与 Java 接口使用相同状态；数据仍仅存在内存，不可用于真实收款。
+const activeAppointment=o=>['pending_confirmation','reservation_confirmed'].includes(o.status)
+function releaseAppointment(o,status,reason) {
+ o.status=status;o.cancelReason=reason
+ const p=pets.find(p=>p.id===o.product.id)
+ if(p?.activeOrderId===o.id){p.status='on_sale';p.activeOrderId=null;p.version++}
+}
+function expireAppointments(){for(const o of orders)if(activeAppointment(o)&&Date.parse(o.expiresAt)<=Date.now())releaseAppointment(o,'expired','appointment_timeout')}
+setInterval(expireAppointments,60000).unref()
+api.post('/orders',buyerOnly,(req,res)=>{
+ expireAppointments()
+ const b=req.body,p=pets.find(p=>p.id===b.petId),a=agreement('live_pet_trade'),visit=Date.parse(b.visitAt)
+ const hours=shop.businessHours.match(/^(?:(?:每天|每日|周一至周日|周一到周日)\s*)?([0-2][0-9]:[0-5][0-9])\s*[-–—至]\s*([0-2][0-9]:[0-5][0-9])$/)
+ if(!Number.isFinite(visit)||visit<=Date.now()||visit>Date.now()+7*86400000)return fail(res,'请选择未来7天内的到店时间')
+ const localTime=new Date(visit+8*3600000).toISOString().slice(11,16)
+ if(!hours)return fail(res,'请店长设置每天 HH:mm-HH:mm 格式的营业时间')
+ if(localTime<hours[1]||localTime>=hours[2])return fail(res,'请选择营业时间内的到店时间')
+ if(orders.some(o=>o.userId===req.identity.id&&activeAppointment(o)))return fail(res,'你已有有效预约，请先取消或完成',409)
+ if(!p||p.status!=='on_sale'||p.version!==b.productVersion||p.priceAmount!==b.expectedAmount)return fail(res,'宠物状态或价格已变更，请刷新',409)
+ if(!b.agreementAccepted||b.agreementVersion!==a.version||b.agreementContentHash!==a.contentHash||b.contactPhone!==req.identity.user.phone||!b.contactName?.trim())return fail(res,'请核对本人手机号、姓名并同意协议')
+ const expiresAt=new Date(Math.min(Date.now()+86400000,visit)).toISOString()
+ const o={id:id('order'),orderNo:'WP'+Date.now(),userId:req.identity.id,status:'pending_confirmation',appointment:{visitAt:new Date(visit).toISOString(),confirmationDeadlineAt:expiresAt},product:{id:p.id,name:p.name,breed:p.breed,coverUrl:p.coverUrl},amount:p.priceAmount,refundedAmount:0,createdAt:now(),expiresAt,paidAt:null,pickupDeadlineAt:null,completedAt:null,shopSnapshot:structuredClone(shop),contactName:b.contactName,contactPhone:b.contactPhone,contactPhoneMasked:mask(b.contactPhone),remark:b.remark||'',agreement:{...a,signedAt:now()},pickup:null,healthGuaranteeExpiresAt:null,afterSale:null,refunds:[]}
+ orders.unshift(o);p.status='reserved';p.version++;p.activeOrderId=o.id;ok(res,orderView(o),201)
+})
+api.post('/admin/orders/:id/appointment/:action',(req,res)=>{
+ expireAppointments();const o=owned(req,res);if(!o)return
+ if(!o.appointment||!activeAppointment(o))return fail(res,'预约已过期或状态已变化',409)
+ const action=req.params.action
+ if(action==='confirm'){
+  if(o.status!=='pending_confirmation')return fail(res,'当前状态不能确认',409)
+  o.status='reservation_confirmed';o.appointment.confirmedAt=now();o.expiresAt=new Date(Date.parse(o.appointment.visitAt)+2*3600000).toISOString()
+ }else if(action==='cancel'){
+  if(!req.body.reason?.trim())return fail(res,'请填写取消原因')
+  releaseAppointment(o,'cancelled',req.body.reason)
+ }else if(action==='complete'){
+  if(o.status!=='reservation_confirmed'||!req.body.paymentReceived||!req.body.deliveryConfirmed||!req.body.quarantineVerified)return fail(res,'请确认实际收款、核验和交付',409)
+  o.status='completed';o.paidAt=now();o.completedAt=now();o.appointment.completedBy=req.identity.id
+  const p=pets.find(p=>p.id===o.product.id);p.status='sold';p.activeOrderId=null;p.version++
+ }else return fail(res,'操作不存在',404)
+ ok(res,orderView(o))
+})
 api.get('/orders',buyerOnly,(req,res)=>{let list=orders.filter(o=>o.userId===req.identity.id);if(req.query.tab&&req.query.tab!=='all')list=list.filter(o=>req.query.tab==='after_sale'?o.afterSale:o.status===(req.query.tab==='pending_pickup'?'paid':req.query.tab));ok(res,page(list.map(orderView),req.query))})
 api.get('/orders/:id',buyerOnly,(req,res)=>{const o=owned(req,res);if(o)ok(res,orderView(o))})
-api.post('/orders/:id/cancel',buyerOnly,(req,res)=>{const o=owned(req,res);if(!o)return;if(o.status!=='pending_paid')return fail(res,'当前订单不可取消',409);o.status='cancelled';const p=pets.find(p=>p.id===o.product.id);p.status='on_sale';p.activeOrderId=null;p.version++;ok(res,orderView(o))})
+api.post('/orders/:id/cancel',buyerOnly,(req,res)=>{const o=owned(req,res);if(!o)return;if(!activeAppointment(o))return fail(res,'当前预约不可取消',409);releaseAppointment(o,'cancelled','user_cancelled');ok(res,orderView(o))})
 api.post('/demo/orders/:id/pay',buyerOnly,(req,res)=>{const o=owned(req,res);if(!o)return;if(o.status!=='pending_paid')return fail(res,'订单不是待付款状态',409);o.status='paid';o.paidAt=now();o.pickupDeadlineAt=new Date(Date.now()+72*3600000).toISOString();o.pickup={code:randomUUID().slice(0,8).toUpperCase(),qrPayload:'demo:'+o.id,expiresAt:o.pickupDeadlineAt,buyerConfirmedAt:null};ok(res,orderView(o))})
 api.get('/orders/:id/payment',buyerOnly,(req,res)=>{const o=owned(req,res);if(o)ok(res,{status:['paid','completed'].includes(o.status)?'succeeded':'pending',scene:'h5',orderStatus:o.status,nextPollAfter:2})})
 api.get('/payment-capabilities',(req,res)=>ok(res,{methods:[{scene:'h5',enabled:false,disabledReason:'本地服务仅提供明确标识的演示支付'},{scene:'jsapi',enabled:false,disabledReason:'未配置微信商户'}]}))
@@ -73,7 +113,7 @@ api.put('/admin/pets/:id',(req,res)=>{const p=pets.find(p=>p.id===req.params.id)
 for(const action of ['publish','unpublish'])api.post('/admin/pets/:id/'+action,(req,res)=>{const p=pets.find(p=>p.id===req.params.id),b=req.body;if(!p||p.version!==b.version||p.status!==(action==='publish'?'off':'on_sale'))return fail(res,'状态已变化',409);if(action==='publish'&&(!b.healthyForSale||!b.quarantineVerified||!b.reviewNote||!p.quarantine?.publicImageFileIds?.length))return fail(res,'请上传公开检疫证明并完成人工核验');p.status=action==='publish'?'on_sale':'off';p.version++;p.publishedAt=now();ok(res,adminPet(p))})
 api.get('/admin/shop',(req,res)=>ok(res,shop))
 api.put('/admin/shop',(req,res)=>{if(req.body.version!==shop.version)return fail(res,'配置已更新，请重新加载',409);if(!req.body.name||req.body.banners?.some(b=>!b.title||!files.has(b.imageFileId)))return fail(res,'门店名称和轮播内容不完整');shop={...shop,...req.body,id:shop.id,version:shop.version+1};ok(res,shop)})
-api.get('/admin/dashboard',(req,res)=>ok(res,{createdOrderCount:orders.length,paidOrderCount:orders.filter(o=>o.paidAt).length,grossSalesAmount:orders.filter(o=>o.paidAt).reduce((s,o)=>s+o.amount,0),onSalePetCount:pets.filter(p=>p.status==='on_sale').length,aiSessionCount:sessions.length,pendingTasks:{pickupCount:orders.filter(o=>o.status==='paid').length,afterSaleReviewCount:sales.filter(s=>s.status==='pending_review').length},updatedAt:now()}))
+api.get('/admin/dashboard',(req,res)=>ok(res,{createdOrderCount:orders.length,paidOrderCount:orders.filter(o=>o.paidAt).length,grossSalesAmount:orders.filter(o=>o.paidAt).reduce((s,o)=>s+o.amount,0),onSalePetCount:pets.filter(p=>p.status==='on_sale').length,aiSessionCount:sessions.length,pendingTasks:{appointmentCount:orders.filter(o=>o.status==='pending_confirmation').length,arrivalCount:orders.filter(o=>o.status==='reservation_confirmed').length,pickupCount:orders.filter(o=>o.status==='paid').length,afterSaleReviewCount:sales.filter(s=>s.status==='pending_review').length},updatedAt:now()}))
 const knowledge=[{id:'kb_1',version:1,title:'幼犬到家第一周',category:'feeding',petType:'dog',format:'article',content:'保持原饮食，逐步适应新环境，定期咨询兽医。',question:null,answer:null,sourceName:'本地演示饲养手册',sourceUrl:null,breedNames:[],status:'published',indexStatus:'ready'}]
 api.get('/admin/knowledge/entries',(req,res)=>ok(res,page(filtered(knowledge,req.query),req.query)))
 api.post('/admin/knowledge/entries',(req,res)=>{const k={...req.body,id:id('kb'),version:1,indexStatus:'ready'};knowledge.unshift(k);ok(res,k,201)})
