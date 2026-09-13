@@ -77,4 +77,8 @@ python3 scripts/microservices_smoke.py
 - 冒烟日志保存在输出的临时目录；脚本结束会停止它自己创建的 JVM 和 Redis，不停止 Nacos，也不删除现有容器或卷。
 - `pom.xml` 显式固定 MyBatis Starter 4.0.1，防止 Alibaba BOM 将传递依赖降为不兼容 Boot 4 的 3.x。
 
-当前未增加消息队列、Seata、独立认证服务或数据库拆分。真实微信/短信、AI、生产扩容和多实例支付任务协调不在本次实现范围。
+当前未增加消息队列、Seata、独立认证服务或数据库拆分。真实微信/短信、生产扩容和多实例支付任务协调不在本次实现范围。
+
+## Python 宠物智能体（2026-09-13）
+
+`../ai-service` 使用 LangChain + DeepSeek，监听 8083，由网关 `/api/v1/ai/**` 路由接入。它通过管理服务 `/auth/ai-identity` 验证买家/游客身份，通过公开商品接口与本人订单接口执行只读查询，不写入交易库。聊天与反馈保存在独立 SQLite，基础知识使用本地中文向量检索；知识后台通过 `/admin/knowledge/**` 接通 Python，管理员身份由 `/admin/auth/ai-identity` 独立验证；知识、审核版本和分块向量也保存在 SQLite。AI 统计及批量导入尚未接通。启动、边界与测试见 `../ai-service/README.md`。

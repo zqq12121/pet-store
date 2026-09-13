@@ -1,0 +1,1 @@
+{"status":"simulated","phone":"13900010004","event":"confirmed","parameters":{"orderId":"order_94c429d9d25f40208a638e285fc83574","visitAt":"2026-09-14 12:00"}}

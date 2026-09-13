@@ -16,14 +16,28 @@ import org.springframework.stereotype.Component;
 @Component
 public class SmsGateway {
   public void send(String phone, String code, String purpose) {
-    String key = com.warmpaw.common.ProviderSupport.env("PAW_SMS_ACCESS_KEY_ID"),
-        secret = com.warmpaw.common.ProviderSupport.env("PAW_SMS_ACCESS_KEY_SECRET"),
-        signName = com.warmpaw.common.ProviderSupport.env("PAW_SMS_SIGN_NAME"),
-        template =
-            com.warmpaw.common.ProviderSupport.env(
-                purpose.equals("pickup_confirm") || purpose.equals("exchange_confirm")
-                    ? "PAW_SMS_CONFIRM_TEMPLATE"
-                    : "PAW_SMS_LOGIN_TEMPLATE");
+    String template = ProviderSupport.env(
+        purpose.equals("pickup_confirm") || purpose.equals("exchange_confirm")
+            ? "PAW_SMS_CONFIRM_TEMPLATE" : "PAW_SMS_LOGIN_TEMPLATE");
+    sendTemplate(phone, template, Json.map("code", code));
+  }
+
+  /** 预约通知使用独立模板，禁止回退到验证码模板。 */
+  public void sendAppointment(String phone, String event, Map<String, Object> parameters) {
+    String templateKey = switch (event) {
+      case "submitted" -> "PAW_SMS_APPOINTMENT_SUBMITTED_TEMPLATE";
+      case "confirmed" -> "PAW_SMS_APPOINTMENT_CONFIRMED_TEMPLATE";
+      case "cancelled" -> "PAW_SMS_APPOINTMENT_CANCELLED_TEMPLATE";
+      case "expired" -> "PAW_SMS_APPOINTMENT_EXPIRED_TEMPLATE";
+      default -> throw new IllegalArgumentException("不支持的预约短信节点");
+    };
+    sendTemplate(phone, ProviderSupport.env(templateKey), parameters);
+  }
+
+  private void sendTemplate(String phone, String template, Map<String, Object> parameters) {
+    String key = ProviderSupport.env("PAW_SMS_ACCESS_KEY_ID"),
+        secret = ProviderSupport.env("PAW_SMS_ACCESS_KEY_SECRET"),
+        signName = ProviderSupport.env("PAW_SMS_SIGN_NAME");
     require(
         !key.isBlank() && !secret.isBlank() && !signName.isBlank() && !template.isBlank(),
         503,
@@ -44,7 +58,7 @@ public class SmsGateway {
       params.put("PhoneNumbers", phone);
       params.put("SignName", signName);
       params.put("TemplateCode", template);
-      params.put("TemplateParam", Json.write(Json.map("code", code)));
+      params.put("TemplateParam", Json.write(parameters));
       String query =
           params.entrySet().stream()
               .map(e -> encode(e.getKey()) + "=" + encode(e.getValue()))

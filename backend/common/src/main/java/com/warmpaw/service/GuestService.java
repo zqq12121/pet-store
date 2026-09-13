@@ -7,7 +7,7 @@ import java.time.Instant;
 import java.util.Map;
 import org.springframework.stereotype.Service;
 
-/** 游客身份仅为访问统计提供去重标识，不创建 AI 会话。 */
+/** 签发统计和 AI 会话使用的游客身份；AI 会话本身由 Python 服务创建。 */
 @Service
 public class GuestService {
   private final TemporaryStore temp;

@@ -1,0 +1,1 @@
+{"status":"simulated","phone":"13900010048","event":"submitted","parameters":{"orderId":"order_db96ba60f32146739cd63669a5577512","visitAt":"2026-09-14 12:00"}}

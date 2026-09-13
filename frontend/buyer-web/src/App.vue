@@ -4,8 +4,8 @@ import { isDemo,isJavaLocal } from '../../shared/api'
 <template>
  <a class="skip-link" href="#main">跳到正文</a>
  <header class="site-header"><div class="container nav"><RouterLink to="/" class="brand">暖爪 <span>paw & home</span></RouterLink><nav aria-label="主导航"><RouterLink to="/">首页</RouterLink><RouterLink to="/pets">发现宠物</RouterLink><RouterLink to="/ai">AI 养宠助手</RouterLink><RouterLink to="/shop">到店指南</RouterLink></nav><RouterLink class="btn secondary nav-order" to="/orders">我的预约</RouterLink><RouterLink class="desktop-profile text-link" to="/profile">我的</RouterLink><RouterLink class="mobile-ai" to="/ai">AI</RouterLink></div></header>
- <!-- 首页已有首屏和导航咨询入口，避免悬浮按钮遮挡商品区链接。 -->
- <RouterLink v-if="$route.path!=='/'" class="floating-ai" to="/ai" aria-label="咨询 AI 养宠助手">AI 养宠助手 ↗</RouterLink>
+ <!-- 首页已有咨询入口；聊天页隐藏悬浮入口，避免遮挡发送按钮。 -->
+ <RouterLink v-if="$route.path!=='/'&&$route.path!=='/ai'" class="floating-ai" to="/ai" aria-label="咨询 AI 养宠助手">AI 养宠助手 ↗</RouterLink>
  <main id="main"><RouterView :key="$route.path" /></main>
  <footer class="site-footer container"><RouterLink to="/" class="brand">暖爪 <span>paw & home</span></RouterLink><p>以陪伴为开始，以责任为约定。</p><RouterLink to="/shop">联系店主 ↗</RouterLink></footer>
  <nav class="mobile-tabs" aria-label="手机导航"><RouterLink to="/">首页</RouterLink><RouterLink to="/pets">找宠物</RouterLink><RouterLink to="/ai">AI 助手</RouterLink><RouterLink to="/profile">我的</RouterLink></nav>

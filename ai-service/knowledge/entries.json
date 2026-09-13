@@ -1,0 +1,106 @@
+[
+  {
+    "id": "paw-appointment",
+    "version": 1,
+    "status": "published",
+    "title": "暖爪到店预约与付款交付",
+    "sourceName": "暖爪预约业务规则（对应 AppointmentService）",
+    "content": "选择在售宠物后，登录并进入预约页面填写到店时间及联系方式，核对并同意协议后提交。预约提交后等待店主确认；确认预约不代表付款、成交或宠物交付。实际收款与交付由店主在线下核实，并完成检疫核验后记录。智能助手只能提供页面入口和查询结果，不能代替买家提交、取消预约或确认付款。营业时间以门店页面最新配置为准。"
+  },
+  {
+    "id": "paw-individual-pet",
+    "version": 1,
+    "status": "published",
+    "title": "一宠一档与实时在售状态",
+    "sourceName": "暖爪商品与库存业务规则",
+    "content": "每只猫狗都有独立档案，一只宠物对应一个库存单位。有效预约会占用该宠物；取消或过期后的释放由业务系统处理。价格、疫苗、驱虫、检疫记录应查看当前商品详情并向店主核实。助手仅推荐当前在售且允许预约的宠物，不保证未来仍有库存。不要根据品种推断个体性格、健康状况或承诺绝对不掉毛；选择时需要考虑时间、预算、居住条件及家人过敏情况。"
+  },
+  {
+    "id": "paw-health-boundary",
+    "version": 1,
+    "status": "published",
+    "title": "猫狗健康咨询与就医",
+    "sourceName": "暖爪需求文档 4.2.7 健康咨询边界",
+    "content": "猫狗出现持续呕吐、腹泻、精神不振等异常时，建议及时就医，由兽医检查。线上助手不能诊断疾病、开处方或提供药物剂量。可以记录症状出现时间、持续情况及饮食变化，供兽医判断。疫苗、驱虫方案需要结合年龄和健康状况由兽医确定；不要在缺少个体资料时给出固定剂量或疗程。"
+  },
+  {
+    "id": "paw-care-arrival",
+    "version": 1,
+    "status": "draft",
+    "title": "猫狗到家后的环境适应（待店主审核）",
+    "sourceName": "待审核的门店护理草稿",
+    "content": "准备安静、安全的休息空间，先向店主了解原有饮食与作息，再循序渐进适应新环境。具体喂养量、换粮安排和护理要求须经店主与兽医审核后发布。"
+  },
+  {
+    "id": "cat-feeding",
+    "version": 1,
+    "status": "published",
+    "title": "猫咪的饮食与饮水",
+    "sourceName": "ASPCA 基础护理指南（中文摘要，2026-09-13 核对）",
+    "sourceUrl": "https://www.aspca.org/pet-care/cat-care/general-cat-care",
+    "content": "选择适合猫咪生命阶段、营养均衡的猫粮；具体饮食和食量需考虑年龄、活动量与健康状况，咨询兽医。随时提供新鲜清洁饮水，每天清洗并补充水碗。不要给猫喂含洋葱或大蒜粉的食物。"
+  },
+  {
+    "id": "cat-grooming",
+    "version": 1,
+    "status": "published",
+    "title": "猫咪梳毛与掉毛护理",
+    "sourceName": "ASPCA 基础护理指南（中文摘要，2026-09-13 核对）",
+    "sourceUrl": "https://www.aspca.org/pet-care/cat-care/general-cat-care",
+    "content": "大多数猫能够保持清洁，通常不需要频繁洗澡。定期轻柔梳毛有助于保持被毛清洁、减少浮毛和毛球问题，但不能保证完全不掉毛。发现不适应向兽医咨询。"
+  },
+  {
+    "id": "cat-home",
+    "version": 1,
+    "status": "published",
+    "title": "猫咪到家后的休息空间与猫砂盆",
+    "sourceName": "ASPCA 基础护理指南（中文摘要，2026-09-13 核对）",
+    "sourceUrl": "https://www.aspca.org/pet-care/cat-care/general-cat-care",
+    "content": "为猫准备干净、干燥的独立休息空间，垫上柔软毯子并定期清洗。猫砂盆放在安静、容易到达的位置，避免不必要地移动，每天清理排泄物。猫持续拒绝使用猫砂盆可能与健康问题有关，应咨询兽医。"
+  },
+  {
+    "id": "cat-vet",
+    "version": 1,
+    "status": "published",
+    "title": "猫咪用药和疫苗咨询",
+    "sourceName": "ASPCA 基础护理指南（中文摘要，2026-09-13 核对）",
+    "sourceUrl": "https://www.aspca.org/pet-care/cat-care/general-cat-care",
+    "content": "不要给猫使用未经兽医开具的药物。怀疑误食有毒物质时及时联系兽医。疫苗建议应由兽医结合猫的年龄及健康状况制定，不能根据网上通用建议替代个体诊疗。"
+  },
+  {
+    "id": "dog-feeding",
+    "version": 1,
+    "status": "published",
+    "title": "幼犬饮食与清洁饮水",
+    "sourceName": "ASPCA 基础护理指南（中文摘要，2026-09-13 核对）",
+    "sourceUrl": "https://www.aspca.org/pet-care/dog-care/general-dog-care",
+    "content": "为幼犬选择优质、适合幼犬阶段的犬粮，大型犬幼犬选择对应的幼犬粮。限制人类食物，避免营养失衡和挑食。随时提供新鲜清洁饮水，经常清洗食盆和水盆。食量及喂养安排应结合月龄、体型和健康情况咨询兽医。"
+  },
+  {
+    "id": "dog-home",
+    "version": 1,
+    "status": "published",
+    "title": "幼犬刚到家的休息与准备",
+    "sourceName": "ASPCA 基础护理指南（中文摘要，2026-09-13 核对）",
+    "sourceUrl": "https://www.aspca.org/pet-care/dog-care/general-dog-care",
+    "content": "为狗准备温暖、安静的休息处，避免冷风直吹，使用干净的狗床或笼内垫子，定期清洗寝具。准备合适犬粮、食盆水碗、安全玩具、梳子、项圈身份牌和牵引绳。出门保持牵引，清理排泄物。"
+  },
+  {
+    "id": "dog-exercise",
+    "version": 1,
+    "status": "published",
+    "title": "狗狗活动与运动需求",
+    "sourceName": "ASPCA 基础护理指南（中文摘要，2026-09-13 核对）",
+    "sourceUrl": "https://www.aspca.org/pet-care/dog-care/general-dog-care",
+    "content": "狗需要适当运动和互动游戏来消耗精力、获得精神刺激。运动量因品种、年龄、性别和健康状况而异，不能为所有狗规定同一强度。由人看护的游戏有助于满足探索、追逐和玩耍需求。"
+  },
+  {
+    "id": "dog-vet",
+    "version": 1,
+    "status": "published",
+    "title": "狗狗用药与寄生虫护理",
+    "sourceName": "ASPCA 基础护理指南（中文摘要，2026-09-13 核对）",
+    "sourceUrl": "https://www.aspca.org/pet-care/dog-care/general-dog-care",
+    "content": "不要给狗使用未经兽医开具的药物。温暖季节注意检查跳蚤与蜱虫，寄生虫控制方案应咨询兽医；不要自行推断驱虫药剂量或用药疗程。怀疑中毒时及时联系兽医。"
+  }
+]

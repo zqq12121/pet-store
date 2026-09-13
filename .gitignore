@@ -26,3 +26,9 @@ server/uploads/
 *.iml
 __pycache__/
 *.pyc
+
+# Python 智能体依赖、会话数据和本地向量模型
+/ai-service/.venv/
+/ai-service/data/
+/ai-service/.pytest_cache/
+/ai-service/:memory:.ses

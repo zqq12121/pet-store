@@ -16,7 +16,16 @@ spring:
       server:
         webflux:
           routes:
+            # Python LangChain 独立服务；必须排在 /api/** 兜底路由前。
+            - id: ai-api
+              uri: ${PAW_AI_URL:http://127.0.0.1:8083}
+              predicates:
+                - Path=/api/v1/ai/**
             # 所有后台请求先到管理服务，后台交易请求再经 Feign 调用订单服务。
+            - id: ai-knowledge-admin
+              uri: ${PAW_AI_URL:http://127.0.0.1:8083}
+              predicates:
+                - Path=/api/v1/admin/knowledge/**
             - id: admin-api
               uri: lb://admin-server
               predicates:

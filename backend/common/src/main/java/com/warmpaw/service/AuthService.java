@@ -283,6 +283,12 @@ public class AuthService {
         parts[1].getBytes(java.nio.charset.StandardCharsets.UTF_8));
   }
 
+  /** 复用受权限保护的开发收件箱；真实模式不能写入模拟通知。 */
+  public void localAppointmentNotice(String id, Map<String, Object> notice) {
+    require(mock, 503, "SERVICE_UNAVAILABLE", "真实模式不可写入开发短信收件箱");
+    devSecret("sms-appointment", id, Json.write(notice));
+  }
+
   private void devSecret(String kind, String id, String code) {
     if (!mock) return;
     try {

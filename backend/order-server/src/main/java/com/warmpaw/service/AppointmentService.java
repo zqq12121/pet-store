@@ -14,9 +14,11 @@ public class AppointmentService {
   private final BusinessRepository store;
   private final OrderService orders;
   private final CatalogReader catalog;
+  private final AppointmentSmsNotifier notifications;
 
-  public AppointmentService(BusinessRepository store, OrderService orders, CatalogReader catalog) {
+  public AppointmentService(BusinessRepository store, OrderService orders, CatalogReader catalog, AppointmentSmsNotifier notifications) {
     this.store = store; this.orders = orders; this.catalog = catalog;
+    this.notifications = notifications;
   }
 
   public Map<String, Object> create(Map<String, Object> body, AuthService.Actor actor) {
@@ -40,6 +42,7 @@ public class AppointmentService {
     order.put("payment", map("status", "offline_unpaid", "paidAmount", 0));
     store.save(order);
     store.audit(actor.id(), "appointment.create", text(order, "id"));
+    notifications.notifyAfterCommit(order, "submitted");
     return order;
   }
 
@@ -63,6 +66,7 @@ public class AppointmentService {
     require(List.of("confirm", "cancel", "complete").contains(action), 404, "RESOURCE_NOT_FOUND", "预约操作不存在");
     if (action.equals("cancel")) {
       cancel(order, input.str("reason", 1, 200), actor.id());
+      notifications.notifyAfterCommit(order, "cancelled");
       return;
     }
     require(active(order) && Instant.parse(text(order, "expiresAt")).isAfter(Instant.now()),
@@ -99,6 +103,7 @@ public class AppointmentService {
     }
     store.save(order);
     store.audit(actor.id(), "appointment." + action, text(order, "id"));
+    if (action.equals("confirm")) notifications.notifyAfterCommit(order, "confirmed");
   }
 
   /** 过期只释放此预约自己的库存；由一分钟任务执行，创建预约时也清理过期占用。 */
@@ -110,6 +115,7 @@ public class AppointmentService {
         order.put("cancelReason", "appointment_timeout");
         orders.release(order);
         store.save(order);
+        notifications.notifyAfterCommit(order, "expired");
       }
     }
   }

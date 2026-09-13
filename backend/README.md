@@ -2,6 +2,9 @@
 
 后端已拆分为 `order-server`、`admin-server` 和 `gateway-server`，接入 Nacos 服务发现及 OpenFeign 调用。保留原 MySQL `warmpaw` 数据、Redis 与前端 API。Java 服务运行在 Mac / IDEA，Nacos、MySQL、Redis、Nginx 运行在 Docker。
 
+完整前后端与 AI 启停顺序见 [项目运行说明](../README.md)。当前订单采用到店预约；支付章节保留历史交易说明。
+AI 已由独立 Python 服务提供，须另行启动，见 [AI 说明](../ai-service/README.md)。
+
 ## 启动与停止
 
 从项目根目录进入后端后运行：
@@ -95,10 +98,10 @@ python3 scripts/microservices_smoke.py
 
 ```dotenv
 VITE_API_TARGET=http://127.0.0.1:8080
-VITE_DEMO_MODE=true
+VITE_DEMO_MODE=false
 ```
 
-写入 `frontend/.env.local` 后重启 Vite。开发模式的模拟支付路径已兼容现有前端。原 Node 演示服务提示的固定 `DEMO` / `123456` **不适用于此后端**；请填写图片中的随机码，并从本机开发收件箱取短信码。原前端仍保留 AI 导航，但此后端不提供对应功能。后台已提供 `/admin/agreements` 协议管理页，可创建、查看和发布版本。
+写入 `frontend/.env.local` 后重启 Vite。原 Node 演示服务提示的固定 `DEMO` / `123456` **不适用于此后端**；请填写图片中的随机码，并从本机开发收件箱取短信码。AI 请求由网关转到独立 Python 服务；后台已提供 `/admin/agreements` 协议管理页，可创建、查看和发布版本。
 
 ## MySQL 与 Redis
 
@@ -203,3 +206,21 @@ sh scripts/start-docker-local.sh
 - 未登录访问后台宠物和个人资料返回 401，未知接口返回 404；买家页与管理页返回 200。
 - 实际 MySQL 核对仍为 51 张表、3 条宠物和 3 条订单。本次没有执行建表或数据迁移脚本。
 - 完整交易回归在隔离 H2 测试库运行；本轮实际 MySQL/Redis/Nginx 验证为启动和只读接口检查，不等同于第三方支付或生产性能验收。
+
+### 到店预约短信
+
+提交预约、店长确认、店长取消、预约过期会在业务事务提交后通知预约联系电话。
+本地 `app.mock-providers=true` 时仅写入 `data/local-inbox/sms-appointment-<订单ID>-<节点>.txt`，
+JSON 中 `status=simulated` 表示模拟通知，绝不调用短信平台；买家自行取消不触发店长取消短信。
+真实模式复用阿里云短信凭据与签名，必须额外配置以下独立模板，不回退到验证码模板：
+
+| 节点 | 环境变量 | 模板参数 |
+| --- | --- | --- |
+| 提交预约 | `PAW_SMS_APPOINTMENT_SUBMITTED_TEMPLATE` | `orderId`、`visitAt` |
+| 店长确认 | `PAW_SMS_APPOINTMENT_CONFIRMED_TEMPLATE` | `orderId`、`visitAt` |
+| 店长取消 | `PAW_SMS_APPOINTMENT_CANCELLED_TEMPLATE` | `orderId`、`visitAt`、`reason` |
+| 预约过期 | `PAW_SMS_APPOINTMENT_EXPIRED_TEMPLATE` | `orderId`、`visitAt` |
+
+`visitAt` 使用上海时区的 `yyyy-MM-dd HH:mm`。短信平台模板须与参数对应。
+缺少配置或平台拒绝时记录“预约短信通知失败”，不会写模拟收件箱或标记已发送，预约操作仍然生效。
+当前为提交后单次尝试，无持久化队列或自动重试；提交后进程中断可能漏通知，真实手机送达需上线联调验证。

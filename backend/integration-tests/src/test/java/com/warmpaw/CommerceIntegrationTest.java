@@ -1184,6 +1184,20 @@ class CommerceIntegrationTest {
     return call("POST", "/orders", orderBody(pet, buyer), buyer);
   }
 
+  /** 检查真实状态流转产生的本地通知，而非只验证模拟网关调用。 */
+  Map<String, Object> appointmentNotice(Map<String, Object> order, String event) {
+    try {
+      var notice = read(Files.readString(Path.of("data/local-inbox/sms-appointment-" + text(order, "id") + "-" + event + ".txt")));
+      assertEquals("simulated", notice.get("status"));
+      assertEquals(buyer.phone(), notice.get("phone"));
+      assertEquals(event, notice.get("event"));
+      assertEquals(order.get("id"), object(notice, "parameters").get("orderId"));
+      return notice;
+    } catch (java.io.IOException e) {
+      throw new AssertionError("预约通知未写入本地收件箱", e);
+    }
+  }
+
   String appointmentPath(Map<String, Object> order, String action) {
     return "/admin/orders/" + order.get("id") + "/appointment/" + action;
   }
@@ -1191,6 +1205,7 @@ class CommerceIntegrationTest {
   @Test
   void appointmentCompletesOfflineOnceAndShowsContactToAdmin() {
     Map<String, Object> o = appointment();
+    appointmentNotice(o, "submitted");
     String id = text(o, "id"), pet = text(object(o, "product"), "id");
     assertEquals("pending_confirmation", o.get("status"));
     assertEquals(id, store.occupation(pet));
@@ -1202,7 +1217,11 @@ class CommerceIntegrationTest {
     assertCode("FORBIDDEN", () -> call("POST", appointmentPath(o, "confirm"), map(), buyer));
     assertCode("RESOURCE_NOT_FOUND", () -> call("POST", "/orders/" + id + "/cancel", map(), other));
     assertCode("ONLINE_PAYMENT_DISABLED", () -> call("POST", "/orders/" + id + "/payments", map("scene", "h5"), buyer));
-    call("POST", appointmentPath(o, "confirm"), map(), admin);
+    String confirmKey = UUID.randomUUID().toString();
+    business.execute("POST", appointmentPath(o, "confirm"), map(), map(), confirmKey, admin, "test");
+    var notice = appointmentNotice(o, "confirmed");
+    business.execute("POST", appointmentPath(o, "confirm"), map(), map(), confirmKey, admin, "test");
+    assertEquals(notice, appointmentNotice(o, "confirmed"));
     assertEquals("reserved", store.get("pet", pet).get("status"));
     assertCode("VALIDATION_ERROR", () -> call("POST", appointmentPath(o, "complete"), map(), admin));
     var dashboardBefore = call("GET", "/admin/dashboard", map(), admin);
@@ -1231,11 +1250,13 @@ class CommerceIntegrationTest {
     assertCode("ACTIVE_APPOINTMENT_EXISTS", () -> call("POST", "/orders", orderBody(secondPet, buyer), buyer));
     call("POST", appointmentPath(first, "confirm"), map(), admin);
     call("POST", "/orders/" + first.get("id") + "/cancel", map(), buyer);
+    assertFalse(Files.exists(Path.of("data/local-inbox/sms-appointment-" + text(first, "id") + "-cancelled.txt")));
     String firstPet = text(object(first, "product"), "id");
     assertNull(store.occupation(firstPet));
     assertEquals("on_sale", store.get("pet", firstPet).get("status"));
     var next = call("POST", "/orders", orderBody(secondPet, buyer), buyer);
     call("POST", appointmentPath(next, "cancel"), map("reason", "门店临时休息"), admin);
+    assertEquals("门店临时休息", object(appointmentNotice(next, "cancelled"), "parameters").get("reason"));
     assertEquals("门店临时休息", store.get("order", text(next, "id")).get("cancelReason"));
     assertNull(store.occupation(text(secondPet, "id")));
   }
@@ -1256,6 +1277,8 @@ class CommerceIntegrationTest {
         return null;
       });
       assertCode("APPOINTMENT_EXPIRED", () -> call("POST", appointmentPath(o, confirmed ? "complete" : "confirm"), map(), admin));
+      worker.reconcile();
+      appointmentNotice(o, "expired");
       worker.reconcile();
       assertEquals("expired", store.get("order", text(o, "id")).get("status"));
       assertNull(store.occupation(text(object(o, "product"), "id")));

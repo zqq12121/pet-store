@@ -32,12 +32,31 @@ public class AuthController {
     return auth.identify(request.getHeader("Authorization"));
   }
 
+  /** AI 服务每次请求复用 Java 身份校验；只返回归属标识，不返回凭证或个人资料。 */
+  @GetMapping("/auth/ai-identity")
+  public ResponseEntity<Object> aiIdentity(HttpServletRequest req) {
+    String bearer = req.getHeader("Authorization"), guest = req.getHeader("X-Guest-Token");
+    ApiException.require(bearer == null || guest == null, 400, "AMBIGUOUS_IDENTITY", "不能同时提供两种身份");
+    AuthService.Actor a = bearer == null ? guests.identify(guest) : auth.identify(bearer);
+    ApiException.require(List.of("buyer", "guest").contains(a.role()), 403, "FORBIDDEN", "请使用买家或游客身份");
+    return ok(200, map("id", a.id(), "role", a.role()));
+  }
+
   @PostMapping("/guest-sessions")
   public ResponseEntity<Object> guest(
       HttpServletRequest req, @RequestBody(required = false) Map<String, Object> b) {
     actor(req);
     new Input(b, "");
     return ok(201, guests.create(req.getRemoteAddr()));
+  }
+
+  /** 知识后台独立验证管理员，不能复用买家/游客的 AI 身份权限。 */
+  @GetMapping("/admin/auth/ai-identity")
+  public ResponseEntity<Object> aiAdminIdentity(HttpServletRequest req) {
+    ApiException.require(req.getHeader("X-Guest-Token") == null, 403, "FORBIDDEN", "知识管理仅限管理员");
+    AuthService.Actor a = actor(req);
+    AuthService.role(a, "admin");
+    return ok(200, map("id", a.id(), "role", a.role()));
   }
 
   @GetMapping("/auth/captchas")
