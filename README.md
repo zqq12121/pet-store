@@ -3,6 +3,12 @@
 Vue 买家端与管理后台、Spring Cloud 业务服务、Python LangChain 智能助手组成的单店项目。
 当前交易流程为预约到店 → 店长确认 → 到店线下收款与交付；AI 只查询和解释，不修改订单、价格或库存。
 
+## Docker Compose 部署
+
+完整容器部署入口为根目录 `compose.yaml`，包含前端、三个 Java 服务、AI 和基础服务。
+配置、启停、数据卷及备份说明见 [Docker 交付说明](docs/DOCKER_DELIVERY.md)。
+下方保留宿主机开发方式；完整部署的实际验收结果以本轮验证记录为准，不能沿用历史测试作为交付证明。
+
 ## 本机运行
 
 需要 JDK 21、Maven、Node.js 22、Python 3.11、uv 和 Docker Desktop。已有 MySQL、Redis 需先启动，
@@ -102,3 +108,12 @@ Nginx 静态部署分别使用 `frontend/dist/buyer/` 和 `frontend/dist/admin/`
 管理端构建仍有现存的大包体积提示。以上不代表正式环境部署或第三方服务验收完成。
 
 更多说明：[业务服务](backend/README.md) · [AI 与知识库](ai-service/README.md) · [接口状态](backend/API_STATUS.md)。
+
+2026-09-13 追加：后台已接通真实 AI 聚合统计、CSV/Excel 知识导入及索引失败重试。
+使用与升级说明见 [AI 统计与导入](ai-service/README.md#ai-统计与批量导入2026-09-13)。
+导入只新增草稿，逐条审核发布后才进入检索；工作台在统计服务不可用时显示“不可用”。
+
+本次追加验证：Python 全量 66 项通过；最后调整错误提示后，导入专项 12 项再次通过。
+Java 39 项测试、前端 2 项测试、类型检查与双端构建通过；独立网关统计路由 200、未登录 401。
+浏览器使用临时数据库、替代身份与向量模型，验证模板下载、部分成功、重复提交、错误行和草稿编辑，
+检查了 1440px 桌面及 390px 手机布局。尚未重启现有业务服务，未调用真实 DeepSeek。

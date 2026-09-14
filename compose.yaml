@@ -1,0 +1,210 @@
+name: warmpaw
+
+# 唯一宿主机入口为 web；服务之间通过 Compose DNS 连接，不访问宿主机 Java。
+x-java-environment: &java-environment
+  SPRING_PROFILES_ACTIVE: prod
+  SERVER_ADDRESS: 0.0.0.0
+  SPRING_CLOUD_NACOS_DISCOVERY_IP: ""
+  NACOS_SERVER_ADDR: nacos:8848
+  PAW_DB_URL: jdbc:mysql://mysql:3306/warmpaw?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+  PAW_DB_USERNAME: warmpaw
+  PAW_DB_PASSWORD: ${PAW_DB_PASSWORD:?请先配置根目录 .env}
+  PAW_REDIS_HOST: redis
+  PAW_REDIS_PORT: 6379
+  PAW_REDIS_PASSWORD: ${PAW_REDIS_PASSWORD:?请先配置 Redis 密码}
+  PAW_ADMIN_PASSWORD: ${PAW_ADMIN_PASSWORD:?请先配置管理员初始密码}
+  PAW_MOCK_PROVIDERS: "false"
+  PAW_STORAGE: /app/data/files
+  PAW_FFPROBE: /usr/bin/ffprobe
+  PAW_OSS_ENABLED: ${PAW_OSS_ENABLED:-false}
+  PAW_OSS_BUCKET: ${PAW_OSS_BUCKET:-}
+  PAW_OSS_ENDPOINT: ${PAW_OSS_ENDPOINT:-https://oss-cn-beijing.aliyuncs.com}
+  PAW_WECHAT_APP_ID: ${PAW_WECHAT_APP_ID:-}
+  PAW_WECHAT_APP_SECRET: ${PAW_WECHAT_APP_SECRET:-}
+  PAW_WECHAT_OAUTH_REDIRECT: ${PAW_WECHAT_OAUTH_REDIRECT:-}
+  PAW_SMS_ACCESS_KEY_ID: ${PAW_SMS_ACCESS_KEY_ID:-}
+  PAW_SMS_ACCESS_KEY_SECRET: ${PAW_SMS_ACCESS_KEY_SECRET:-}
+  OSS_ACCESS_KEY_ID: ${OSS_ACCESS_KEY_ID:-}
+  OSS_ACCESS_KEY_SECRET: ${OSS_ACCESS_KEY_SECRET:-}
+  PAW_PNVS_SIGN_NAME: ${PAW_PNVS_SIGN_NAME:-恒创联众}
+  PAW_PNVS_LOGIN_TEMPLATE: ${PAW_PNVS_LOGIN_TEMPLATE:-100001}
+  PAW_SMS_SIGN_NAME: ${PAW_SMS_SIGN_NAME:-}
+  PAW_SMS_CONFIRM_TEMPLATE: ${PAW_SMS_CONFIRM_TEMPLATE:-}
+  PAW_SMS_APPOINTMENT_SUBMITTED_TEMPLATE: ${PAW_SMS_APPOINTMENT_SUBMITTED_TEMPLATE:-}
+  PAW_SMS_APPOINTMENT_CONFIRMED_TEMPLATE: ${PAW_SMS_APPOINTMENT_CONFIRMED_TEMPLATE:-}
+  PAW_SMS_APPOINTMENT_CANCELLED_TEMPLATE: ${PAW_SMS_APPOINTMENT_CANCELLED_TEMPLATE:-}
+  PAW_SMS_APPOINTMENT_EXPIRED_TEMPLATE: ${PAW_SMS_APPOINTMENT_EXPIRED_TEMPLATE:-}
+
+x-java: &java
+  restart: unless-stopped
+  init: true
+  mem_limit: 768m
+  environment: *java-environment
+  depends_on:
+    mysql:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    nacos:
+      condition: service_healthy
+  healthcheck:
+    test: [CMD-SHELL, 'curl -fsS http://localhost:$${SERVER_PORT}/actuator/health >/dev/null']
+    interval: 15s
+    timeout: 5s
+    retries: 20
+    start_period: 90s
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    mem_limit: 1g
+    environment:
+      MYSQL_DATABASE: warmpaw
+      MYSQL_USER: warmpaw
+      MYSQL_PASSWORD: ${PAW_DB_PASSWORD:?请先配置数据库密码}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?请先配置数据库 root 密码}
+      TZ: Asia/Shanghai
+    command: [--character-set-server=utf8mb4, --collation-server=utf8mb4_unicode_ci]
+    volumes:
+      - mysql-data:/var/lib/mysql
+      # 官方入口只在空数据卷初始化时执行；已有库不会被覆盖。
+      - ./backend/common/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: [CMD-SHELL, 'MYSQL_PWD="$$MYSQL_PASSWORD" mysql -h127.0.0.1 -u"$$MYSQL_USER" "$$MYSQL_DATABASE" -e "SELECT COUNT(*) FROM schema_migrations" >/dev/null']
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
+  redis:
+    image: redis:8.2-alpine
+    restart: unless-stopped
+    mem_limit: 256m
+    environment:
+      REDIS_PASSWORD: ${PAW_REDIS_PASSWORD:?请先配置 Redis 密码}
+    command: [sh, -c, 'exec redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"']
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: [CMD-SHELL, 'REDISCLI_AUTH="$$REDIS_PASSWORD" redis-cli ping | grep -q PONG']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  nacos:
+    image: nacos/nacos-server:v3.1.1
+    restart: unless-stopped
+    mem_limit: 768m
+    environment:
+      MODE: standalone
+      # 本机单店部署只在私有容器网络提供服务发现，不发布控制台或注册端口。
+      NACOS_AUTH_ENABLE: "false"
+      NACOS_AUTH_TOKEN: ${NACOS_AUTH_TOKEN:?请先初始化 Nacos token}
+      NACOS_AUTH_IDENTITY_KEY: warmpaw
+      NACOS_AUTH_IDENTITY_VALUE: ${NACOS_AUTH_IDENTITY_VALUE:?请先初始化 Nacos identity}
+      JVM_XMS: 256m
+      JVM_XMX: 512m
+      JVM_XMN: 128m
+    volumes:
+      - nacos-data:/home/nacos/data
+      - nacos-logs:/home/nacos/logs
+    healthcheck:
+      test: [CMD-SHELL, 'curl -fsS http://localhost:8848/nacos/v3/admin/core/state/readiness >/dev/null']
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
+  order-server:
+    <<: *java
+    build:
+      context: ./backend
+      args:
+        SERVICE: order-server
+    environment:
+      <<: *java-environment
+      SERVER_PORT: 8081
+
+  admin-server:
+    <<: *java
+    build:
+      context: ./backend
+      args:
+        SERVICE: admin-server
+    environment:
+      <<: *java-environment
+      SERVER_PORT: 8082
+    volumes:
+      - uploads:/app/data/files
+
+  gateway-server:
+    <<: *java
+    build:
+      context: ./backend
+      args:
+        SERVICE: gateway-server
+    environment:
+      SERVER_ADDRESS: 0.0.0.0
+      SERVER_PORT: 8080
+      SPRING_CLOUD_NACOS_DISCOVERY_IP: ""
+      NACOS_SERVER_ADDR: nacos:8848
+      PAW_AI_URL: http://ai-service:8083
+
+  ai-service:
+    build: ./ai-service
+    restart: unless-stopped
+    init: true
+    mem_limit: 2g
+    environment:
+      AI_HOST: 0.0.0.0
+      AI_PORT: 8083
+      AI_DB_PATH: /app/data/ai.sqlite3
+      AI_MODEL_CACHE: /app/data/models
+      PAW_CATALOG_URL: http://admin-server:8082
+      PAW_ORDER_URL: http://order-server:8081
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-chat}
+      DEEPSEEK_API_BASE: ${DEEPSEEK_API_BASE:-https://api.deepseek.com}
+    volumes:
+      - ai-data:/app/data
+    depends_on:
+      admin-server:
+        condition: service_healthy
+      order-server:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8083/health', timeout=4)"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  web:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${WEB_PORT:-8090}:80"
+    depends_on:
+      gateway-server:
+        condition: service_healthy
+      ai-service:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD-SHELL, 'wget -q -O /dev/null http://127.0.0.1/healthz']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql-data:
+  redis-data:
+  nacos-data:
+  nacos-logs:
+  uploads:
+  ai-data:

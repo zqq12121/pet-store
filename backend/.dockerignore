@@ -1,0 +1,6 @@
+**/target
+**/data
+.env*
+.nacos.env
+.idea
+**/*.log

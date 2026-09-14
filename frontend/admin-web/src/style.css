@@ -3,3 +3,10 @@
 @media(max-width:1100px){.sidebar{width:200px;padding:28px 20px}.admin-body{margin-left:200px;width:calc(100% - 200px);padding-inline:24px}.metrics{grid-template-columns:repeat(2,1fr)}.editor-layout{grid-template-columns:1fr}.editor-layout>aside{max-width:450px}.form-grid{gap:0 16px}}
 @media(max-width:720px){.sidebar{position:static;width:100%;padding:16px}.sidebar nav{flex-direction:row;overflow:auto;gap:6px}.sidebar nav a{white-space:nowrap;padding:10px}.console-label,.sidebar-bottom{display:none}.brand{font-size:25px}.admin-shell{display:block}.admin-body{margin:0;width:100%;padding-inline:16px}.admin-header{height:84px}.admin-header h1{font-size:23px}.metric{padding:18px}.metric strong{font-size:25px}.section-title{align-items:flex-start}.section-title h2{font-size:23px}.form-grid{grid-template-columns:1fr}.el-dialog{width:calc(100% - 24px)!important}.panel{padding:20px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;animation:none!important}}
+/* 登录页网格允许收缩，避免固定宽度表单在手机上撑出视口。 */
+.login-page{grid-template-columns:minmax(0,1fr)}
+.login-panel{min-width:0}
+.login-panel .captcha-row{width:100%;min-width:0}
+.login-panel .captcha-row>.el-input{min-width:0;flex:1}
+.login-panel .captcha-row>button{flex-shrink:0}
+@media(max-width:720px){.login-page{padding:20px}.login-panel{padding:28px 24px}}

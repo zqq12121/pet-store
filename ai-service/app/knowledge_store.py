@@ -52,22 +52,37 @@ class KnowledgeStore:
                                                          ('title', 'content', 'question', 'answer')).casefold()],
                       key=lambda e: (e['updatedAt'], e['id']), reverse=True)
 
-    def save(self, body, actor, entry_id=None):
+    def save(self, body, actor, entry_id=None, db=None):
+        if db is None:
+            with self.store.db() as connection:
+                connection.execute('BEGIN IMMEDIATE')
+                return self.save(body, actor, entry_id, connection)
+        old = self.get(entry_id, db) if entry_id else None
+        if old and old['version'] != body['version']:
+            raise ApiError(409, 'VERSION_CONFLICT', '内容已被其他操作修改，请刷新后重新编辑')
+        entry = {**body, 'id': entry_id or uid('kb'), 'version': old['version']+1 if old else 1,
+                 'createdAt': old['createdAt'] if old else now(), 'updatedAt': now(),
+                 'updatedBy': actor, 'reviewedBy': actor if body['status'] == 'published' else None,
+                 'reviewedAt': now() if body['status'] == 'published' else None,
+                 'indexStatus': 'pending' if body['status'] == 'published' else 'not_indexed',
+                 'indexedVersion': None, 'indexErrorCode': None}
+        # 保存立即清除旧向量资格；新正文成功保存不代表新向量已可检索。
+        db.execute('INSERT INTO knowledge(id,data) VALUES (?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data,vectors=NULL,model=NULL',
+                   (entry['id'], json.dumps(entry)))
+        return entry
+
+    def retry_index(self, entry_id, version, actor):
         with self.store.db() as db:
             db.execute('BEGIN IMMEDIATE')
-            old = self.get(entry_id, db) if entry_id else None
-            if old and old['version'] != body['version']:
-                raise ApiError(409, 'VERSION_CONFLICT', '内容已被其他操作修改，请刷新后重新编辑')
-            entry = {**body, 'id': entry_id or uid('kb'), 'version': old['version']+1 if old else 1,
-                     'createdAt': old['createdAt'] if old else now(), 'updatedAt': now(),
-                     'updatedBy': actor, 'reviewedBy': actor if body['status'] == 'published' else None,
-                     'reviewedAt': now() if body['status'] == 'published' else None,
-                     'indexStatus': 'pending' if body['status'] == 'published' else 'not_indexed',
-                     'indexedVersion': None, 'indexErrorCode': None}
-            # 保存立即清除旧向量资格；新正文成功保存不代表新向量已可检索。
-            db.execute('INSERT INTO knowledge(id,data) VALUES (?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data,vectors=NULL,model=NULL',
-                       (entry['id'], json.dumps(entry)))
-        return entry
+            entry = self.get(entry_id, db)
+            if entry['version'] != version:
+                raise ApiError(409, 'VERSION_CONFLICT', '内容已更新，请刷新后重试')
+            if entry['status'] != 'published' or entry['indexStatus'] != 'failed':
+                raise ApiError(409, 'KNOWLEDGE_NOT_RETRYABLE', '只有已发布且更新失败的知识可以重试')
+            # 重试只恢复索引任务，不修改正文版本或冒充再次审核。
+            entry.update(indexStatus='pending', indexErrorCode=None, indexRetriedBy=actor, indexRetriedAt=now())
+            db.execute('UPDATE knowledge SET data=? WHERE id=?', (json.dumps(entry), entry_id))
+            return entry
 
     def delete(self, entry_id, version, actor):
         entry = self.get(entry_id)

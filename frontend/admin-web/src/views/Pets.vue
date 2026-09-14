@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import {ref,reactive,onMounted} from 'vue';import {admin,money} from '../../../shared/api';import type {Page} from '../../../shared/types';import type {AdminPet} from '../../../shared/adminTypes';import {useLoad} from '../../../shared/useLoad';import {ElMessageBox,ElMessage} from 'element-plus'
 const result=ref<Page<AdminPet>>(),query=reactive({keyword:'',status:'',category:''}),{loading,error,run}=useLoad();const statuses:Record<string,string>={off:'未上架',on_sale:'在售',reserved:'已预订',sold:'已售'}
-const load=(page=1)=>run(async()=>{result.value=await admin('GET','/admin/pets',undefined,{...query,page,pageSize:10})})
+// “全部”筛选不发送空枚举值，与后端可选查询参数约定保持一致。
+const load=(page=1)=>run(async()=>{result.value=await admin('GET','/admin/pets',undefined,{keyword:query.keyword||undefined,status:query.status||undefined,category:query.category||undefined,page,pageSize:10})})
 async function unpublish(row:AdminPet){try{const {value}=await ElMessageBox.prompt('请填写下架原因','下架宠物',{inputValidator:v=>Boolean(v?.trim())||'请填写原因'});await run(async()=>{await admin('POST',`/admin/pets/${row.id}/unpublish`,{version:row.version,reason:value});ElMessage.success('已下架')});await load(result.value?.page)}catch{/* 用户取消对话框，不发起修改。 */}}
 onMounted(()=>load())
 </script>

@@ -16,10 +16,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class MaintenanceService {
   private final BusinessRepository store;
   private final Path root;
+  private final OssStorage oss;
 
-  public MaintenanceService(BusinessRepository store, @Value("${app.storage}") String storage) {
+  public MaintenanceService(BusinessRepository store, OssStorage oss, @Value("${app.storage}") String storage) {
     this.store = store;
     this.root = Path.of(storage).toAbsolutePath().normalize();
+    this.oss = oss;
   }
 
   @Scheduled(fixedDelay = 86400000, initialDelay = 86400000)
@@ -39,6 +41,7 @@ public class MaintenanceService {
       Path target = root.resolve(id).normalize();
       if (!target.getParent().equals(root)) continue;
       try {
+        oss.delete(id);
         Files.deleteIfExists(target);
         file.put("status", "deleted");
         store.save(file);

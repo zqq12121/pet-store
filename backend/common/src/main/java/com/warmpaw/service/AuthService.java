@@ -146,13 +146,15 @@ public class AuthService {
     temp.limit("sms-day:" + phone, 10, 86400);
     temp.limit("sms-ip:" + ip, 50, 86400);
     String id = id("sms"), code = digits(6);
+    // 仅平台受理后保存验证码，发送失败不能留下有效登录凭据。
+    if (!mock) smsGateway.send(phone, code, purpose);
     temp.put(
         "sms:" + id,
         write(map("phone", phone, "purpose", purpose, "scope", scope, "hash", hash(code))),
         300);
-    if (!mock) smsGateway.send(phone, code, purpose);
     devSecret("sms", id, code);
-    return map("smsRequestId", id, "expiresIn", 300, "retryAfter", 60, "phoneMasked", mask(phone));
+    return map("smsRequestId", id, "expiresIn", 300, "retryAfter", 60, "phoneMasked", mask(phone),
+        "status", mock ? "simulated" : "accepted");
   }
 
   public synchronized void checkSms(

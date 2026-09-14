@@ -1,6 +1,7 @@
 """买家 SSE 与管理员知识接口；交易写入不在此服务开放。"""
 import asyncio
 import json
+from time import perf_counter
 from contextlib import asynccontextmanager
 from typing import Annotated, Literal
 from uuid import UUID
@@ -18,6 +19,7 @@ from .knowledge import Knowledge
 from .knowledge_store import KnowledgeStore
 from .knowledge_api import register_knowledge_api
 from .store import DISCLAIMER, Store, now, uid
+from .statistics import register_statistics_api
 
 Id = Annotated[str, Field(pattern=r"^[A-Za-z0-9_-]{1,100}$")]
 
@@ -76,6 +78,7 @@ def create_app(settings=None, business=None, agent=None):
         for task in list(tasks):
             task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
+        await app.state.imports.stop()
         await knowledge.stop()
         await http.aclose()
 
@@ -83,6 +86,7 @@ def create_app(settings=None, business=None, agent=None):
     app.state.store = store
     app.state.knowledge = knowledge
     register_knowledge_api(app, business, knowledge, envelope, page)
+    register_statistics_api(app, business, store, envelope)
 
     @app.exception_handler(ApiError)
     async def api_error(request, exc):
@@ -134,6 +138,7 @@ def create_app(settings=None, business=None, agent=None):
 
     async def generate(actor, session, body, message):
         evidence = {}
+        started = perf_counter()
         try:
             # 持久化完整历史，但只向模型发送有限最近上下文，不携带凭证或卡片原始记录。
             history = [{"role": m["role"], "content": m["content"][:2000]}
@@ -141,6 +146,9 @@ def create_app(settings=None, business=None, agent=None):
                        and m["status"] == "completed"][-10:]
             async with asyncio.timeout(settings.generation_timeout):
                 async for text in agent.stream(actor, session, history, body, evidence):
+                    # 从实际生成开始计时；没有首字时保持缺失，历史数据不补造耗时。
+                    if text and 'firstTokenMs' not in message:
+                        message['firstTokenMs'] = round((perf_counter()-started)*1000)
                     if len(message["content"]) + len(text) > 12000:
                         raise ApiError(503, "AI_UPSTREAM_UNAVAILABLE", "回复超出长度限制，请缩小问题范围")
                     message["content"] += text
@@ -156,6 +164,7 @@ def create_app(settings=None, business=None, agent=None):
         except Exception:
             store.fail(message, "AI_UPSTREAM_UNAVAILABLE", "智能助手暂时无法回答，请联系店主")
         finally:
+            message['generationMs'] = round((perf_counter()-started)*1000)
             store.save(message)
 
     async def events(sid, message, replayed):

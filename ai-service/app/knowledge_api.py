@@ -5,6 +5,7 @@ from urllib.parse import parse_qsl, urlsplit
 
 from fastapi import Depends, Query, Request
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, field_validator, model_validator
+from .knowledge_import import Imports, register_import_api
 
 
 class KnowledgeInput(BaseModel):
@@ -65,6 +66,16 @@ def register_knowledge_api(app, business, knowledge, envelope, page):
 
     async def administrator(request: Request):
         return await business.identify_admin(request.headers.get("Authorization"), request.headers.get("X-Guest-Token"))
+
+    imports = Imports(repository, KnowledgeInput)
+    app.state.imports = imports
+    register_import_api(app, imports, administrator, envelope, page)
+
+    @app.post('/api/v1/admin/knowledge/entries/{entry_id}/retry-index')
+    async def retry_index(entry_id: str, version: int = Query(..., ge=1), actor=Depends(administrator)):
+        result = repository.retry_index(entry_id, version, actor.owner)
+        knowledge.schedule()
+        return envelope(result)
 
     @app.get("/api/v1/admin/knowledge/entries")
     async def entries(page_number: int = Query(1, alias="page", ge=1), pageSize: int = Query(20, ge=1, le=100),

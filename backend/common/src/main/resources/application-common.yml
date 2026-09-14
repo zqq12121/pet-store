@@ -44,4 +44,4 @@ spring:
     activate:
       on-profile: local
 app:
-  mock-providers: true
+  mock-providers: ${PAW_MOCK_PROVIDERS:true}

@@ -25,7 +25,7 @@ spring:
             - id: ai-knowledge-admin
               uri: ${PAW_AI_URL:http://127.0.0.1:8083}
               predicates:
-                - Path=/api/v1/admin/knowledge/**
+                - Path=/api/v1/admin/knowledge/**,/api/v1/admin/ai/**
             - id: admin-api
               uri: lb://admin-server
               predicates:

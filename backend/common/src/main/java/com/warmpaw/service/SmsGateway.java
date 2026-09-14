@@ -16,10 +16,17 @@ import org.springframework.stereotype.Component;
 @Component
 public class SmsGateway {
   public void send(String phone, String code, String purpose) {
+    // 登录与微信绑定使用号码认证赠送模板；交付确认仍使用原短信服务。
+    if (purpose.equals("login") || purpose.equals("wechat_bind")) {
+      String template = ProviderSupport.env("PAW_PNVS_LOGIN_TEMPLATE");
+      sendTemplate(phone, template.isBlank() ? "100001" : template,
+          Json.map("code", code, "min", "5"), true);
+      return;
+    }
     String template = ProviderSupport.env(
         purpose.equals("pickup_confirm") || purpose.equals("exchange_confirm")
             ? "PAW_SMS_CONFIRM_TEMPLATE" : "PAW_SMS_LOGIN_TEMPLATE");
-    sendTemplate(phone, template, Json.map("code", code));
+    sendTemplate(phone, template, Json.map("code", code), false);
   }
 
   /** 预约通知使用独立模板，禁止回退到验证码模板。 */
@@ -31,13 +38,19 @@ public class SmsGateway {
       case "expired" -> "PAW_SMS_APPOINTMENT_EXPIRED_TEMPLATE";
       default -> throw new IllegalArgumentException("不支持的预约短信节点");
     };
-    sendTemplate(phone, ProviderSupport.env(templateKey), parameters);
+    sendTemplate(phone, ProviderSupport.env(templateKey), parameters, false);
   }
 
-  private void sendTemplate(String phone, String template, Map<String, Object> parameters) {
+  private void sendTemplate(String phone, String template, Map<String, Object> parameters, boolean verification) {
     String key = ProviderSupport.env("PAW_SMS_ACCESS_KEY_ID"),
         secret = ProviderSupport.env("PAW_SMS_ACCESS_KEY_SECRET"),
-        signName = ProviderSupport.env("PAW_SMS_SIGN_NAME");
+        signName = ProviderSupport.env(verification ? "PAW_PNVS_SIGN_NAME" : "PAW_SMS_SIGN_NAME");
+    if (verification && signName.isBlank()) signName = "恒创联众";
+    // 未提供短信专用凭据时，成对复用阿里云凭据，避免混用两个账号的 ID 与 Secret。
+    if (key.isBlank() && secret.isBlank()) {
+      key = ProviderSupport.env("OSS_ACCESS_KEY_ID");
+      secret = ProviderSupport.env("OSS_ACCESS_KEY_SECRET");
+    }
     require(
         !key.isBlank() && !secret.isBlank() && !signName.isBlank() && !template.isBlank(),
         503,
@@ -46,7 +59,7 @@ public class SmsGateway {
     try {
       Map<String, String> params = new TreeMap<>();
       params.put("AccessKeyId", key);
-      params.put("Action", "SendSms");
+      params.put("Action", verification ? "SendSmsVerifyCode" : "SendSms");
       params.put("Format", "JSON");
       params.put("Version", "2017-05-25");
       params.put("RegionId", "cn-hangzhou");
@@ -55,7 +68,14 @@ public class SmsGateway {
       params.put("SignatureNonce", UUID.randomUUID().toString());
       params.put(
           "Timestamp", Instant.now().truncatedTo(java.time.temporal.ChronoUnit.SECONDS).toString());
-      params.put("PhoneNumbers", phone);
+      params.put(verification ? "PhoneNumber" : "PhoneNumbers", phone);
+      if (verification) {
+        // 使用自有验证码，由 Redis 校验；阿里云响应不得返回验证码。
+        params.put("CountryCode", "86");
+        params.put("ValidTime", "300");
+        params.put("Interval", "60");
+        params.put("ReturnVerifyCode", "false");
+      }
       params.put("SignName", signName);
       params.put("TemplateCode", template);
       params.put("TemplateParam", Json.write(parameters));
@@ -70,7 +90,7 @@ public class SmsGateway {
               .encodeToString(
                   mac.doFinal(("POST&%2F&" + encode(query)).getBytes(StandardCharsets.UTF_8)));
       HttpRequest request =
-          HttpRequest.newBuilder(URI.create("https://dysmsapi.aliyuncs.com/"))
+          HttpRequest.newBuilder(URI.create(verification ? "https://dypnsapi.aliyuncs.com/" : "https://dysmsapi.aliyuncs.com/"))
               .timeout(Duration.ofSeconds(15))
               .header("Content-Type", "application/x-www-form-urlencoded")
               .POST(HttpRequest.BodyPublishers.ofString(query + "&Signature=" + encode(signature)))
@@ -80,9 +100,11 @@ public class SmsGateway {
               .connectTimeout(Duration.ofSeconds(10))
               .build()
               .send(request, HttpResponse.BodyHandlers.ofString());
+      Map<String, Object> result = Json.read(response.body());
       require(
           response.statusCode() == 200
-              && "OK".equals(Json.text(Json.read(response.body()), "Code")),
+              && "OK".equals(Json.text(result, "Code"))
+              && (!verification || Boolean.TRUE.equals(result.get("Success"))),
           502,
           "UPSTREAM_ERROR",
           "短信平台暂未受理，请稍后重试");

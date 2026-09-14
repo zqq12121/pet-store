@@ -128,7 +128,7 @@ Redis 密码用 `PAW_REDIS_PASSWORD`，生产通过 Redis 执行临时凭证、�
 
 | 模块 | 环境变量 |
 |---|---|
-| 阿里云短信 | `PAW_SMS_ACCESS_KEY_ID`、`PAW_SMS_ACCESS_KEY_SECRET`、`PAW_SMS_SIGN_NAME`、`PAW_SMS_LOGIN_TEMPLATE`、`PAW_SMS_CONFIRM_TEMPLATE`；模板参数为 `code` |
+| 阿里云短信 | `PAW_SMS_ACCESS_KEY_ID`、`PAW_SMS_ACCESS_KEY_SECRET`（两者均未配置时使用 `OSS_ACCESS_KEY_ID`、`OSS_ACCESS_KEY_SECRET`）；另需 `PAW_SMS_SIGN_NAME`、`PAW_SMS_LOGIN_TEMPLATE`、`PAW_SMS_CONFIRM_TEMPLATE`；模板参数为 `code`，凭据所属 RAM 身份需具备短信发送权限 |
 | 微信网页授权 | `PAW_WECHAT_APP_ID`、`PAW_WECHAT_APP_SECRET`、`PAW_WECHAT_OAUTH_REDIRECT`（固定 HTTPS 前端回调页） |
 | 微信 API v3 | `PAW_WECHAT_MCH_ID`、`PAW_WECHAT_MCH_SERIAL`、`PAW_WECHAT_PRIVATE_KEY_PATH`（PKCS#8 PEM）、`PAW_WECHAT_PUBLIC_KEY_PATH`、`PAW_WECHAT_PUBLIC_KEY_ID`、`PAW_WECHAT_API_V3_KEY` |
 | 支付能力 | `PAW_WECHAT_JSAPI_ENABLED=true`、`PAW_WECHAT_H5_ENABLED=true`，分别开通后配置；`PAW_PUBLIC_BASE_URL` 为业务 HTTPS 地址 |
@@ -224,3 +224,23 @@ JSON 中 `status=simulated` 表示模拟通知，绝不调用短信平台；买�
 `visitAt` 使用上海时区的 `yyyy-MM-dd HH:mm`。短信平台模板须与参数对应。
 缺少配置或平台拒绝时记录“预约短信通知失败”，不会写模拟收件箱或标记已发送，预约操作仍然生效。
 当前为提交后单次尝试，无持久化队列或自动重试；提交后进程中断可能漏通知，真实手机送达需上线联调验证。
+
+### 号码认证短信登录（Dypnsapi）
+
+买家登录和微信绑定调用 `SendSmsVerifyCode`，使用赠送签名与模板。
+默认签名为 `恒创联众`、模板为 `100001`；可通过 `PAW_PNVS_SIGN_NAME`、
+`PAW_PNVS_LOGIN_TEMPLATE` 覆盖。参数为 `code`（后端生成的六位数字）和 `min=5`。
+验证码由本项目 Redis 校验、限流并一次性消费，不调用云端 `CheckSmsVerifyCode`。
+凭据优先读取成对的 `PAW_SMS_ACCESS_KEY_ID` / `PAW_SMS_ACCESS_KEY_SECRET`，
+两者均为空时读取 `OSS_ACCESS_KEY_ID` / `OSS_ACCESS_KEY_SECRET`。
+凭据所属 RAM 身份需有 `dypns:SendSmsVerifyCode` 权限；仅 OSS 权限不足。
+
+真实联调时，在 admin-server 进程环境中设置 `PAW_MOCK_PROVIDERS=false`，
+并保持 Redis 可用；local profile 默认模拟，但允许该变量显式覆盖。
+买家前端以 `VITE_DEMO_MODE=false` 启动并指向 Java 网关。
+短信发送响应 `status=accepted` 仅表示平台受理，不代表运营商已送达；
+`status=simulated` 表示写入开发收件箱。密钥只配置在后端，不能加入 `VITE_*` 变量。
+预约通知及交付确认继续使用原 Dysmsapi 和各自模板。
+图形验证码当前仍由后端本地生成，尚未接入阿里云验证码产品。
+
+通过 `scripts/run-service.sh admin-server` 启动时，登录服务默认真实模式；仅需模拟时显式设置 `PAW_AUTH_MOCK_PROVIDERS=true`。订单服务的模拟配置不受此登录启动设置影响。

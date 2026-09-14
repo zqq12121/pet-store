@@ -22,16 +22,19 @@ public class FileService {
   private final TemporaryStore temp;
   private final AuthService auth;
   private final Path root;
+  private final OssStorage oss;
 
   public FileService(
       BusinessRepository store,
       TemporaryStore temp,
       AuthService auth,
+      OssStorage oss,
       @Value("${app.storage}") String root) {
     this.store = store;
     this.temp = temp;
     this.auth = auth;
     this.root = Path.of(root).toAbsolutePath().normalize();
+    this.oss = oss;
   }
 
   /** 访问令牌校验仍由 content 执行，Controller 只拿到已授权的下载描述。 */
@@ -75,6 +78,7 @@ public class FileService {
         "文件为空或超过大小限制");
     String id = id("file");
     Path target = root.resolve(id);
+    boolean storedRemotely = false;
     try {
       Files.createDirectories(root);
       file.transferTo(target);
@@ -137,6 +141,9 @@ public class FileService {
       boolean pub =
           List.of("avatar", "pet_image", "banner", "pet_video", "quarantine_public")
               .contains(purpose);
+      // 类型和内容校验通过后再上传；失败时不创建 ready 文件记录。
+      oss.upload(id, target, mime);
+      storedRemotely = true;
       Map<String, Object> asset =
           store.create(
               "file",
@@ -163,9 +170,11 @@ public class FileService {
                   pub ? "/api/v1/media/" + id : null));
       return dto(asset);
     } catch (ApiException e) {
+      if (storedRemotely) deleteRemote(id);
       delete(target);
       throw e;
     } catch (Exception e) {
+      if (storedRemotely) deleteRemote(id);
       delete(target);
       throw new ApiException(503, "SERVICE_UNAVAILABLE", "文件存储或解码服务不可用");
     }
@@ -237,6 +246,14 @@ public class FileService {
     }
   }
 
+  private void deleteRemote(String id) {
+    try {
+      oss.delete(id);
+    } catch (Exception ignored) {
+      /* 不掩盖原始上传错误；保留对象供存储核对，不伪造成功记录。 */
+    }
+  }
+
   public Map<String, Object> dto(Map<String, Object> f) {
     return CatalogService.select(
         f, "id,originalName,mimeType,sizeBytes,purpose,visibility,status,publicUrl,createdAt");
@@ -278,6 +295,13 @@ public class FileService {
         "RESOURCE_NOT_FOUND",
         "文件不可访问");
     Path p = root.resolve(id).normalize();
+    require(p.getParent().equals(root), 404, "RESOURCE_NOT_FOUND", "文件不存在");
+    try {
+      // 必须在上方权限校验之后读取 OSS，私有材料不生成公开存储链接。
+      oss.restoreCache(id, p);
+    } catch (Exception e) {
+      throw new ApiException(503, "SERVICE_UNAVAILABLE", "文件存储暂不可用");
+    }
     require(
         p.getParent().equals(root) && Files.isRegularFile(p), 404, "RESOURCE_NOT_FOUND", "文件不存在");
     return p;

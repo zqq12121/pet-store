@@ -19,10 +19,13 @@ coverage/
 server/uploads/
 
 /backend/data/
+/backend/integration-tests/data/
+/data/
 /backend/target/
 /backend/*/target/
 /backend/.nacos.env
 /output/
+/backups/
 *.iml
 __pycache__/
 *.pyc

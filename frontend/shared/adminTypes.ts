@@ -7,4 +7,8 @@ export interface PickupLookup {order:Order;contactName:string;contactPhoneMasked
 export interface AdminAfterSale extends AfterSale {version:number;order:Order;requestedAmount:number|null;diagnosisFileIds:string[];approvedAmount:number|null}
 export interface Knowledge {id:string;version:number;title:string;category:string;petType:string;format:'article'|'qa';content:string|null;question:string|null;answer:string|null;sourceName:string;sourceUrl:string|null;breedNames:string[];status:string;indexStatus:string}
 export interface Job {id:string;status:string;errorMessage?:string;totalCount?:number;successCount?:number;failedCount?:number;errors?:{row:number;message:string}[]}
+export interface AiCounts {sessionCount:number;questionCount:number;completedCount:number;failedCount:number;streamingCount:number;positiveCount:number;negativeCount:number;avgFirstTokenMs:number|null;avgGenerationMs:number|null;firstTokenSamples:number;generationSamples:number}
+export interface AiStatistics {startDate:string;endDate:string;totals:AiCounts;daily:(AiCounts&{date:string})[];knowledge:{total:number;draft:number;published:number;archived:number;ready:number;pending:number;failed:number};updatedAt:string}
+export interface ImportJob {id:string;status:string;totalCount:number|null;successCount:number;failedCount:number;errorMessage:string|null;createdAt:string}
+export interface ImportError {rowNumber:number;field:string|null;message:string}
 export interface ShopSettings extends Shop {version:number;paymentTimeoutMinutes:number;pickupRetentionHours:number;exchangeEnabled:boolean;banners:{id:string|null;title:string;imageFileId:string;linkType:'pet'|'notice'|'none';petId:string|null;noticeText:string|null;sortOrder:number;enabled:boolean}[]}

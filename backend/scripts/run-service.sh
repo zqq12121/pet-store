@@ -11,5 +11,9 @@ if [ -f .env ]; then
   . ./.env
   set +a
 fi
+# 登录服务默认调用真实短信；其他服务保留各自原有模拟配置。
+if [ "$service" = "admin-server" ]; then
+  export PAW_MOCK_PROVIDERS="${PAW_AUTH_MOCK_PROVIDERS:-false}"
+fi
 export SPRING_PROFILES_ACTIVE="${SPRING_PROFILES_ACTIVE:-local}"
 exec java -Xms128m -Xmx384m -jar "$service/target/$service-1.0.0-exec.jar"
