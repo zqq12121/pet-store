@@ -1,6 +1,7 @@
 package com.warmpaw.application;
 import static com.warmpaw.common.Json.*;
 import com.warmpaw.repository.BusinessRepository;
+import com.warmpaw.service.AppointmentSmsOutbox;
 import java.time.*;
 import java.util.*;
 import org.springframework.stereotype.Service;
@@ -8,7 +9,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class TransactionDashboardService {
   private final BusinessRepository store;
-  public TransactionDashboardService(BusinessRepository store) { this.store = store; }
+  private final AppointmentSmsOutbox appointmentSms;
+  public TransactionDashboardService(BusinessRepository store, AppointmentSmsOutbox appointmentSms) {
+    this.store = store;
+    this.appointmentSms = appointmentSms;
+  }
   public Map<String, Object> dashboard() {
     LocalDate today = LocalDate.now(ZoneId.of("Asia/Shanghai"));
     // 线下收款按店长实际登记时间统计，不伪造微信支付流水。
@@ -56,6 +61,10 @@ public class TransactionDashboardService {
                 .count(),
             "failedRefundCount",
             store.list("refund").stream().filter(r -> "failed".equals(text(r, "status"))).count(),
+            "smsNotificationPendingCount",
+            appointmentSms.pendingCount(),
+            "smsNotificationFailedCount",
+            appointmentSms.failedCount(),
             "knowledgeFailedJobCount",
             0,
             "paymentExceptionCount",

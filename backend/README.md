@@ -209,7 +209,7 @@ sh scripts/start-docker-local.sh
 
 ### 到店预约短信
 
-提交预约、店长确认、店长取消、预约过期会在业务事务提交后通知预约联系电话。
+提交预约、店长确认、店长取消、预约过期和线下交付完成会通知预约联系电话。
 本地 `app.mock-providers=true` 时仅写入 `data/local-inbox/sms-appointment-<订单ID>-<节点>.txt`，
 JSON 中 `status=simulated` 表示模拟通知，绝不调用短信平台；买家自行取消不触发店长取消短信。
 真实模式复用阿里云短信凭据与签名，必须额外配置以下独立模板，不回退到验证码模板：
@@ -220,10 +220,14 @@ JSON 中 `status=simulated` 表示模拟通知，绝不调用短信平台；买�
 | 店长确认 | `PAW_SMS_APPOINTMENT_CONFIRMED_TEMPLATE` | `orderId`、`visitAt` |
 | 店长取消 | `PAW_SMS_APPOINTMENT_CANCELLED_TEMPLATE` | `orderId`、`visitAt`、`reason` |
 | 预约过期 | `PAW_SMS_APPOINTMENT_EXPIRED_TEMPLATE` | `orderId`、`visitAt` |
+| 交付完成 | `PAW_SMS_APPOINTMENT_COMPLETED_TEMPLATE` | `orderId`、`visitAt` |
 
 `visitAt` 使用上海时区的 `yyyy-MM-dd HH:mm`。短信平台模板须与参数对应。
-缺少配置或平台拒绝时记录“预约短信通知失败”，不会写模拟收件箱或标记已发送，预约操作仍然生效。
-当前为提交后单次尝试，无持久化队列或自动重试；提交后进程中断可能漏通知，真实手机送达需上线联调验证。
+通知先与预约状态写入同一事务的 `appointment_sms_outbox`，提交后立即发送；失败按指数退避自动重试，
+最多八次，进程重启后继续。多实例使用两分钟租约避免同时发送，后台工作台显示等待重试和最终失败数量。
+缺少配置或平台拒绝不会伪装成功，预约操作仍然生效。上线前先执行
+`deploy/appointment-sms-outbox-migration.sql`。阿里云不接受业务幂等键，因此平台受理后、成功状态落库前若进程崩溃，
+仍可能产生重复短信；真实手机送达与该边界需上线联调验证。
 
 ### 号码认证短信登录（Dypnsapi）
 

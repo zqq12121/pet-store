@@ -103,7 +103,7 @@ public class AppointmentService {
     }
     store.save(order);
     store.audit(actor.id(), "appointment." + action, text(order, "id"));
-    if (action.equals("confirm")) notifications.notifyAfterCommit(order, "confirmed");
+    notifications.notifyAfterCommit(order, action.equals("confirm") ? "confirmed" : "completed");
   }
 
   /** 过期只释放此预约自己的库存；由一分钟任务执行，创建预约时也清理过期占用。 */

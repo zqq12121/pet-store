@@ -2,7 +2,7 @@
 
 目标为本机完整容器化：买家端、后台、网关、订单、管理、AI、MySQL、Redis、Nacos。
 外部 DeepSeek 与阿里云短信使用真实模式；未配置的能力不会改为模拟成功。
-文件当前保存在 Docker 上传数据卷；OSS 尚未实现，不能称为已接通。
+文件已接入阿里云 OSS，上传卷保留本地缓存。当前实测结果见 [交付验收记录](DELIVERY_STATUS.md)。
 
 ## 首次部署
 
@@ -43,7 +43,17 @@ AI 首次知识索引需要下载中文嵌入模型；服务 `/health` 返回 UP
 默认 Compose 项目名为 `warmpaw`，实际卷名带此前缀。原名为 `mysql`、`redis`、`nginx` 及
 `warmpaw-micro-nacos-1` 的容器不属于此项目；本配置不会接管或删除它们。
 旧数据迁移应先暂停旧应用写入、备份 MySQL/上传/SQLite，再导入新卷并校验数量和媒体；
-迁移决定与具体执行结果另行记录，不能因为目录内有备份就视为已经迁移。
+本机现有数据已经迁移并完成校验，详见交付验收记录。不要再次向运行库导入旧备份。
+
+### OSS
+
+根目录 `.env` 设置 `PAW_OSS_ENABLED=true`、`PAW_OSS_BUCKET`、`PAW_OSS_ENDPOINT`，
+凭据使用 `OSS_ACCESS_KEY_ID` 和 `OSS_ACCESS_KEY_SECRET`。当前为北京 `aurt` Bucket。
+对象固定在 `warmpaw/files/` 前缀，全部使用私有 ACL；公开图片也由现有媒体 API 提供，不开放 Bucket。
+API 先执行原有权限校验，本地缓存缺失时再从 OSS 恢复，文件 ID 和访问 URL 不变。
+
+新环境需迁移原磁盘文件时运行 `python3 scripts/migrate-oss.py`，它会校验内容、拒绝覆盖不同内容的同名对象，
+并检查回读和私有 ACL。执行后保留原文件，备份目录生成校验清单。
 
 ## 启停、更新与排查
 
@@ -65,6 +75,15 @@ docker compose exec web nginx -t
 
 Docker Hub 超时时先检查 Docker Desktop 的网络/代理；不要把网络超时当作应用编译错误。
 Maven、npm、uv 安装阶段也需要可达各自官方依赖源。
+本机 Docker Desktop 已配置 `http://127.0.0.1:7897` 代理，原设置保存在初始迁移备份中。
+若 Docker pull 成功但 BuildKit 的认证请求仍超时，构建命令也需使用该代理：
+
+```sh
+HTTPS_PROXY=http://127.0.0.1:7897 HTTP_PROXY=http://127.0.0.1:7897 NO_PROXY=localhost,127.0.0.1 docker compose build
+docker compose up -d --no-build --wait --wait-timeout 600
+```
+
+代理地址是本机配置；复制到其他电脑时按其网络配置调整，不要照搬不存在的代理。
 
 ## 备份与恢复
 
@@ -79,6 +98,15 @@ python3 scripts/backup-compose.py
 
 恢复先在另一 Compose 项目演练，禁止直接覆盖唯一运行库。基础步骤：
 
+```sh
+# 替换为自己的完整备份目录；项目名必须全新，并使用指定前缀。
+python3 scripts/restore-compose.py backups/20260914-225121 --project warmpaw-restore-example
+```
+
+恢复脚本拒绝已有数据卷，恢复 MySQL、上传及 AI 数据并设置 UID/GID 10001；
+只启动数据库和 Redis，不启动可能重复发送通知的业务服务。核验后再选择正式切换时间。
+已完成一次独立恢复演练，结果位于备份目录的 `restore-verification.json`。
+
 1. 停止目标项目所有应用，确认目标数据可以被备份替换。
 2. 启动目标 MySQL，将 `mysql.sql` 导入其 `warmpaw` 库；先校验 dump 完整及源版本。
 3. 将 `uploads` 内容恢复到管理服务 `/app/data/files`，`ai-data` 内容恢复到 AI `/app/data`，
@@ -92,7 +120,7 @@ python3 scripts/backup-compose.py
 - 登录、权限隔离、上传、预约库存、店长确认、线下收款交付、取消/过期、售后通过业务验证。
 - 真实 DeepSeek 回复与知识引用、管理员知识管理与导入统计验证；不能只用健康接口代替。
 - 真实短信由指定验收手机号确认送达；平台 accepted 不等于手机收到。
-- 上传视频与私有证明鉴权验证；如要求 OSS，需要补齐实现并单独验收。
+- 上传视频、OSS 回源与私有证明鉴权验证。
 - 重建/重启保留数据，完成备份恢复演练；列出仍未提供的业务资料与第三方配置。
 
 自动测试、配置校验、容器启动、第三方调用和浏览器验收分别记录实际结果，不互相替代。

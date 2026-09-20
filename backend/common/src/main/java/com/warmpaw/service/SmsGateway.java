@@ -36,6 +36,7 @@ public class SmsGateway {
       case "confirmed" -> "PAW_SMS_APPOINTMENT_CONFIRMED_TEMPLATE";
       case "cancelled" -> "PAW_SMS_APPOINTMENT_CANCELLED_TEMPLATE";
       case "expired" -> "PAW_SMS_APPOINTMENT_EXPIRED_TEMPLATE";
+      case "completed" -> "PAW_SMS_APPOINTMENT_COMPLETED_TEMPLATE";
       default -> throw new IllegalArgumentException("不支持的预约短信节点");
     };
     sendTemplate(phone, ProviderSupport.env(templateKey), parameters, false);
