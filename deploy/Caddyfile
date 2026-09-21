@@ -1,0 +1,27 @@
+{
+    email {$ACME_EMAIL}
+}
+
+{$PAW_DOMAIN} {
+    # 自动申请、续期证书并将 HTTP 跳转至 HTTPS；不记录含凭证的请求 URL。
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        X-Content-Type-Options nosniff
+        Referrer-Policy strict-origin-when-cross-origin
+        X-Frame-Options SAMEORIGIN
+        -Server
+    }
+    request_body {
+        max_size 101MB
+    }
+    # API 直接到网关，保留 HTTPS 与访客 IP；Caddy 默认丢弃外部伪造的 X-Forwarded-*。
+    handle /api/* {
+        reverse_proxy gateway-server:8080 {
+            header_up -Forwarded
+            flush_interval -1
+        }
+    }
+    handle {
+        reverse_proxy web:80
+    }
+}

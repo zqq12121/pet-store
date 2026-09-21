@@ -64,6 +64,25 @@ class AppointmentSmsNotifierTest {
   }
 
   @Test
+  void immediateDispatchFailureDoesNotFailCommittedAppointment() {
+    AppointmentSmsOutbox outbox = mock(AppointmentSmsOutbox.class);
+    AppointmentSmsWorker worker = mock(AppointmentSmsWorker.class);
+    var notifier = new AppointmentSmsNotifier(outbox, worker);
+    when(outbox.enqueue(anyString(), anyString(), anyString(), anyMap(), any())).thenReturn(true);
+    doThrow(new IllegalStateException("database temporarily unavailable"))
+        .when(worker).dispatch(anyString());
+    TransactionSynchronizationManager.initSynchronization();
+    TransactionSynchronizationManager.setActualTransactionActive(true);
+    try {
+      notifier.notifyAfterCommit(order(), "submitted");
+      assertDoesNotThrow(() -> TransactionSynchronizationManager.getSynchronizations().getFirst().afterCommit());
+      verify(worker).dispatch("order_sms_test-submitted");
+    } finally {
+      TransactionSynchronizationManager.clear();
+    }
+  }
+
+  @Test
   void duplicateBusinessEventDoesNotRegisterAnotherDispatch() {
     AppointmentSmsOutbox outbox = mock(AppointmentSmsOutbox.class);
     AppointmentSmsWorker worker = mock(AppointmentSmsWorker.class);
@@ -101,7 +120,7 @@ class AppointmentSmsNotifierTest {
 
     assertDoesNotThrow(() -> worker.dispatch(notice.key()));
     verify(outbox).retry(eq(notice.key()), eq(1), any(Instant.class), eq("UPSTREAM_ERROR"));
-    verify(outbox, never()).sent(anyString(), any());
+    verify(outbox, never()).sent(anyString(), anyInt(), any());
 
     reset(gateway, outbox);
     when(outbox.claim(eq(notice.key()), any())).thenReturn(notice);
@@ -111,7 +130,7 @@ class AppointmentSmsNotifierTest {
             eq("13900000000"),
             eq("cancelled"),
             argThat(p -> "门店临时休息".equals(p.get("reason"))));
-    verify(outbox).sent(eq(notice.key()), any());
+    verify(outbox).sent(eq(notice.key()), eq(notice.attempts()), any());
   }
 
   @Test
@@ -135,7 +154,7 @@ class AppointmentSmsNotifierTest {
         .localAppointmentNotice(
             eq(notice.key()), argThat(n -> "simulated".equals(n.get("status"))));
     verifyNoInteractions(gateway);
-    verify(outbox).sent(eq(notice.key()), any());
+    verify(outbox).sent(eq(notice.key()), eq(notice.attempts()), any());
 
     try (var env = mockStatic(ProviderSupport.class)) {
       env.when(() -> ProviderSupport.env(anyString())).thenReturn("configured");

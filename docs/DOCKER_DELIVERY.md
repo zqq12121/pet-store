@@ -2,6 +2,7 @@
 
 目标为本机完整容器化：买家端、后台、网关、订单、管理、AI、MySQL、Redis、Nacos。
 外部 DeepSeek 与阿里云短信使用真实模式；未配置的能力不会改为模拟成功。
+公网部署另叠加 `compose.production.yaml`，新增 Caddy 自动 HTTPS 并关闭 8090 对外入口，见 [正式运营部署](PRODUCTION.md)。
 文件已接入阿里云 OSS，上传卷保留本地缓存。当前实测结果见 [交付验收记录](DELIVERY_STATUS.md)。
 
 ## 首次部署

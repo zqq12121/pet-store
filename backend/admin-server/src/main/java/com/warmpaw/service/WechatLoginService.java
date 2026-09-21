@@ -30,6 +30,20 @@ public class WechatLoginService {
     return com.warmpaw.common.ProviderSupport.env("PAW_WECHAT_APP_ID");
   }
 
+  /** 只公开是否具备配置，不向浏览器返回应用密钥或回调内部信息。 */
+  public boolean configured() {
+    String callback = com.warmpaw.common.ProviderSupport.env("PAW_WECHAT_OAUTH_REDIRECT");
+    try {
+      URI uri = URI.create(callback);
+      return !app().isBlank()
+          && !com.warmpaw.common.ProviderSupport.env("PAW_WECHAT_APP_SECRET").isBlank()
+          && "https".equals(uri.getScheme()) && uri.getHost() != null
+          && uri.getUserInfo() == null && uri.getFragment() == null;
+    } catch (IllegalArgumentException e) {
+      return false;
+    }
+  }
+
   public Map<String, Object> authorize(
       Map<String, Object> query, AuthService.Actor actor, String browser) {
     Input in = new Input(query, "scene,returnPath");
@@ -38,7 +52,7 @@ public class WechatLoginService {
     if (scene.equals("pay")) AuthService.role(actor, "buyer");
     String callback = com.warmpaw.common.ProviderSupport.env("PAW_WECHAT_OAUTH_REDIRECT");
     require(
-        !app().isBlank() && callback.startsWith("https://"),
+        configured(),
         503,
         "SERVICE_UNAVAILABLE",
         "微信网页授权尚未配置");

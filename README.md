@@ -9,6 +9,7 @@ Vue 买家端与管理后台、Spring Cloud 业务服务、Python LangChain 智�
 配置、启停、数据卷及备份说明见 [Docker 交付说明](docs/DOCKER_DELIVERY.md)。
 本机入口：[买家](http://localhost:8090/) · [后台](http://localhost:8090/admin/)。
 原数据已迁移，DeepSeek 与 OSS 已实际接通；完成情况及正式运营待办见 [交付验收记录](docs/DELIVERY_STATUS.md)。
+公网运营使用 `compose.yaml` + `compose.production.yaml`，包含自动 HTTPS；配置、上线检查和运营验收见 [正式运营部署](docs/PRODUCTION.md)。
 下方保留宿主机开发方式与历史记录；当前 Docker 部署以以上交付文档为准。
 
 ## 本机运行

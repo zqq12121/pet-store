@@ -69,6 +69,12 @@ public class AuthController {
             new Input(query, "purpose").choice("purpose", "sms,admin_login"), req.getRemoteAddr()));
   }
 
+  /** 登录页只展示当前可用入口；配置存在不代表第三方已验收。 */
+  @GetMapping("/auth/capabilities")
+  public ResponseEntity<Object> capabilities() {
+    return ok(200, map("wechatLogin", wechatLogin.configured()));
+  }
+
   @PostMapping("/auth/sms-codes")
   public ResponseEntity<Object> sms(@RequestBody Map<String, Object> b, HttpServletRequest req) {
     actor(req);

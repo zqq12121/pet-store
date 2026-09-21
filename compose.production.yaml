@@ -1,0 +1,36 @@
+# 公网单机入口：docker compose -f compose.yaml -f compose.production.yaml up -d --build --wait
+# 需要 Compose 2.24.4+；真实域名须解析到部署服务器，80/443 必须可达。
+services:
+  web:
+    ports: !reset []
+  edge:
+    image: caddy:2.10.2-alpine
+    restart: unless-stopped
+    environment:
+      PAW_DOMAIN: ${PAW_DOMAIN:?请填写公网域名，不含协议和路径}
+      ACME_EMAIL: ${ACME_EMAIL:?请填写证书到期联系邮箱}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      web:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD-SHELL, 'wget -q -O /dev/null http://127.0.0.1:2019/config/']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+volumes:
+  caddy-data:
+  caddy-config:

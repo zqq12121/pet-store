@@ -4,6 +4,8 @@ name: warmpaw
 x-java-environment: &java-environment
   SPRING_PROFILES_ACTIVE: prod
   SERVER_ADDRESS: 0.0.0.0
+  # 业务端口仅在容器私网；由 Tomcat 解析边缘代理清洗后的真实客户端地址。
+  SERVER_FORWARD_HEADERS_STRATEGY: native
   SPRING_CLOUD_NACOS_DISCOVERY_IP: ""
   NACOS_SERVER_ADDR: nacos:8848
   PAW_DB_URL: jdbc:mysql://mysql:3306/warmpaw?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
@@ -60,8 +62,28 @@ x-java: &java
       max-size: 10m
       max-file: "3"
 
+# 所有服务都限制日志大小，避免长期运营耗尽磁盘。
+x-logging: &bounded-logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
 services:
+  # 按需执行只读上线检查，不常驻，也不挂载 Docker socket。
+  readiness:
+    image: python:3.12-alpine
+    profiles: [tools]
+    env_file: .env
+    entrypoint: [python, /checks/check-production.py]
+    volumes:
+      - ./scripts/check-production.py:/checks/check-production.py:ro
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    logging: *bounded-logging
   mysql:
+    logging: *bounded-logging
     image: mysql:8.4
     restart: unless-stopped
     mem_limit: 1g
@@ -84,6 +106,7 @@ services:
       start_period: 60s
 
   redis:
+    logging: *bounded-logging
     image: redis:8.2-alpine
     restart: unless-stopped
     mem_limit: 256m
@@ -99,6 +122,7 @@ services:
       retries: 10
 
   nacos:
+    logging: *bounded-logging
     image: nacos/nacos-server:v3.1.1
     restart: unless-stopped
     mem_limit: 768m
@@ -156,8 +180,11 @@ services:
       SPRING_CLOUD_NACOS_DISCOVERY_IP: ""
       NACOS_SERVER_ADDR: nacos:8848
       PAW_AI_URL: http://ai-service:8083
+      # Gateway 4.3+ 必须显式信任容器私网代理，才转发边缘已清洗的来源头。
+      SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_TRUSTED_PROXIES: '^(10[.].*|172[.](1[6-9]|2[0-9]|3[01])[.].*|192[.]168[.].*)$'
 
   ai-service:
+    logging: *bounded-logging
     build: ./ai-service
     restart: unless-stopped
     init: true
@@ -187,6 +214,7 @@ services:
       start_period: 60s
 
   web:
+    logging: *bounded-logging
     build: ./frontend
     restart: unless-stopped
     ports:

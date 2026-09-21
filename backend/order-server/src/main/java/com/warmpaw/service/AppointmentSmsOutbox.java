@@ -68,15 +68,22 @@ public class AppointmentSmsOutbox {
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public Notice claim(String key, Instant now) {
     Instant lease = now.plus(Duration.ofMinutes(2));
+    // 第八次发送中断也必须终止；不能因进程一直崩溃而无限重发。
+    jdbc.update(
+        "UPDATE appointment_sms_outbox SET status='failed',locked_until=NULL,"
+            + "last_error='LEASE_EXPIRED',updated_at=? WHERE event_key=? "
+            + "AND status='sending' AND attempts>=? AND locked_until<=?",
+        now.toString(), key, MAX_ATTEMPTS, now.toString());
     int changed =
         jdbc.update(
             "UPDATE appointment_sms_outbox SET status='sending',attempts=attempts+1,"
                 + "locked_until=?,updated_at=? WHERE event_key=? "
-                + "AND status IN ('pending','retry','sending') AND next_attempt_at<=? "
+                + "AND status IN ('pending','retry','sending') AND attempts<? AND next_attempt_at<=? "
                 + "AND (locked_until IS NULL OR locked_until<=?)",
             lease.toString(),
             now.toString(),
             key,
+            MAX_ATTEMPTS,
             now.toString(),
             now.toString());
     if (changed != 1) return null;
@@ -121,13 +128,14 @@ public class AppointmentSmsOutbox {
   }
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void sent(String key, Instant now) {
+  public void sent(String key, int attempts, Instant now) {
     jdbc.update(
         "UPDATE appointment_sms_outbox SET status='sent',sent_at=?,locked_until=NULL,"
-            + "last_error=NULL,updated_at=? WHERE event_key=? AND status='sending'",
+            + "last_error=NULL,updated_at=? WHERE event_key=? AND status='sending' AND attempts=?",
         now.toString(),
         now.toString(),
-        key);
+        key,
+        attempts);
   }
 
   /** 指数退避最多八次；最终失败保留在表内，供后台排查而不是静默丢弃。 */
@@ -137,11 +145,12 @@ public class AppointmentSmsOutbox {
     long delayMinutes = Math.min(120, 1L << Math.min(7, Math.max(0, attempts - 1)));
     jdbc.update(
         "UPDATE appointment_sms_outbox SET status=?,next_attempt_at=?,locked_until=NULL,"
-            + "last_error=?,updated_at=? WHERE event_key=? AND status='sending'",
+            + "last_error=?,updated_at=? WHERE event_key=? AND status='sending' AND attempts=?",
         exhausted ? "failed" : "retry",
         now.plus(Duration.ofMinutes(delayMinutes)).toString(),
         errorCode,
         now.toString(),
-        key);
+        key,
+        attempts);
   }
 }

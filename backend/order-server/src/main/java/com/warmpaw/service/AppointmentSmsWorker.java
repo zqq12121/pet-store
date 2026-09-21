@@ -44,7 +44,8 @@ public class AppointmentSmsWorker {
       } else {
         gateway.sendAppointment(notice.phone(), notice.event(), notice.parameters());
       }
-      outbox.sent(notice.key(), Instant.now());
+      // attempts 随每次认领递增，旧 Worker 不能覆盖新租约的结果。
+      outbox.sent(notice.key(), notice.attempts(), Instant.now());
     } catch (RuntimeException e) {
       String code = e instanceof ApiException api ? api.code : "INTERNAL_ERROR";
       outbox.retry(notice.key(), notice.attempts(), Instant.now(), code);

@@ -6,6 +6,8 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -13,6 +15,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 /** 在预约事务内登记通知；事务回滚时 outbox 记录也一起回滚。 */
 @Service
 public class AppointmentSmsNotifier {
+  private static final Logger log = LoggerFactory.getLogger(AppointmentSmsNotifier.class);
   private final AppointmentSmsOutbox outbox;
   private final AppointmentSmsWorker worker;
 
@@ -39,7 +42,12 @@ public class AppointmentSmsNotifier {
     TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
       @Override
       public void afterCommit() {
-        worker.dispatch(id + "-" + event);
+        try {
+          worker.dispatch(id + "-" + event);
+        } catch (RuntimeException e) {
+          // 订单已经提交，队列也已持久化；交给定时扫描恢复，不向买家谎报下单失败。
+          log.error("预约短信即时调度失败，等待扫描恢复：orderId={}, event={}", id, event);
+        }
       }
     });
   }
