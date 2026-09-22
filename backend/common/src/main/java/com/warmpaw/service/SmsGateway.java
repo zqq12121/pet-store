@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 public class SmsGateway {
   public void send(String phone, String code, String purpose) {
     // 登录与微信绑定使用号码认证赠送模板；交付确认仍使用原短信服务。
-    if (purpose.equals("login") || purpose.equals("wechat_bind")) {
+    if (purpose.equals("login") || purpose.equals("wechat_bind") || purpose.equals("password_reset")) {
       String template = ProviderSupport.env("PAW_PNVS_LOGIN_TEMPLATE");
       sendTemplate(phone, template.isBlank() ? "100001" : template,
           Json.map("code", code, "min", "5"), true);

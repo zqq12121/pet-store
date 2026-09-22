@@ -5,7 +5,7 @@ export interface Pet { id: string; name: string; category: 'cat' | 'dog'; breed:
 export interface Banner { id: string; title: string; imageUrl: string; linkType: 'pet' | 'notice' | 'none'; petId: string | null; noticeText: string | null }
 export interface Category { code: string; name: string; breeds: string[] }
 export interface HomeData { banners: Banner[]; categories: Category[]; recommendedPets: Pet[]; latestPets: Pet[]; shop: Shop }
-export interface User { id: string; nickname: string; avatarUrl: string | null; phoneMasked: string }
+export interface User { id: string; nickname: string; avatarUrl: string | null; phoneMasked: string; username?: string | null; hasPassword?: boolean; passwordChangeAvailableAt?: string | null; usernameChangeAvailableAt?: string | null }
 export interface LoginResult { accessToken: string; expiresIn: number; user: User }
 export interface Agreement { id: string; type: string; version: string; title: string; content: string; contentHash: string; healthGuaranteeDays: number | null }
 export interface OrderPreview { product: Pet; productVersion: number; amount: number; shop: Shop; agreementVersion: string; agreementContentHash: string; purchaseAllowed: boolean; blockedReason: string | null; paymentTimeoutMinutes: number; pickupRetentionHours: number; healthGuaranteeDays: number }

@@ -18,8 +18,8 @@ def model(kind,table,label,cols,children=None,constraints=None):
     common='id:id ownerId:id status:VARCHAR(40) version:'+('VARCHAR(32)' if kind=='agreement' else 'int')+' createdAt:time updatedAt:time'
     obj={'kind':kind,'table':table,'label':label,'fields':fields(common+' '+cols),'children':children or [],'constraints':constraints or []}
     models.append(obj);return obj
-model('admin','admins','管理员','username:VARCHAR(32) passwordHash:s',None,['UNIQUE (username)'])
-model('user','users','买家用户','phone:VARCHAR(11) nickname:VARCHAR(30) avatarUrl:VARCHAR(2048)',constraints=['UNIQUE (phone)'])
+model('admin','admins','管理员','username:VARCHAR(32) passwordHash:s passwordChangedAt:time',None,['UNIQUE (username)'])
+model('user','users','买家用户','phone:VARCHAR(11) nickname:VARCHAR(30) avatarUrl:VARCHAR(2048) username:VARCHAR(32) passwordHash:s passwordChangedAt:time usernameChangedAt:time',constraints=['UNIQUE (phone)', 'UNIQUE (username)'])
 model('wechat','wechat_accounts','微信账号绑定','appId:VARCHAR(64) openid:VARCHAR(128)',constraints=['UNIQUE (app_id,openid)','UNIQUE (app_id,owner_id)','FOREIGN KEY (owner_id) REFERENCES users(id)'])
 model('wechat_openid','wechat_openid_claims','微信身份唯一归属','appId:VARCHAR(64)',constraints=['FOREIGN KEY (owner_id) REFERENCES users(id)'])
 model('session','auth_sessions','可撤销登录会话','role:VARCHAR(16) expiresAt:time')

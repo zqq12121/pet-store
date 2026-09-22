@@ -2,6 +2,7 @@ import {createRouter,createWebHistory} from 'vue-router'
 import {auth} from '../../shared/api'
 const router=createRouter({history:createWebHistory(import.meta.env.BASE_URL),routes:[
  {path:'/login',component:()=>import('./views/Login.vue')},
+ {path:'/security',component:()=>import('./views/Security.vue'),meta:{title:'账号安全'}},
  {path:'/',component:()=>import('./views/Dashboard.vue'),meta:{title:'工作台'}},
  {path:'/pets',component:()=>import('./views/Pets.vue'),meta:{title:'宠物管理'}},
  {path:'/pets/:id',component:()=>import('./views/PetEditor.vue'),meta:{title:'宠物档案'}},

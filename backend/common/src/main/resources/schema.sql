@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS admins (
   updated_at VARCHAR(40) NOT NULL COMMENT 'updatedAt',
   username VARCHAR(32) COMMENT 'username',
   password_hash VARCHAR(255) COMMENT 'passwordHash',
+  password_changed_at VARCHAR(40) COMMENT 'passwordChangedAt',
   PRIMARY KEY (id),
   UNIQUE (username)
 ) COMMENT='管理员';
@@ -30,8 +31,13 @@ CREATE TABLE IF NOT EXISTS users (
   phone VARCHAR(11) COMMENT 'phone',
   nickname VARCHAR(30) COMMENT 'nickname',
   avatar_url VARCHAR(2048) COMMENT 'avatarUrl',
+  username VARCHAR(32) COMMENT 'username',
+  password_hash VARCHAR(255) COMMENT 'passwordHash',
+  password_changed_at VARCHAR(40) COMMENT 'passwordChangedAt',
+  username_changed_at VARCHAR(40) COMMENT 'usernameChangedAt',
   PRIMARY KEY (id),
-  UNIQUE (phone)
+  UNIQUE (phone),
+  UNIQUE (username)
 ) COMMENT='买家用户';
 
 -- 微信账号绑定

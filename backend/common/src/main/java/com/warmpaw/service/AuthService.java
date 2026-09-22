@@ -86,7 +86,7 @@ public class AuthService {
   }
 
   public Map<String, Object> captcha(String purpose, String ip) {
-    require(List.of("sms", "admin_login").contains(purpose), 400, "VALIDATION_ERROR", "验证码用途不正确");
+    require(List.of("sms", "admin_login", "password_login").contains(purpose), 400, "VALIDATION_ERROR", "验证码用途不正确");
     temp.limit("captcha:" + ip, 30, 60);
     String id = id("captcha"), code = digits(4);
     temp.put("captcha:" + id, write(map("purpose", purpose, "hash", hash(code))), 120);
@@ -127,7 +127,7 @@ public class AuthService {
 
   public Map<String, Object> sendLoginSms(Map<String, Object> body, String ip) {
     Input in = new Input(body, "phone,purpose,captchaId,captchaCode,bindTicket");
-    String phone = in.phone("phone"), purpose = in.choice("purpose", "login,wechat_bind");
+    String phone = in.phone("phone"), purpose = in.choice("purpose", "login,wechat_bind,password_reset");
     checkCaptcha(in.str("captchaId", 1, 64), in.str("captchaCode", 4, 6), "sms");
     if (purpose.equals("wechat_bind"))
       require(
@@ -197,6 +197,10 @@ public class AuthService {
     return map(
         "id",
         user.get("id"),
+        "username", user.get("username"),
+        "hasPassword", user.get("passwordHash") != null,
+        "passwordChangeAvailableAt", nextChange(user, "passwordChangedAt", 7),
+        "usernameChangeAvailableAt", nextChange(user, "usernameChangedAt", 3),
         "nickname",
         user.get("nickname"),
         "avatarUrl",
@@ -240,6 +244,7 @@ public class AuthService {
     String username = in.str("username", 3, 32), password = in.str("password", 8, 128);
     temp.checkFailures("admin-login:" + hash(username), 5);
     checkCaptcha(in.str("captchaId", 1, 64), in.str("captchaCode", 1, 20), "admin_login");
+    store.lock();
     Map<String, Object> account = store.byKey("admin", username);
     if (account == null || !passwordMatches(password, text(account, "passwordHash"))) {
       temp.failed("admin-login:" + hash(username), 600);
@@ -278,11 +283,129 @@ public class AuthService {
   }
 
   private boolean passwordMatches(String password, String encoded) {
+    if (encoded == null || !encoded.contains(":")) return false;
     String[] parts = encoded.split(":");
     return MessageDigest.isEqual(
         derive(password, Base64.getDecoder().decode(parts[0]))
             .getBytes(java.nio.charset.StandardCharsets.UTF_8),
         parts[1].getBytes(java.nio.charset.StandardCharsets.UTF_8));
+  }
+
+  /** 密码登录与密码变更共用数据库锁，避免密码重置后旧密码仍签发新会话。 */
+  @Transactional
+  public Map<String, Object> passwordLogin(Map<String, Object> body, String ip) {
+    Input in = new Input(body, "account,password,captchaId,captchaCode");
+    String account = in.str("account", 3, 32).toLowerCase(Locale.ROOT);
+    String password = in.str("password", 8, 128);
+    temp.limit("password-login-ip:" + ip, 30, 60);
+    checkCaptcha(in.str("captchaId", 1, 64), in.str("captchaCode", 1, 20), "password_login");
+    store.lock();
+    Map<String, Object> user = account.matches("1[3-9][0-9]{9}")
+        ? store.byKey("user", account) : store.userByUsername(account);
+    // 手机号、用户名使用同一个账号失败计数，不能交替登录绕过限流。
+    String key = "buyer-password:" + (user == null ? hash(account) : text(user, "id"));
+    temp.checkFailures(key, 5);
+    if (user == null || !passwordMatches(password, text(user, "passwordHash"))) {
+      temp.failed(key, 600);
+      throw new ApiException(401, "UNAUTHORIZED", "账号或密码不正确");
+    }
+    temp.resetFailures(key);
+    return login(user, "buyer");
+  }
+
+  private String nextChange(Map<String, Object> account, String field, int days) {
+    String changed = text(account, field);
+    return changed == null || changed.isBlank() ? null : Instant.parse(changed).plus(Duration.ofDays(days)).toString();
+  }
+
+  /** 使用服务器时间和持久化时间戳；首次设置允许执行，之后按滚动天数限制。 */
+  private void checkCooldown(Map<String, Object> account, String field, int days) {
+    String next = nextChange(account, field, days);
+    require(next == null || !Instant.parse(next).isAfter(Instant.now()), 429,
+        "CHANGE_COOLDOWN", "每" + days + "天只能修改一次，下次可修改时间：" + next);
+  }
+
+  private String newPassword(Input in) {
+    String password = in.str("newPassword", 12, 128);
+    require(password.matches(".*[a-zA-Z].*") && password.matches(".*[0-9].*"),
+        400, "VALIDATION_ERROR", "密码须为12至128位，包含字母和数字");
+    return password;
+  }
+
+  private void savePassword(Map<String, Object> account, String password, String role) {
+    checkCooldown(account, "passwordChangedAt", 7);
+    require(!passwordMatches(password, text(account, "passwordHash")), 400,
+        "PASSWORD_UNCHANGED", "新密码不能与原密码相同");
+    account.put("passwordHash", passwordHash(password));
+    account.put("passwordChangedAt", Instant.now().toString());
+    store.save(account);
+    store.revokeSessions(text(account, "id"), role);
+    store.audit(text(account, "id"), "password_changed", text(account, "id"));
+  }
+
+  /** 重置和首次设置均要求绑定手机号的专用验证码，不接受登录验证码。 */
+  @Transactional
+  public Map<String, Object> resetPassword(Map<String, Object> body) {
+    Input in = new Input(body, "phone,smsRequestId,smsCode,newPassword");
+    String phone = in.phone("phone"), password = newPassword(in);
+    checkSms(in.str("smsRequestId", 1, 64), in.str("smsCode", 6, 6), phone, "password_reset", "");
+    store.lock();
+    Map<String, Object> user = store.byKey("user", phone);
+    require(user != null, 400, "ACCOUNT_NOT_REGISTERED", "请先使用短信登录创建账号");
+    savePassword(user, password, "buyer");
+    return map("message", "密码已更新，请重新登录");
+  }
+
+  @Transactional
+  public Map<String, Object> changePassword(Actor actor, Map<String, Object> body, String role) {
+    role(actor, role);
+    Input in = new Input(body, "oldPassword,newPassword");
+    String password = newPassword(in);
+    store.lock();
+    requireActiveSession(actor);
+    Map<String, Object> account = store.get(role.equals("admin") ? "admin" : "user", actor.id());
+    String key = "password-change:" + actor.id();
+    temp.checkFailures(key, 5);
+    if (!passwordMatches(in.str("oldPassword", 8, 128), text(account, "passwordHash"))) {
+      temp.failed(key, 600);
+      throw new ApiException(400, "PASSWORD_INVALID", "原密码不正确；尚未设置密码请使用手机号验证设置");
+    }
+    savePassword(account, password, role);
+    temp.resetFailures(key);
+    return map("message", "密码已更新，请重新登录");
+  }
+
+  /** 写操作取得锁后再次认证，防止等待期间会话已被另一请求撤销。 */
+  private void requireActiveSession(Actor actor) {
+    Map<String, Object> session = store.byKey("session", actor.tokenHash());
+    require(session != null && "active".equals(text(session, "status"))
+        && Instant.parse(text(session, "expiresAt")).isAfter(Instant.now()),
+        401, "UNAUTHORIZED", "请重新登录");
+  }
+
+  @Transactional
+  public Map<String, Object> changeUsername(Actor actor, Map<String, Object> body) {
+    role(actor, "buyer");
+    String username = new Input(body, "username").str("username", 3, 32).toLowerCase(Locale.ROOT);
+    require(username.matches("[a-z][a-z0-9_]{2,31}"), 400, "VALIDATION_ERROR",
+        "用户名须以字母开头，包含3至32位字母、数字或下划线");
+    store.lock();
+    requireActiveSession(actor);
+    Map<String, Object> account = store.get("user", actor.id());
+    require(!username.equals(text(account, "username")), 400, "USERNAME_UNCHANGED", "用户名未改变");
+    checkCooldown(account, "usernameChangedAt", 3);
+    require(store.userByUsername(username) == null, 409, "USERNAME_TAKEN", "用户名已被使用");
+    account.put("username", username);
+    account.put("usernameChangedAt", Instant.now().toString());
+    store.save(account);
+    return profile(account);
+  }
+
+  public Map<String, Object> adminSecurity(Actor actor) {
+    role(actor, "admin");
+    Map<String, Object> account = store.get("admin", actor.id());
+    return map("username", account.get("username"),
+        "passwordChangeAvailableAt", nextChange(account, "passwordChangedAt", 7));
   }
 
   /** 复用受权限保护的开发收件箱；真实模式不能写入模拟通知。 */

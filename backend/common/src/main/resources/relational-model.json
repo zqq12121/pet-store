@@ -52,6 +52,12 @@
           "column": "password_hash",
           "sql": "VARCHAR(255)",
           "json": false
+        },
+        {
+          "field": "passwordChangedAt",
+          "column": "password_changed_at",
+          "sql": "VARCHAR(40)",
+          "json": false
         }
       ],
       "children": [],
@@ -117,11 +123,36 @@
           "column": "avatar_url",
           "sql": "VARCHAR(2048)",
           "json": false
+        },
+        {
+          "field": "username",
+          "column": "username",
+          "sql": "VARCHAR(32)",
+          "json": false
+        },
+        {
+          "field": "passwordHash",
+          "column": "password_hash",
+          "sql": "VARCHAR(255)",
+          "json": false
+        },
+        {
+          "field": "passwordChangedAt",
+          "column": "password_changed_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "usernameChangedAt",
+          "column": "username_changed_at",
+          "sql": "VARCHAR(40)",
+          "json": false
         }
       ],
       "children": [],
       "constraints": [
-        "UNIQUE (phone)"
+        "UNIQUE (phone)",
+        "UNIQUE (username)"
       ]
     },
     {

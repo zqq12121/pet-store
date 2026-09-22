@@ -55,7 +55,7 @@ class PnvsSmsTest {
   }
 
   @Test void loginAndBindingUseGiftTemplateAndOwnCode() throws Exception {
-    for (String purpose : List.of("login", "wechat_bind")) {
+    for (String purpose : List.of("login", "wechat_bind", "password_reset")) {
       var params = sentRequest(purpose, true);
       assertEquals("SendSmsVerifyCode", params.get("Action"));
       assertEquals("13900000000", params.get("PhoneNumber"));

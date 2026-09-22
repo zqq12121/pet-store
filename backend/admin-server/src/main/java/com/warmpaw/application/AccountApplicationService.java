@@ -35,6 +35,8 @@ public class AccountApplicationService {
   public OperationResult updateProfile(Map<String, Object> b, AuthService.Actor a) {
     Input in = new Input(b, "nickname,avatarFileId");
     require(!b.isEmpty(), 400, "VALIDATION_ERROR", "至少修改一个字段");
+    // 与账号安全写入使用相同锁，避免资料保存覆盖新密码或冷却时间。
+    store.lock();
     Map<String, Object> u = store.get("user", a.id());
     if (in.has("nickname")) u.put("nickname", in.str("nickname", 1, 30));
     if (in.has("avatarFileId"))

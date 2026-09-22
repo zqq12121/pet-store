@@ -66,7 +66,7 @@ public class AuthController {
     return ok(
         200,
         auth.captcha(
-            new Input(query, "purpose").choice("purpose", "sms,admin_login"), req.getRemoteAddr()));
+            new Input(query, "purpose").choice("purpose", "sms,admin_login,password_login"), req.getRemoteAddr()));
   }
 
   /** 登录页只展示当前可用入口；配置存在不代表第三方已验收。 */
@@ -85,6 +85,37 @@ public class AuthController {
   public ResponseEntity<Object> login(@RequestBody Map<String, Object> b, HttpServletRequest req) {
     actor(req);
     return ok(200, auth.smsLogin(b));
+  }
+
+  /** 密码入口统一经过服务端身份验证、限流和持久化冷却检查。 */
+  @PostMapping("/auth/password-login")
+  public ResponseEntity<Object> passwordLogin(@RequestBody Map<String, Object> b, HttpServletRequest req) {
+    return ok(200, auth.passwordLogin(b, req.getRemoteAddr()));
+  }
+
+  @PostMapping("/auth/password-reset")
+  public ResponseEntity<Object> resetPassword(@RequestBody Map<String, Object> b) {
+    return ok(200, auth.resetPassword(b));
+  }
+
+  @PutMapping("/me/password")
+  public ResponseEntity<Object> changePassword(@RequestBody Map<String, Object> b, HttpServletRequest req) {
+    return ok(200, auth.changePassword(actor(req), b, "buyer"));
+  }
+
+  @PutMapping("/me/username")
+  public ResponseEntity<Object> changeUsername(@RequestBody Map<String, Object> b, HttpServletRequest req) {
+    return ok(200, auth.changeUsername(actor(req), b));
+  }
+
+  @GetMapping("/admin/auth/security")
+  public ResponseEntity<Object> security(HttpServletRequest req) {
+    return ok(200, auth.adminSecurity(actor(req)));
+  }
+
+  @PutMapping("/admin/auth/password")
+  public ResponseEntity<Object> adminPassword(@RequestBody Map<String, Object> b, HttpServletRequest req) {
+    return ok(200, auth.changePassword(actor(req), b, "admin"));
   }
 
   @PostMapping("/admin/auth/login")

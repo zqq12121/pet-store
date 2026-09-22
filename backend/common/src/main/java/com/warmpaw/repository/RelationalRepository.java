@@ -52,6 +52,15 @@ public class RelationalRepository {
     return one(model(kind), "business_key", key);
   }
 
+  /** 用户名有独立唯一索引；手机号仍保留原业务键，兼容短信及微信登录。 */
+  public Map<String, Object> userByUsername(String username) {
+    return one(model("user"), "username", username);
+  }
+
+  public void revokeSessions(String owner, String role) {
+    jdbc.update("UPDATE auth_sessions SET status='revoked' WHERE owner_id=? AND role=?", owner, role);
+  }
+
   private Map<String, Object> one(Map<String, Object> m, String column, String value) {
     var rows =
         jdbc.queryForList("SELECT * FROM " + m.get("table") + " WHERE " + column + "=?", value);

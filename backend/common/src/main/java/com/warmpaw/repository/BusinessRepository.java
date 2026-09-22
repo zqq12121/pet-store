@@ -60,6 +60,14 @@ public class BusinessRepository {
     return repository.byKey(kind, key);
   }
 
+  public Map<String, Object> userByUsername(String username) {
+    return repository.userByUsername(username);
+  }
+
+  public void revokeSessions(String owner, String role) {
+    repository.revokeSessions(owner, role);
+  }
+
   public List<Map<String, Object>> list(String kind) {
     return repository.list(kind);
   }
