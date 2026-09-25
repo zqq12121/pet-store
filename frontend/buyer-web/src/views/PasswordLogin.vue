@@ -21,7 +21,7 @@ onMounted(()=>run(refresh))
 <template><div class="container page narrow"><form class="panel stack" @submit.prevent="submit"><h1>密码登录</h1>
 <p v-if="route.query.changed" class="notice">密码已更新，请重新登录。</p>
 <label>手机号或用户名<input v-model="account" required maxlength="32" autocomplete="username"></label>
-<label>密码<input v-model="password" type="password" required minlength="8" maxlength="128" autocomplete="current-password"></label>
+<label>密码<input v-model="password" type="password" required maxlength="128" autocomplete="current-password"></label>
 <label>图片验证码<div class="captcha-row"><input v-model="captchaCode" required maxlength="6"><button type="button" class="captcha" aria-label="刷新图片验证码" @click="run(refresh)"><img v-if="captcha" :src="captcha.imageBase64" alt="图片验证码"><span v-else>加载验证码</span></button></div></label>
 <p v-if="error" class="error-text" role="alert">{{error}}</p><button class="btn" :disabled="loading||!captcha">登录</button>
 <RouterLink :to="{path:'/password-reset'}">忘记密码／首次设置密码</RouterLink><RouterLink :to="{path:'/login',query:route.query}">使用短信验证码登录</RouterLink>

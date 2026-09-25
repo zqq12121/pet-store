@@ -241,7 +241,8 @@ public class AuthService {
   @Transactional
   public Map<String, Object> adminLogin(Map<String, Object> body, String ip) {
     Input in = new Input(body, "username,password,captchaId,captchaCode");
-    String username = in.str("username", 3, 32), password = in.str("password", 8, 128);
+    String username = loginCredential(body, "username", 32);
+    String password = loginCredential(body, "password", 128);
     temp.checkFailures("admin-login:" + hash(username), 5);
     checkCaptcha(in.str("captchaId", 1, 64), in.str("captchaCode", 1, 20), "admin_login");
     store.lock();
@@ -291,12 +292,20 @@ public class AuthService {
         parts[1].getBytes(java.nio.charset.StandardCharsets.UTF_8));
   }
 
+  /** 登录凭据格式不暴露长度规则，失败时与账号或密码不匹配使用同一提示。 */
+  private String loginCredential(Map<String, Object> body, String key, int maxLength) {
+    Object value = body == null ? null : body.get(key);
+    if (!(value instanceof String text) || text.trim().isEmpty() || text.trim().length() > maxLength)
+      throw new ApiException(401, "UNAUTHORIZED", "账号或密码不正确");
+    return text.trim();
+  }
+
   /** 密码登录与密码变更共用数据库锁，避免密码重置后旧密码仍签发新会话。 */
   @Transactional
   public Map<String, Object> passwordLogin(Map<String, Object> body, String ip) {
     Input in = new Input(body, "account,password,captchaId,captchaCode");
-    String account = in.str("account", 3, 32).toLowerCase(Locale.ROOT);
-    String password = in.str("password", 8, 128);
+    String account = loginCredential(body, "account", 32).toLowerCase(Locale.ROOT);
+    String password = loginCredential(body, "password", 128);
     temp.limit("password-login-ip:" + ip, 30, 60);
     checkCaptcha(in.str("captchaId", 1, 64), in.str("captchaCode", 1, 20), "password_login");
     store.lock();

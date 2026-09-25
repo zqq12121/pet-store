@@ -83,6 +83,24 @@ class AccountSecurityTest {
     assertFalse(write(result).contains("passwordHash"));
   }
 
+  @Test void loginCredentialLengthsUseTheSameErrorAsWrongCredentials() {
+    auth.resetPassword(reset("password_reset",password));
+    for (String[] credentials : new String[][]{{"ab",password},{phone,"short"},{phone,"x".repeat(129)}}) {
+      var error=assertThrows(ApiException.class,()->login(credentials[0],credentials[1]));
+      assertEquals(401,error.status);
+      assertEquals("账号或密码不正确",error.getMessage());
+    }
+    // 管理员入口也不能把过短账号或密码的长度规则返回给登录页。
+    for (String[] credentials : new String[][]{{"a",password},{"admin","short"}}) {
+      String captcha=UUID.randomUUID().toString();
+      temp.put("captcha:"+captcha,write(map("purpose","admin_login","hash",hash("1234"))),120);
+      var error=assertThrows(ApiException.class,()->auth.adminLogin(
+          map("username",credentials[0],"password",credentials[1],"captchaId",captcha,"captchaCode","1234"),userId));
+      assertEquals(401,error.status);
+      assertEquals("账号或密码不正确",error.getMessage());
+    }
+  }
+
   @Test void resetAndChangeShareSevenDayCooldownAndOldPasswordIsRequired() {
     auth.resetPassword(reset("password_reset",password));authenticate();
     assertEquals("CHANGE_COOLDOWN",assertThrows(ApiException.class,()->
