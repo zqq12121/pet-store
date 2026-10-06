@@ -84,7 +84,7 @@ class PnvsSmsTest {
     TemporaryStore temp = mock(TemporaryStore.class);
     SmsGateway gateway = mock(SmsGateway.class);
     doThrow(new ApiException(502, "UPSTREAM_ERROR", "发送失败")).when(gateway).send(anyString(), anyString(), anyString());
-    AuthService auth = new AuthService(mock(BusinessRepository.class), temp, gateway, false);
+    AuthService auth = new AuthService(mock(BusinessRepository.class), temp, gateway, mock(GraphCaptchaService.class), false);
     assertThrows(ApiException.class, () -> auth.sendSms("13900000000", "login", "", "test"));
     verify(temp, never()).put(startsWith("sms:"), anyString(), anyInt());
   }
@@ -92,7 +92,7 @@ class PnvsSmsTest {
   @Test void acceptedCodeIsPhoneBoundRateLimitedAndConsumedOnce() {
     TemporaryStore temp = new TemporaryStore(null, false);
     SmsGateway gateway = mock(SmsGateway.class);
-    AuthService auth = new AuthService(mock(BusinessRepository.class), temp, gateway, false);
+    AuthService auth = new AuthService(mock(BusinessRepository.class), temp, gateway, mock(GraphCaptchaService.class), false);
     var result = auth.sendSms("13900000000", "login", "", "test");
     assertEquals("accepted", result.get("status"));
     assertFalse(result.containsKey("code"));

@@ -19,11 +19,13 @@ public class WechatLoginService {
   private final BusinessRepository store;
   private final TemporaryStore temp;
   private final AuthService auth;
+  private final GraphCaptchaService graphCaptcha;
 
-  public WechatLoginService(BusinessRepository store, TemporaryStore temp, AuthService auth) {
+  public WechatLoginService(BusinessRepository store, TemporaryStore temp, AuthService auth, GraphCaptchaService graphCaptcha) {
     this.store = store;
     this.temp = temp;
     this.auth = auth;
+    this.graphCaptcha = graphCaptcha;
   }
 
   private String app() {
@@ -46,7 +48,7 @@ public class WechatLoginService {
 
   public Map<String, Object> authorize(
       Map<String, Object> query, AuthService.Actor actor, String browser) {
-    Input in = new Input(query, "scene,returnPath");
+    Input in = new Input(query, "scene,returnPath," + GraphCaptchaService.FIELDS);
     String scene = in.choice("scene", "login,pay"), path = in.str("returnPath", 1, 500);
     com.warmpaw.common.ProviderSupport.safePath(path);
     if (scene.equals("pay")) AuthService.role(actor, "buyer");
@@ -56,6 +58,8 @@ public class WechatLoginService {
         503,
         "SERVICE_UNAVAILABLE",
         "微信网页授权尚未配置");
+    // 登录授权必须先通过图形验证；回调沿用一次性 state 与浏览器 Cookie 绑定。
+    if (scene.equals("login")) graphCaptcha.verify(query);
     String state = auth.randomToken();
     temp.put(
         "oauth:" + state,

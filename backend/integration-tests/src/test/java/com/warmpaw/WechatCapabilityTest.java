@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 class WechatCapabilityTest {
   @Test
   void requiresCompleteCredentialsAndHttpsCallback() {
-    var service = new WechatLoginService(null, null, null);
+    var service = new WechatLoginService(null, null, null, null);
     try (var env = mockStatic(ProviderSupport.class)) {
       env.when(() -> ProviderSupport.env(anyString())).thenReturn("");
       assertFalse(service.configured());

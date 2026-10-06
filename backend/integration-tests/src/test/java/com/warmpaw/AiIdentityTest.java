@@ -18,9 +18,9 @@ class AiIdentityTest {
   void validatesGuestAndBuyerWithoutExposingCredentials() {
     BusinessRepository store = mock(BusinessRepository.class);
     TemporaryStore temporary = new TemporaryStore(null, false);
-    AuthService auth = new AuthService(store, temporary, mock(SmsGateway.class), true);
+    AuthService auth = new AuthService(store, temporary, mock(SmsGateway.class), mock(GraphCaptchaService.class), true);
     GuestService guests = new GuestService(temporary, auth);
-    AuthController controller = new AuthController(guests, auth, mock(WechatLoginService.class));
+    AuthController controller = new AuthController(guests, auth, mock(WechatLoginService.class), mock(GraphCaptchaService.class));
     MockHttpServletRequest request = new MockHttpServletRequest();
     request.addHeader("X-Guest-Token", "forged");
     assertEquals(401, assertThrows(ApiException.class, () -> controller.aiIdentity(request)).status);

@@ -45,6 +45,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class CommerceIntegrationTest {
+  // 商业流程不调用真实图形认证；专项测试验证二次校验协议和拦截。
+  @org.springframework.test.context.bean.override.mockito.MockitoBean GraphCaptchaService graphCaptcha;
   @Autowired BusinessRepository store;
   @Autowired org.springframework.web.context.WebApplicationContext webContext;
   ContractClient business;
@@ -742,18 +744,13 @@ class CommerceIntegrationTest {
   @Test
   void randomSmsCannotBeReusedAndLogoutRevokesToken() throws Exception {
     String phone = "138999" + (counter++);
-    Map<String, Object> captcha = auth.captcha("sms", "sms-" + phone);
     Map<String, Object> sms =
         auth.sendLoginSms(
             map(
                 "phone",
                 phone,
                 "purpose",
-                "login",
-                "captchaId",
-                captcha.get("captchaId"),
-                "captchaCode",
-                code("captcha", text(captcha, "captchaId"))),
+                "login"),
             "sms-" + phone);
     Map<String, Object> body =
         map(

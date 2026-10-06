@@ -27,6 +27,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     "app.admin-password=SecurityTest2026!", "app.storage=./target/security-files"})
 @ActiveProfiles("test")
 class AccountSecurityTest {
+  // 账号安全用例隔离云端认证，协议及失败拦截另由图形认证专项用例覆盖。
+  @org.springframework.test.context.bean.override.mockito.MockitoBean GraphCaptchaService graphCaptcha;
   @Autowired AuthService auth;
   @Autowired BusinessRepository store;
   @Autowired TemporaryStore temp;
@@ -54,9 +56,7 @@ class AccountSecurityTest {
   }
 
   Map<String,Object> login(String account, String secret) {
-    String captcha=UUID.randomUUID().toString();
-    temp.put("captcha:"+captcha,write(map("purpose","password_login","hash",hash("1234"))),120);
-    return auth.passwordLogin(map("account",account,"password",secret,"captchaId",captcha,"captchaCode","1234"),userId);
+    return auth.passwordLogin(map("account",account,"password",secret),userId);
   }
 
   void authenticate() {

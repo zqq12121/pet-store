@@ -1,5 +1,8 @@
 # 账号密码与用户名
 
+用户登录及获取短信验证码已接入阿里云弹出式图形认证；触发顺序、配置与更新步骤见
+[图形认证接入](GRAPH_CAPTCHA.md)。管理员继续使用原有文字图片验证码。
+
 买家保留短信及微信登录，新增手机号或用户名密码登录。用户名为3至32位，以字母开头，
 只允许字母、数字和下划线，统一保存为小写并有数据库唯一约束。昵称仍是独立展示字段。
 
@@ -42,8 +45,8 @@ MySQL DDL 会自动提交，出现失败应核对已完成的字段再处理，�
 
 | 方法 | 路径（/api/v1） | 用途 |
 | --- | --- | --- |
-| POST | /auth/password-login | 手机号或用户名、密码和 password_login 图片验证码 |
-| POST | /auth/sms-codes | purpose=password_reset，手机号及 sms 图片验证码 |
+| POST | /auth/password-login | 手机号或用户名、密码和图形认证输出参数 |
+| POST | /auth/sms-codes | purpose=password_reset，手机号及图形认证输出参数 |
 | POST | /auth/password-reset | 手机号、smsRequestId、smsCode、newPassword |
 | PUT | /me/password | 买家会话、oldPassword、newPassword |
 | PUT | /me/username | 买家会话、username |

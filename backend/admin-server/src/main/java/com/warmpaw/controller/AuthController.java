@@ -6,6 +6,7 @@ import static com.warmpaw.controller.support.ApiResponses.ok;
 import com.warmpaw.common.ApiException;
 import com.warmpaw.common.Input;
 import com.warmpaw.service.AuthService;
+import com.warmpaw.service.GraphCaptchaService;
 import com.warmpaw.service.GuestService;
 import com.warmpaw.service.WechatLoginService;
 import jakarta.servlet.http.*;
@@ -21,11 +22,19 @@ public class AuthController {
   private final GuestService guests;
   private final AuthService auth;
   private final WechatLoginService wechatLogin;
+  private final GraphCaptchaService graphCaptcha;
 
-  public AuthController(GuestService guests, AuthService auth, WechatLoginService wechatLogin) {
+  public AuthController(GuestService guests, AuthService auth, WechatLoginService wechatLogin, GraphCaptchaService graphCaptcha) {
     this.guests = guests;
     this.auth = auth;
     this.wechatLogin = wechatLogin;
+    this.graphCaptcha = graphCaptcha;
+  }
+
+  /** 只发布图形认证的公开 ID，真正放行由各业务接口内的二次验证决定。 */
+  @GetMapping("/auth/graph-captcha")
+  public ResponseEntity<Object> graphCaptcha() {
+    return ok(200, graphCaptcha.config());
   }
 
   private AuthService.Actor actor(HttpServletRequest request) {
@@ -139,12 +148,13 @@ public class AuthController {
     return ok(200, null);
   }
 
-  @GetMapping("/auth/wechat/authorize-url")
+  @RequestMapping(value = "/auth/wechat/authorize-url", method = {RequestMethod.GET, RequestMethod.POST})
   public ResponseEntity<Object> authorize(
-      @RequestParam Map<String, Object> q, HttpServletRequest req, HttpServletResponse res) {
+      @RequestParam Map<String, Object> q, @RequestBody(required = false) Map<String, Object> b,
+      HttpServletRequest req, HttpServletResponse res) {
     AuthService.Actor a = actor(req);
     String cookie = auth.randomToken();
-    Map<String, Object> result = wechatLogin.authorize(q, a, cookie);
+    Map<String, Object> result = wechatLogin.authorize(b == null ? q : b, a, cookie);
     res.addHeader(
         "Set-Cookie",
         ResponseCookie.from("paw_oauth", cookie)

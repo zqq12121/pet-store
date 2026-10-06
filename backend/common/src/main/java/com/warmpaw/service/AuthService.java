@@ -29,17 +29,20 @@ public class AuthService {
   private final TemporaryStore temp;
   private final boolean mock;
   private final SmsGateway smsGateway;
+  private final GraphCaptchaService graphCaptcha;
   private final SecureRandom random = new SecureRandom();
 
   public AuthService(
       BusinessRepository store,
       TemporaryStore temp,
       SmsGateway smsGateway,
+      GraphCaptchaService graphCaptcha,
       @Value("${app.mock-providers}") boolean mock) {
     this.store = store;
     this.temp = temp;
     this.mock = mock;
     this.smsGateway = smsGateway;
+    this.graphCaptcha = graphCaptcha;
   }
 
   public boolean local() {
@@ -126,9 +129,9 @@ public class AuthService {
   }
 
   public Map<String, Object> sendLoginSms(Map<String, Object> body, String ip) {
-    Input in = new Input(body, "phone,purpose,captchaId,captchaCode,bindTicket");
+    Input in = new Input(body, "phone,purpose,bindTicket," + GraphCaptchaService.FIELDS);
     String phone = in.phone("phone"), purpose = in.choice("purpose", "login,wechat_bind,password_reset");
-    checkCaptcha(in.str("captchaId", 1, 64), in.str("captchaCode", 4, 6), "sms");
+    graphCaptcha.verify(body);
     if (purpose.equals("wechat_bind"))
       require(
           temp.get("bind:" + in.str("bindTicket", 1, 200)) != null,
@@ -303,11 +306,11 @@ public class AuthService {
   /** 密码登录与密码变更共用数据库锁，避免密码重置后旧密码仍签发新会话。 */
   @Transactional
   public Map<String, Object> passwordLogin(Map<String, Object> body, String ip) {
-    Input in = new Input(body, "account,password,captchaId,captchaCode");
+    Input in = new Input(body, "account,password," + GraphCaptchaService.FIELDS);
     String account = loginCredential(body, "account", 32).toLowerCase(Locale.ROOT);
     String password = loginCredential(body, "password", 128);
     temp.limit("password-login-ip:" + ip, 30, 60);
-    checkCaptcha(in.str("captchaId", 1, 64), in.str("captchaCode", 1, 20), "password_login");
+    graphCaptcha.verify(body);
     store.lock();
     Map<String, Object> user = account.matches("1[3-9][0-9]{9}")
         ? store.byKey("user", account) : store.userByUsername(account);
