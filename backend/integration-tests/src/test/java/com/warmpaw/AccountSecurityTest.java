@@ -92,10 +92,8 @@ class AccountSecurityTest {
     }
     // 管理员入口也不能把过短账号或密码的长度规则返回给登录页。
     for (String[] credentials : new String[][]{{"a",password},{"admin","short"}}) {
-      String captcha=UUID.randomUUID().toString();
-      temp.put("captcha:"+captcha,write(map("purpose","admin_login","hash",hash("1234"))),120);
       var error=assertThrows(ApiException.class,()->auth.adminLogin(
-          map("username",credentials[0],"password",credentials[1],"captchaId",captcha,"captchaCode","1234"),userId));
+          map("username",credentials[0],"password",credentials[1]),userId));
       assertEquals(401,error.status);
       assertEquals("账号或密码不正确",error.getMessage());
     }

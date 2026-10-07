@@ -406,17 +406,13 @@ class CommerceIntegrationTest {
             HttpRequest.newBuilder(URI.create(base + "/admin/pets")).GET().build(),
             HttpResponse.BodyHandlers.ofString());
     assertEquals(401, denied.statusCode());
-    var captcha = auth.captcha("admin_login", "http-test");
+    // 云端校验由专项测试覆盖；这里使用隔离的验证替代对象测试真实登录 HTTP。
     Map<String, Object> login =
         map(
             "username",
             "admin",
             "password",
-            "LocalTestPassword2026",
-            "captchaId",
-            captcha.get("captchaId"),
-            "captchaCode",
-            code("captcha", text(captcha, "captchaId")));
+            "LocalTestPassword2026");
     var logged =
         client.send(
             HttpRequest.newBuilder(URI.create(base + "/admin/auth/login"))

@@ -117,17 +117,6 @@ public class AuthService {
     }
   }
 
-  private void checkCaptcha(String id, String code, String purpose) {
-    String value = temp.take("captcha:" + id);
-    require(
-        value != null
-            && purpose.equals(text(read(value), "purpose"))
-            && hash(code).equals(text(read(value), "hash")),
-        400,
-        "CAPTCHA_INVALID",
-        "图片验证码错误或已过期");
-  }
-
   public Map<String, Object> sendLoginSms(Map<String, Object> body, String ip) {
     Input in = new Input(body, "phone,purpose,bindTicket," + GraphCaptchaService.FIELDS);
     String phone = in.phone("phone"), purpose = in.choice("purpose", "login,wechat_bind,password_reset");
@@ -243,11 +232,12 @@ public class AuthService {
 
   @Transactional
   public Map<String, Object> adminLogin(Map<String, Object> body, String ip) {
-    Input in = new Input(body, "username,password,captchaId,captchaCode");
+    new Input(body, "username,password," + GraphCaptchaService.FIELDS);
     String username = loginCredential(body, "username", 32);
     String password = loginCredential(body, "password", 128);
     temp.checkFailures("admin-login:" + hash(username), 5);
-    checkCaptcha(in.str("captchaId", 1, 64), in.str("captchaCode", 1, 20), "admin_login");
+    // 与买家入口共用阿里云二次校验；旧图片验证码不能绕过人机验证。
+    graphCaptcha.verify(body);
     store.lock();
     Map<String, Object> account = store.byKey("admin", username);
     if (account == null || !passwordMatches(password, text(account, "passwordHash"))) {

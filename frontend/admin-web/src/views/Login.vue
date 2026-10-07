@@ -1,10 +1,18 @@
 <script setup lang="ts">
-import {reactive,ref,onMounted} from 'vue';import {useRouter,useRoute} from 'vue-router';import {admin,saveAuth,isDemo,isJavaLocal} from '../../../shared/api';import {useLoad} from '../../../shared/useLoad'
-const router=useRouter(),route=useRoute(),form=reactive({username:'',password:'',captchaCode:''}),captcha=ref<{captchaId:string;imageBase64:string}>(),{loading,error,run}=useLoad()
-const refresh=async()=>{captcha.value=await admin('GET','/auth/captchas',undefined,{purpose:'admin_login'});form.captchaCode=''}
-const submit=()=>run(async()=>{try{const result=await admin<{accessToken:string;expiresIn:number}>('POST','/admin/auth/login',{...form,captchaId:captcha.value?.captchaId});saveAuth('admin',result);const next=String(route.query.redirect||'/');await router.replace(next.startsWith('/')&&!next.startsWith('//')?next:'/')}catch(e){await refresh();throw e}})
-onMounted(()=>run(refresh))
+import {reactive} from 'vue';import {useRouter,useRoute} from 'vue-router';import {admin,saveAuth,isDemo} from '../../../shared/api';import {useLoad} from '../../../shared/useLoad'
+import {useGraphCaptcha} from '../../../shared/useGraphCaptcha'
+const graph=useGraphCaptcha()
+const router=useRouter(),route=useRoute(),form=reactive({username:'',password:''}),{loading,error,run}=useLoad()
+async function submit(){if(loading.value)return;await run(async()=>{
+ // 点击和 Enter 共用验证流程，取消验证不请求登录；每次重试使用新的凭据。
+ const proof=await graph.verify()
+ if(!proof)return
+ const result=await admin<{accessToken:string;expiresIn:number}>('POST','/admin/auth/login',{...form,...proof})
+ saveAuth('admin',result)
+ const next=String(route.query.redirect||'/')
+ await router.replace(next.startsWith('/')&&!next.startsWith('//')?next:'/')
+})}
 </script>
 <template>
 <!-- 登录只保留一个表单，输入框按 Enter 与点击按钮走同一提交逻辑。 -->
-<div class="login-page"><el-form class="login-panel" label-position="top" @submit.prevent="submit"><span class="brand">暖爪</span><p class="eyebrow">STORE ACCESS</p><h1>欢迎回来，店主。</h1><p>照顾好每一只，也照顾好每一份托付。</p><el-alert v-if="isJavaLocal" title="本地联调：使用已配置的管理员密码和图片中的随机验证码。" type="info" :closable="false"/><el-alert v-else-if="isDemo" title="演示账号 admin / WarmPaw2026，图片码 DEMO" type="info" :closable="false"/><el-form-item label="管理员账号"><el-input v-model="form.username" required autocomplete="username" maxlength="32"/></el-form-item><el-form-item label="密码"><el-input v-model="form.password" required type="password" show-password autocomplete="current-password"/></el-form-item><el-form-item label="图片验证码"><div class="captcha-row"><el-input v-model="form.captchaCode" required maxlength="6"/><button type="button" style="border:0;padding:0;background:none" aria-label="刷新验证码" @click="run(refresh)"><img v-if="captcha" :src="captcha.imageBase64" alt="图片验证码"></button></div></el-form-item><el-alert v-if="error" :title="error" type="error" :closable="false"/><el-button type="primary" native-type="submit" :loading="loading" size="large">登录工作台</el-button></el-form></div></template>
+<div class="login-page"><el-form class="login-panel" label-position="top" @submit.prevent="submit"><span class="brand">暖爪</span><p class="eyebrow">STORE ACCESS</p><h1>欢迎回来，店主。</h1><p>照顾好每一只，也照顾好每一份托付。</p><el-alert v-if="isDemo" title="阿里云人机验证请连接 Java 服务进行联调。" type="info" :closable="false"/><el-form-item label="管理员账号"><el-input v-model="form.username" :readonly="loading" required autocomplete="username" maxlength="32"/></el-form-item><el-form-item label="密码"><el-input v-model="form.password" :readonly="loading" required type="password" show-password autocomplete="current-password"/></el-form-item><el-alert v-if="error" :title="error" type="error" :closable="false"/><el-button type="primary" native-type="submit" :loading="loading" size="large">登录工作台</el-button></el-form></div></template>
