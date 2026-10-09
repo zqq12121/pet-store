@@ -1,11 +1,13 @@
 # 暖爪宠物门店后端
 
-后端已拆分为 `order-server`、`admin-server` 和 `gateway-server`，接入 Nacos 服务发现及 OpenFeign 调用。保留原 MySQL `warmpaw` 数据、Redis 与前端 API。Java 服务运行在 Mac / IDEA，Nacos、MySQL、Redis、Nginx 运行在 Docker。
+后端已拆分为 `order-server`、`admin-server` 和 `gateway-server`，接入 Nacos 服务发现及 OpenFeign 调用。保留原 MySQL `warmpaw` 数据、Redis 与前端 API。默认通过根目录 Compose 运行完整容器栈，买家与后台入口为 `http://localhost:8090/`、`http://localhost:8090/admin/`；下方 Mac / IDEA 启动方式仅用于宿主机开发。
 
 完整前后端与 AI 启停顺序见 [项目运行说明](../README.md)。当前订单采用到店预约；支付章节保留历史交易说明。
-AI 已由独立 Python 服务提供，须另行启动，见 [AI 说明](../ai-service/README.md)。
+AI 已由独立 Python 服务提供，Compose 会一并启动；宿主机开发时另行启动，见 [AI 说明](../ai-service/README.md)。
 
-## 启动与停止
+2026-10-09：项目定位为练习与简历展示，20 只示例宠物已经补齐模拟资料并上架。当前买家及管理员登录均接入阿里云图形认证，见 [认证说明](../docs/GRAPH_CAPTCHA.md)。可复现的隔离流程与测试账号见 [演示指南](../docs/DEMO_GUIDE.md)。后面的日期章节是历史记录，不代表当前缺少 AI 或仍使用图片验证码。
+
+## 宿主机开发的启动与停止
 
 从项目根目录进入后端后运行：
 
@@ -58,15 +60,19 @@ docker compose -p warmpaw-micro -f deploy/compose-microservices.yml up -d
 
 ## 测试与数据
 
-`mvn package` 默认使用独立 H2 执行业务回归。完整微服务联调：
+`mvn package` 默认使用独立 H2 执行业务回归。当前浏览器与完整微服务验收使用根目录的隔离副本脚本：
 
 ```bash
-python3 scripts/microservices_smoke.py
+cd ..
+python3 scripts/backup-compose.py
+# 替换为上一条命令产生的完整备份目录。
+python3 scripts/start-demo-acceptance.py backups/你的备份目录
+node scripts/demo-browser.cjs
 ```
 
-该脚本使用临时数据库和独立 Redis，验证真实跨进程调用，不向运行中的 MySQL 写测试订单。不要把测试数据库参数设置为实际运行库。
+此流程恢复到全新 MySQL、Redis、Nacos 与应用副本，模拟图形认证及通知，验证真实 Gateway / Feign 调用；不向主库写验收订单。旧 `scripts/local_smoke.py` 和 `scripts/microservices_smoke.py` 保留历史验证码/支付流程，不适用于当前登录及预约验收。
 
-本次改造没有建表、迁移或清空数据。此前插入的 20 条猫狗示例仍保持未上架，宠物展示任务按要求暂停。详细职责、事务边界和验证方式见 [微服务结构](ARCHITECTURE.md)。
+2026-09-12 微服务拆分时没有建表、迁移或清空数据；当时 20 条示例尚未上架。2026-10-09 已按练习项目授权补齐模拟资料并上架，见 [模拟资料](../docs/DEMO_MATERIALS.md)。详细职责、事务边界见 [微服务结构](ARCHITECTURE.md)。
 
 ## 微服务实测结果（2026-09-12）
 
@@ -80,9 +86,9 @@ python3 scripts/microservices_smoke.py
 
 ## 本地短信和付款
 
-图片验证码是真实随机 PNG；短信也是随机6位数字，不接受万能码。
+当前登录使用阿里云弹出式图形认证，旧随机 PNG 接口保留兼容代码但不参与买家/管理员登录。短信为随机 6 位数字，不接受万能码；隔离浏览器验收仅在测试辅助入口替代图形认证。
 
-- 图片验证码：120秒、一次性、绑定用途。
+- 阿里云图形凭据：服务端二次校验、一次性消费，失败关闭。
 - 短信：300秒、绑定手机号/用途/订单或换宠方案，验证成功即消费。
 - local 模式将开发验证码写入 `data/local-inbox/sms-<smsRequestId>.txt`；只在本机读取。
 - 同手机号60秒内只能发送一条短信，登录后立即发送自提短信也须遵守限制。
@@ -191,12 +197,12 @@ sh scripts/start-docker-local.sh
 - Playwright 验证后台登录、协议创建草稿、查看正文及未确认禁止发布；修复嵌套表单引起的刷新。手机390×844登录页及验证码刷新通过，所检查页面控制台无错误。
 - 新页面“发布”按钮的实际点击被自动审批拦截（替换当前生效协议），尚未完成浏览器发布验证；草稿 `ui-test-20260910` 保留待审核。此前 HTTP 流程中的协议接口已验证，不等同于这项 UI 验证。
 
-所有冒烟协议、商品和订单均为本地测试数据，不能用于真实经营；没有调用微信扣款或真实短信。AI/RAG仍未实现，原有AI入口暂保留。HTTPS、真实第三方服务、视频及生产容量仍待验收。
+此历史轮次的冒烟协议、商品和订单均为本地测试数据，没有调用微信扣款或真实短信。当时 AI/RAG 尚未实现；之后已提供独立 Python + DeepSeek/RAG 服务，当前状态见 [AI 说明](../ai-service/README.md)。公网 HTTPS 与生产容量仍需单独验收。
 
 
 ## 2026-09-11 关系表改造
 
-运行库现使用独立业务表，已完成备份、副本演练及26条旧记录的逐字段迁移校验。旧订单/ID/协议内容保留，旧表名为 `resources_legacy`，后端不再使用它。参见 [数据库设计与验收](DATABASE.md)。AI/知识库仅建立表结构，未实现模型或向量检索业务。
+该轮将运行库迁为独立业务表，完成备份、副本演练及 26 条旧记录逐字段校验，保留旧订单/ID/协议内容。旧表 `resources_legacy` 不再参与业务读写，见 [数据库设计与验收](DATABASE.md)。当时 MySQL AI 表仅有结构；当前 AI 由 Python 服务和 SQLite 提供模型调用与检索，不使用这些历史 AI 表。
 
 ## 历史单体结构重构验收（2026-09-11）
 
@@ -245,6 +251,6 @@ JSON 中 `status=simulated` 表示模拟通知，绝不调用短信平台；买�
 短信发送响应 `status=accepted` 仅表示平台受理，不代表运营商已送达；
 `status=simulated` 表示写入开发收件箱。密钥只配置在后端，不能加入 `VITE_*` 变量。
 预约通知及交付确认继续使用原 Dysmsapi 和各自模板。
-图形验证码当前仍由后端本地生成，尚未接入阿里云验证码产品。
+买家和管理员的图形认证已接入阿里云，使用公开 appId 与服务端 appKey 二次校验，见 [登录人机验证](../docs/GRAPH_CAPTCHA.md)。模拟短信模式不自动关闭或绕过真实图形认证。
 
 通过 `scripts/run-service.sh admin-server` 启动时，登录服务默认真实模式；仅需模拟时显式设置 `PAW_AUTH_MOCK_PROVIDERS=true`。订单服务的模拟配置不受此登录启动设置影响。

@@ -1,6 +1,6 @@
 export type PetStatus = 'off' | 'on_sale' | 'reserved' | 'sold'
 export interface Page<T> { items: T[]; page: number; pageSize: number; total: number }
-export interface Shop { id: string; name: string; address: string; phone: string; wechat: string; businessHours: string; pickupInstructions: string; latitude: number; longitude: number; coordinateSystem: string }
+export interface Shop { id: string; name: string; address: string; phone: string; wechat: string; businessHours: string; pickupInstructions: string; latitude: number | null; longitude: number | null; coordinateSystem: string }
 export interface Pet { id: string; name: string; category: 'cat' | 'dog'; breed: string; coverUrl: string; priceAmount: number; currency: string; gender: 'male' | 'female'; ageMonths: number; status: PetStatus; isRecommended: boolean; publishedAt: string; version: number; weightKg: number; color: string; personalityTags: string[]; vaccineStatus: string; dewormStatus: string; description: string; feedingNotes: string; healthDescription: string; images: {fileId: string; url: string; sortOrder: number}[]; videoUrl: string | null; quarantine: {certificateNo: string; images: {fileId: string; url: string}[]; validUntil: string | null; reviewStatus: string} | null; shop: Shop; purchaseAllowed: boolean; purchaseBlockedReason: string | null }
 export interface Banner { id: string; title: string; imageUrl: string; linkType: 'pet' | 'notice' | 'none'; petId: string | null; noticeText: string | null }
 export interface Category { code: string; name: string; breeds: string[] }

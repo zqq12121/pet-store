@@ -1091,6 +1091,35 @@ class CommerceIntegrationTest {
   }
 
   @Test
+  void shopAllowsMissingContactAndMapWhileValidatingProvidedCoordinates() {
+    // 练习门店可保存空联系方式和位置，但仍校验名称、营业时间及坐标范围。
+    Map<String, Object> body = call("GET", "/admin/shop", map(), admin);
+    body.remove("id");
+    body.put("name", "茸茸星球");
+    body.put("phone", "");
+    body.put("wechat", "");
+    body.put("latitude", null);
+    body.put("longitude", null);
+    body.put("businessHours", "每天 08:00-17:00");
+    Map<String, Object> saved = call("PUT", "/admin/shop", body, admin);
+    assertEquals("茸茸星球", saved.get("name"));
+    Map<String, Object> visible = call("GET", "/shop", map(), null);
+    assertEquals("", visible.get("phone"));
+    assertEquals("", visible.get("wechat"));
+    assertNull(visible.get("latitude"));
+    assertNull(visible.get("longitude"));
+    assertEquals("每天 08:00-17:00", visible.get("businessHours"));
+
+    body.put("version", saved.get("version"));
+    body.put("latitude", 30);
+    assertCode("VALIDATION_ERROR", () -> call("PUT", "/admin/shop", body, admin));
+    body.put("longitude", 181);
+    assertCode("VALIDATION_ERROR", () -> call("PUT", "/admin/shop", body, admin));
+    body.put("longitude", 120);
+    assertEquals(30.0, ((Number) call("PUT", "/admin/shop", body, admin).get("latitude")).doubleValue());
+  }
+
+  @Test
   void splitAdminControllersRequireAdminRole() {
     for (String path :
         List.of(

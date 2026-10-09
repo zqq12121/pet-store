@@ -223,13 +223,21 @@ public class CatalogService extends CatalogReader {
     Map<String, Object> s = shop();
     BusinessRepository.version(s, in.integer("version", 1, Integer.MAX_VALUE));
     for (String key :
-        List.of("name", "address", "phone", "wechat", "businessHours", "pickupInstructions"))
+        List.of("name", "address", "businessHours", "pickupInstructions"))
       s.put(
           key,
           in.str(key, 1, key.equals("pickupInstructions") ? 1000 : key.equals("name") ? 80 : 200));
     com.warmpaw.common.AppointmentHours.parse(text(s, "businessHours"));
-    s.put("latitude", in.decimal("latitude", -90, 90));
-    s.put("longitude", in.decimal("longitude", -180, 180));
+    // 未提供联系方式时保存为空，不用虚构电话或微信填充必填项。
+    for (String key : List.of("phone", "wechat")) s.put(key, Objects.requireNonNullElse(in.optional(key, 200), ""));
+    // 地图位置可以不填写；填写时经纬度必须成对且在有效范围内。
+    require(
+        (body.get("latitude") == null) == (body.get("longitude") == null),
+        400,
+        "VALIDATION_ERROR",
+        "经纬度必须同时填写或同时留空");
+    s.put("latitude", body.get("latitude") == null ? null : in.decimal("latitude", -90, 90));
+    s.put("longitude", body.get("longitude") == null ? null : in.decimal("longitude", -180, 180));
     s.put("coordinateSystem", in.choice("coordinateSystem", "gcj02"));
     s.put("paymentTimeoutMinutes", in.integer("paymentTimeoutMinutes", 5, 120));
     s.put("pickupRetentionHours", in.integer("pickupRetentionHours", 1, 168));
