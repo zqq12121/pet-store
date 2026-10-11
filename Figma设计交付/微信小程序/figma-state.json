@@ -903,11 +903,181 @@
       "wechat-capsule"
     ],
     "remainingScreenshotsBlockedBy": "Figma Starter MCP call limit",
-    "uiFallback": "Desktop Figma blank; in-app browser requires login; Chrome unavailable",
-    "partialInteractions": [
-      "classification/filter state links",
-      "other pets share milk-candy detail demonstration"
+    "uiFallback": "2026-10-11: Logged-in Chrome canvas available for visual review; native input repeatedly fails with noWindowsAvailable and AX/screenshot disagreement after leaving fullscreen and resetting CUA",
+    "nativeScreenshotsReviewedOnContinuation": [
+      "home",
+      "pets",
+      "success",
+      "records",
+      "record",
+      "my",
+      "login",
+      "shop",
+      "ai",
+      "empty"
     ],
-    "prototypePlaybackVerified": false
-  }
+    "continuationDate": "2026-10-11",
+    "continuationFigmaWrites": "Local development plugin executed; 21 editable screens added and original category/card links corrected",
+    "localBackup": "设计备份-2026-10-11.fig",
+    "prototypePlaybackBlocker": "Present displays mini-program home; native coordinate click reports noWindowsAvailable, and AX/keyboard actions do not reliably change prototype. Full click/scroll acceptance remains unverified",
+    "chromeExtension": "Recognized; nameSession and tab listing timed out after installation",
+    "desktopPluginImport": "Imported and successfully executed in Figma desktop",
+    "preparedRepair": {
+      "source": "交互修正/repair.js",
+      "manifest": "交互修正/manifest.json",
+      "status": "written-and-exported",
+      "additionalScreens": 21,
+      "syntaxCheckPassed": true,
+      "runtimeVerified": true
+    },
+    "partialInteractions": [
+      "Phone/SMS, agreement, date/time inputs and AI sending remain static prototype examples",
+      "Reservation-status tabs are visual examples"
+    ],
+    "prototypePlaybackVerified": false,
+    "visualReview": {
+      "date": "2026-10-11",
+      "screenCount": 33,
+      "exportDirectory": "实际检查-2026-10-11",
+      "allExportsViewedAtNativeResolution": true,
+      "fixes": [
+        "category counts 2",
+        "price filter active styles",
+        "orange-cat photo consistency",
+        "pending confirmation copy and counts",
+        "hide inconsistent second sample appointment card"
+      ]
+    },
+    "structureChecks": {
+      "screenCount": 33,
+      "allScreens390x844": true,
+      "unresolvedTargets": 0,
+      "petChainsChecked": 4,
+      "scrollAreaConfigured": true,
+      "bottomActionSeparateFromScrollArea": true
+    },
+    "cloudSyncVerified": false,
+    "cloudSyncStatus": "Changes saved briefly appeared, but reconnect/unsynced text persisted; cloud synchronization cannot yet be confirmed",
+    "exportReport": "实际检查-2026-10-11/report.json",
+    "latestBackupStatus": "Save Local Copy succeeded; fresh .fig file copied into workspace",
+    "lastReviewCorrectedNodeIds": [
+      "50:1923",
+      "50:1929",
+      "35:795",
+      "35:781",
+      "50:857",
+      "50:844",
+      "50:1220",
+      "50:1207",
+      "50:1583",
+      "50:1570",
+      "35:842",
+      "35:843",
+      "35:849",
+      "35:857",
+      "50:932",
+      "50:933",
+      "50:939",
+      "50:947",
+      "50:1295",
+      "50:1296",
+      "50:1302",
+      "50:1310",
+      "50:1658",
+      "50:1659",
+      "50:1665",
+      "50:1673",
+      "35:926"
+    ],
+    "latestBackup": "设计备份-33屏-2026-10-11.fig",
+    "latestBackupBytes": 2418876,
+    "latestBackupSha256": "431deee1fb9702e2b8a5fd67630a8cd2fe69d8b97fafd4388a9ff99dbba038d6"
+  },
+  "additionalScreens": [
+    {
+      "id": "50:616",
+      "name": "小程序 / 修正 / 年糕 / 宠物详情"
+    },
+    {
+      "id": "50:671",
+      "name": "小程序 / 修正 / 年糕 / 手机号登录"
+    },
+    {
+      "id": "50:715",
+      "name": "小程序 / 修正 / 年糕 / 到店预约"
+    },
+    {
+      "id": "50:783",
+      "name": "小程序 / 修正 / 年糕 / 预约已提交"
+    },
+    {
+      "id": "50:828",
+      "name": "小程序 / 修正 / 年糕 / 我的预约"
+    },
+    {
+      "id": "50:923",
+      "name": "小程序 / 修正 / 年糕 / 预约详情"
+    },
+    {
+      "id": "50:979",
+      "name": "小程序 / 修正 / 松饼 / 宠物详情"
+    },
+    {
+      "id": "50:1034",
+      "name": "小程序 / 修正 / 松饼 / 手机号登录"
+    },
+    {
+      "id": "50:1078",
+      "name": "小程序 / 修正 / 松饼 / 到店预约"
+    },
+    {
+      "id": "50:1146",
+      "name": "小程序 / 修正 / 松饼 / 预约已提交"
+    },
+    {
+      "id": "50:1191",
+      "name": "小程序 / 修正 / 松饼 / 我的预约"
+    },
+    {
+      "id": "50:1286",
+      "name": "小程序 / 修正 / 松饼 / 预约详情"
+    },
+    {
+      "id": "50:1342",
+      "name": "小程序 / 修正 / 橘子 / 宠物详情"
+    },
+    {
+      "id": "50:1397",
+      "name": "小程序 / 修正 / 橘子 / 手机号登录"
+    },
+    {
+      "id": "50:1441",
+      "name": "小程序 / 修正 / 橘子 / 到店预约"
+    },
+    {
+      "id": "50:1509",
+      "name": "小程序 / 修正 / 橘子 / 预约已提交"
+    },
+    {
+      "id": "50:1554",
+      "name": "小程序 / 修正 / 橘子 / 我的预约"
+    },
+    {
+      "id": "50:1649",
+      "name": "小程序 / 修正 / 橘子 / 预约详情"
+    },
+    {
+      "id": "50:1705",
+      "name": "小程序 / 修正 / 选宠 / 猫咪"
+    },
+    {
+      "id": "50:1807",
+      "name": "小程序 / 修正 / 选宠 / 狗狗"
+    },
+    {
+      "id": "50:1909",
+      "name": "小程序 / 修正 / 选宠 / 2千以内"
+    }
+  ],
+  "screenCount": 33
 }

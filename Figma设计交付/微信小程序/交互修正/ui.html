@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<style>
+  body {margin:24px;font:14px/1.6 system-ui;background:#fffaf5;color:#342b24}
+  h1 {font-size:20px} button {border:0;border-radius:12px;padding:12px 20px;background:#d66c30;color:white;font:inherit}
+  button:disabled {opacity:.5} textarea {box-sizing:border-box;width:100%;height:300px;margin-top:16px;font:12px/1.5 monospace}
+</style>
+<h1>茸茸星球 · 小程序交互修正</h1>
+<p>复用原页面，补齐猫咪、狗狗及 2 千元以内示例状态，为其他三只宠物保留各自的预约流程。</p>
+<p id="status">正在只读检查原文件…</p>
+<button id="apply" disabled>写入当前设计文件</button>
+<textarea id="report" readonly aria-label="执行报告"></textarea>
+<script>
+  // 报告只在本地插件中展示，不上传到外部服务。
+  const status = document.getElementById('status');
+  const report = document.getElementById('report');
+  const apply = document.getElementById('apply');
+  apply.onclick = () => {
+    apply.disabled = true;
+    status.textContent = '正在修正，完成后仍需检查画布和演示流程…';
+    parent.postMessage({pluginMessage:{type:'apply'}}, '*');
+  };
+  onmessage = event => {
+    const message = event.data.pluginMessage;
+    if (!message) return;
+    if (message.type === 'progress') {status.textContent = message.text; return;}
+    if (message.type === 'archive') {
+      // 标准 ZIP 的未压缩存储格式，无第三方库；一次下载包含 PNG 和实际报告。
+      const encode = new TextEncoder(), chunks = [], central = [];
+      let offset = 0;
+      const crc32 = bytes => {
+        let crc = 0xffffffff;
+        for (const byte of bytes) {
+          crc ^= byte;
+          for (let i = 0; i < 8; i++) crc = (crc >>> 1) ^ ((crc & 1) ? 0xedb88320 : 0);
+        }
+        return (crc ^ 0xffffffff) >>> 0;
+      };
+      const files = [...message.files, {name:'report.json', bytes:encode.encode(JSON.stringify(message.report, null, 2))}];
+      for (const file of files) {
+        const name = encode.encode(file.name), bytes = new Uint8Array(file.bytes), crc = crc32(bytes);
+        const header = new Uint8Array(30), h = new DataView(header.buffer);
+        h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true);
+        h.setUint32(14, crc, true); h.setUint32(18, bytes.length, true); h.setUint32(22, bytes.length, true); h.setUint16(26, name.length, true);
+        chunks.push(header, name, bytes);
+        const record = new Uint8Array(46), r = new DataView(record.buffer);
+        r.setUint32(0, 0x02014b50, true); r.setUint16(4, 20, true); r.setUint16(6, 20, true);
+        r.setUint32(16, crc, true); r.setUint32(20, bytes.length, true); r.setUint32(24, bytes.length, true); r.setUint16(28, name.length, true); r.setUint32(42, offset, true);
+        central.push(record, name); offset += header.length + name.length + bytes.length;
+      }
+      const size = central.reduce((sum, bytes) => sum + bytes.length, 0), end = new Uint8Array(22), e = new DataView(end.buffer);
+      e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, size, true); e.setUint32(16, offset, true);
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([...chunks, ...central, end], {type:'application/zip'}));
+      a.download = 'warmpaw-mini-review.zip'; a.textContent = '下载实际页面和报告';
+      document.body.appendChild(a); a.click();
+      return;
+    }
+    if (message.type === 'error') {
+      status.textContent = message.text + ' 如已生成部分页面，请先检查；不要重复运行。';
+      apply.disabled = true;
+      return;
+    }
+    report.value = JSON.stringify(message.report, null, 2);
+    if (message.type === 'ready') {
+      status.textContent = '检查通过。原 12 屏保留，计划新增 21 个流程和筛选状态屏。';
+      apply.disabled = false;
+    } else {
+      status.textContent = '已写入。请检查导出的页面与报告，并实际播放原型；写入成功不等于验收完成。';
+    }
+  };
+  // 通知插件界面已经可以接收进度、结果和错误。
+  parent.postMessage({pluginMessage:{type:'ui-ready'}}, '*');
+</script>
+</html>

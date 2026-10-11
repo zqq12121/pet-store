@@ -1,0 +1,6116 @@
+{
+  "status": "written-and-exported-awaiting-playback",
+  "pageId": "4:2",
+  "originalScreenCount": 12,
+  "addedScreenCount": 21,
+  "correctedNodeIds": [
+    "50:1923",
+    "50:1929",
+    "35:795",
+    "35:781",
+    "50:857",
+    "50:844",
+    "50:1220",
+    "50:1207",
+    "50:1583",
+    "50:1570",
+    "35:842",
+    "35:843",
+    "35:849",
+    "35:857",
+    "50:932",
+    "50:933",
+    "50:939",
+    "50:947",
+    "50:1295",
+    "50:1296",
+    "50:1302",
+    "50:1310",
+    "50:1658",
+    "50:1659",
+    "50:1665",
+    "50:1673",
+    "35:926"
+  ],
+  "prototypePlaybackVerified": false,
+  "screens": [
+    {
+      "id": "30:512",
+      "name": "小程序 / 01 首页",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 95,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I33:1006;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I33:1006;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I33:1006;32:521",
+          "text": "茸茸星球",
+          "visible": true
+        },
+        {
+          "id": "33:1053",
+          "text": "想找哪位小伙伴？",
+          "visible": true
+        },
+        {
+          "id": "33:1056",
+          "text": "HELLO, LITTLE PAW",
+          "visible": true
+        },
+        {
+          "id": "33:1057",
+          "text": "把喜欢，\n变成陪伴。",
+          "visible": true
+        },
+        {
+          "id": "33:1058",
+          "text": "先见一面，再认真决定。",
+          "visible": true
+        },
+        {
+          "id": "I33:1059;16:3",
+          "text": "去认识它们  →",
+          "visible": true
+        },
+        {
+          "id": "33:1067",
+          "text": "养宠助手",
+          "visible": true
+        },
+        {
+          "id": "33:1068",
+          "text": "新手问题，随时问",
+          "visible": true
+        },
+        {
+          "id": "33:1074",
+          "text": "到店见一面",
+          "visible": true
+        },
+        {
+          "id": "33:1075",
+          "text": "每天 08:00—17:00",
+          "visible": true
+        },
+        {
+          "id": "33:1077",
+          "text": "今日的小心动",
+          "visible": true
+        },
+        {
+          "id": "33:1078",
+          "text": "全部宠物 →",
+          "visible": true
+        },
+        {
+          "id": "I33:1080;34:658",
+          "text": "奶糖 · 柯基",
+          "visible": true
+        },
+        {
+          "id": "I33:1080;34:659",
+          "text": "4个月 · 弟弟",
+          "visible": true
+        },
+        {
+          "id": "I33:1080;34:660",
+          "text": "¥ 4,800",
+          "visible": true
+        },
+        {
+          "id": "I33:1080;34:661",
+          "text": "",
+          "visible": false
+        },
+        {
+          "id": "I33:1087;34:665",
+          "text": "年糕 · 田园猫",
+          "visible": true
+        },
+        {
+          "id": "I33:1087;34:666",
+          "text": "5个月 · 妹妹",
+          "visible": true
+        },
+        {
+          "id": "I33:1087;34:667",
+          "text": "¥ 1,800",
+          "visible": true
+        },
+        {
+          "id": "I33:1087;34:668",
+          "text": "",
+          "visible": false
+        },
+        {
+          "id": "33:1094",
+          "text": "示例宠物 · 练习项目",
+          "visible": true
+        },
+        {
+          "id": "I33:1023;32:534",
+          "text": "首页",
+          "visible": true
+        },
+        {
+          "id": "I33:1023;32:541",
+          "text": "选宠",
+          "visible": true
+        },
+        {
+          "id": "I33:1023;32:546",
+          "text": "预约",
+          "visible": true
+        },
+        {
+          "id": "I33:1023;32:551",
+          "text": "我的",
+          "visible": true
+        }
+      ],
+      "images": [
+        {
+          "id": "33:1061",
+          "name": "示例宠物照片",
+          "hash": "08b1df33f71fed3769848a3cdb6eefa70e88e998",
+          "width": 144,
+          "height": 176
+        },
+        {
+          "id": "I33:1080;34:656",
+          "name": "Rectangle",
+          "hash": "08b1df33f71fed3769848a3cdb6eefa70e88e998",
+          "width": 169,
+          "height": 142
+        },
+        {
+          "id": "I33:1087;34:663",
+          "name": "Rectangle",
+          "hash": "a6edeaf9c2df201f3f1a47f1e789cddbf59d99e5",
+          "width": 169,
+          "height": 142
+        }
+      ],
+      "destinations": [
+        {
+          "sourceId": "33:1049",
+          "source": "搜索 → pets",
+          "destinationId": "30:513"
+        },
+        {
+          "sourceId": "33:1053",
+          "source": "想找哪位小伙伴？ → pets",
+          "destinationId": "30:513"
+        },
+        {
+          "sourceId": "33:1059",
+          "source": "去认识它们  → → pets",
+          "destinationId": "30:513"
+        },
+        {
+          "sourceId": "33:1063",
+          "source": "内容组 → ai",
+          "destinationId": "30:522"
+        },
+        {
+          "sourceId": "33:1069",
+          "source": "内容组 → shop",
+          "destinationId": "30:521"
+        },
+        {
+          "sourceId": "33:1078",
+          "source": "全部宠物 → → pets",
+          "destinationId": "30:513"
+        },
+        {
+          "sourceId": "33:1080",
+          "source": "宠物卡片 / 奶糖 · 柯基 → detail",
+          "destinationId": "30:514"
+        },
+        {
+          "sourceId": "33:1087",
+          "source": "宠物卡片 / 年糕 · 田园猫 → detail",
+          "destinationId": "50:616"
+        },
+        {
+          "sourceId": "I33:1023;32:535",
+          "source": "Tab / 选宠 → pets",
+          "destinationId": "30:513"
+        },
+        {
+          "sourceId": "I33:1023;32:542",
+          "source": "Tab / 预约 → records",
+          "destinationId": "30:517"
+        },
+        {
+          "sourceId": "I33:1023;32:547",
+          "source": "Tab / 我的 → my",
+          "destinationId": "30:519"
+        }
+      ],
+      "layout": [
+        {
+          "id": "33:1006",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "33:1021",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 674,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 697
+        },
+        {
+          "id": "33:1023",
+          "name": "小程序组件 / 底部导航",
+          "y": 762,
+          "height": 82,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 82
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "30:513",
+      "name": "小程序 / 02 选宠",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 102,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I33:1095;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I33:1095;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I33:1095;32:521",
+          "text": "选宠",
+          "visible": true
+        },
+        {
+          "id": "33:1138",
+          "text": "找到你的合拍伙伴",
+          "visible": true
+        },
+        {
+          "id": "33:1139",
+          "text": "先了解性格，再安排一次到店见面。",
+          "visible": true
+        },
+        {
+          "id": "33:1144",
+          "text": "搜索名字、品种",
+          "visible": true
+        },
+        {
+          "id": "33:1149",
+          "text": "全部",
+          "visible": true
+        },
+        {
+          "id": "33:1151",
+          "text": "猫咪",
+          "visible": true
+        },
+        {
+          "id": "33:1153",
+          "text": "狗狗",
+          "visible": true
+        },
+        {
+          "id": "33:1155",
+          "text": "筛选",
+          "visible": true
+        },
+        {
+          "id": "33:1157",
+          "text": "4 位示例小伙伴",
+          "visible": true
+        },
+        {
+          "id": "33:1158",
+          "text": "默认排序 ↓",
+          "visible": true
+        },
+        {
+          "id": "I33:1160;34:658",
+          "text": "奶糖 · 柯基",
+          "visible": true
+        },
+        {
+          "id": "I33:1160;34:659",
+          "text": "4个月 · 弟弟",
+          "visible": true
+        },
+        {
+          "id": "I33:1160;34:660",
+          "text": "¥ 4,800",
+          "visible": true
+        },
+        {
+          "id": "I33:1160;34:661",
+          "text": "",
+          "visible": false
+        },
+        {
+          "id": "I33:1167;34:665",
+          "text": "年糕 · 田园猫",
+          "visible": true
+        },
+        {
+          "id": "I33:1167;34:666",
+          "text": "5个月 · 妹妹",
+          "visible": true
+        },
+        {
+          "id": "I33:1167;34:667",
+          "text": "¥ 1,800",
+          "visible": true
+        },
+        {
+          "id": "I33:1167;34:668",
+          "text": "",
+          "visible": false
+        },
+        {
+          "id": "I33:1175;34:672",
+          "text": "松饼 · 金毛",
+          "visible": true
+        },
+        {
+          "id": "I33:1175;34:673",
+          "text": "3个月 · 弟弟",
+          "visible": true
+        },
+        {
+          "id": "I33:1175;34:674",
+          "text": "¥ 3,600",
+          "visible": true
+        },
+        {
+          "id": "I33:1175;34:675",
+          "text": "",
+          "visible": false
+        },
+        {
+          "id": "I33:1182;34:679",
+          "text": "橘子 · 田园猫",
+          "visible": true
+        },
+        {
+          "id": "I33:1182;34:680",
+          "text": "6个月 · 妹妹",
+          "visible": true
+        },
+        {
+          "id": "I33:1182;34:681",
+          "text": "¥ 1,500",
+          "visible": true
+        },
+        {
+          "id": "I33:1182;34:682",
+          "text": "",
+          "visible": false
+        },
+        {
+          "id": "33:1190",
+          "text": "DEMO 示例展示 · 先预约，到店了解后再决定。",
+          "visible": true
+        },
+        {
+          "id": "I33:1112;32:561",
+          "text": "首页",
+          "visible": true
+        },
+        {
+          "id": "I33:1112;32:568",
+          "text": "选宠",
+          "visible": true
+        },
+        {
+          "id": "I33:1112;32:573",
+          "text": "预约",
+          "visible": true
+        },
+        {
+          "id": "I33:1112;32:578",
+          "text": "我的",
+          "visible": true
+        }
+      ],
+      "images": [
+        {
+          "id": "I33:1160;34:656",
+          "name": "Rectangle",
+          "hash": "08b1df33f71fed3769848a3cdb6eefa70e88e998",
+          "width": 169,
+          "height": 142
+        },
+        {
+          "id": "I33:1167;34:663",
+          "name": "Rectangle",
+          "hash": "a6edeaf9c2df201f3f1a47f1e789cddbf59d99e5",
+          "width": 169,
+          "height": 142
+        },
+        {
+          "id": "I33:1175;34:670",
+          "name": "Rectangle",
+          "hash": "199b94884be6c1babff99bb8f0b95ac59730907d",
+          "width": 169,
+          "height": 142
+        },
+        {
+          "id": "I33:1182;34:677",
+          "name": "Rectangle",
+          "hash": "7770cfd048bbf9034127290f6c2b6a359938a697",
+          "width": 169,
+          "height": 142
+        }
+      ],
+      "destinations": [
+        {
+          "sourceId": "33:1145",
+          "source": "图标 / filter → empty",
+          "destinationId": "50:1909"
+        },
+        {
+          "sourceId": "33:1150",
+          "source": "猫咪 → empty",
+          "destinationId": "50:1705"
+        },
+        {
+          "sourceId": "33:1152",
+          "source": "狗狗 → detail",
+          "destinationId": "50:1807"
+        },
+        {
+          "sourceId": "33:1154",
+          "source": "筛选 → empty",
+          "destinationId": "50:1909"
+        },
+        {
+          "sourceId": "33:1160",
+          "source": "宠物卡片 / 奶糖 · 柯基 → detail",
+          "destinationId": "30:514"
+        },
+        {
+          "sourceId": "33:1167",
+          "source": "宠物卡片 / 年糕 · 田园猫 → detail",
+          "destinationId": "50:616"
+        },
+        {
+          "sourceId": "33:1175",
+          "source": "宠物卡片 / 松饼 · 金毛 → detail",
+          "destinationId": "50:979"
+        },
+        {
+          "sourceId": "33:1182",
+          "source": "宠物卡片 / 橘子 · 田园猫 → detail",
+          "destinationId": "50:1342"
+        },
+        {
+          "sourceId": "I33:1112;32:557",
+          "source": "Tab / 首页 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "I33:1112;32:569",
+          "source": "Tab / 预约 → records",
+          "destinationId": "30:517"
+        },
+        {
+          "sourceId": "I33:1112;32:574",
+          "source": "Tab / 我的 → my",
+          "destinationId": "30:519"
+        }
+      ],
+      "layout": [
+        {
+          "id": "33:1095",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "33:1110",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 674,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 838
+        },
+        {
+          "id": "33:1112",
+          "name": "小程序组件 / 底部导航",
+          "y": 762,
+          "height": 82,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 82
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "30:514",
+      "name": "小程序 / 03 宠物详情",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 55,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I33:1191;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I33:1191;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I33:1191;32:521",
+          "text": "宠物详情",
+          "visible": true
+        },
+        {
+          "id": "33:1210",
+          "text": "奶糖 · 柯基",
+          "visible": true
+        },
+        {
+          "id": "33:1212",
+          "text": "可预约",
+          "visible": true
+        },
+        {
+          "id": "33:1213",
+          "text": "活泼亲人，喜欢在你身边蹦蹦跳跳。",
+          "visible": true
+        },
+        {
+          "id": "33:1215",
+          "text": "¥ 4,800",
+          "visible": true
+        },
+        {
+          "id": "33:1216",
+          "text": "参考价 · 到店确认",
+          "visible": true
+        },
+        {
+          "id": "33:1219",
+          "text": "4个月",
+          "visible": true
+        },
+        {
+          "id": "33:1220",
+          "text": "年龄",
+          "visible": true
+        },
+        {
+          "id": "33:1222",
+          "text": "弟弟",
+          "visible": true
+        },
+        {
+          "id": "33:1223",
+          "text": "性别",
+          "visible": true
+        },
+        {
+          "id": "33:1225",
+          "text": "柯基",
+          "visible": true
+        },
+        {
+          "id": "33:1226",
+          "text": "品种",
+          "visible": true
+        },
+        {
+          "id": "33:1232",
+          "text": "成长档案",
+          "visible": true
+        },
+        {
+          "id": "33:1233",
+          "text": "疫苗、驱虫与健康记录可在到店时核验。",
+          "visible": true
+        },
+        {
+          "id": "33:1234",
+          "text": "模拟资料，仅供测试 · DEMO-PET-001",
+          "visible": true
+        },
+        {
+          "id": "33:1236",
+          "text": "预约仅用于安排到店时间，线上不收款。",
+          "visible": true
+        },
+        {
+          "id": "I33:1238;16:3",
+          "text": "预约到店，见见奶糖",
+          "visible": true
+        }
+      ],
+      "images": [
+        {
+          "id": "33:1208",
+          "name": "示例宠物照片",
+          "hash": "08b1df33f71fed3769848a3cdb6eefa70e88e998",
+          "width": 350,
+          "height": 220
+        }
+      ],
+      "destinations": [
+        {
+          "sourceId": "I33:1191;32:519",
+          "source": "返回 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "33:1238",
+          "source": "预约到店，见见奶糖 → login",
+          "destinationId": "30:520"
+        }
+      ],
+      "layout": [
+        {
+          "id": "33:1191",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "33:1206",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 672,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 631
+        },
+        {
+          "id": "33:1237",
+          "name": "底部操作",
+          "y": 760,
+          "height": 84,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 60
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "30:515",
+      "name": "小程序 / 04 到店预约",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 68,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I33:1240;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I33:1240;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I33:1240;32:521",
+          "text": "到店预约",
+          "visible": true
+        },
+        {
+          "id": "33:1260",
+          "text": "奶糖 · 柯基",
+          "visible": true
+        },
+        {
+          "id": "33:1261",
+          "text": "DEMO-PET-001 · 4个月 · 弟弟",
+          "visible": true
+        },
+        {
+          "id": "33:1262",
+          "text": "参考价 ¥ 4,800",
+          "visible": true
+        },
+        {
+          "id": "33:1264",
+          "text": "预约不收款 · 提交后等待门店确认。",
+          "visible": true
+        },
+        {
+          "id": "33:1266",
+          "text": "联系信息",
+          "visible": true
+        },
+        {
+          "id": "33:1268",
+          "text": "联系人",
+          "visible": true
+        },
+        {
+          "id": "33:1270",
+          "text": "张同学",
+          "visible": true
+        },
+        {
+          "id": "33:1272",
+          "text": "手机号",
+          "visible": true
+        },
+        {
+          "id": "33:1274",
+          "text": "138 **** 8000",
+          "visible": true
+        },
+        {
+          "id": "33:1276",
+          "text": "选择到店时间",
+          "visible": true
+        },
+        {
+          "id": "33:1279",
+          "text": "10/11 周日",
+          "visible": true
+        },
+        {
+          "id": "33:1280",
+          "text": "已选择",
+          "visible": true
+        },
+        {
+          "id": "33:1282",
+          "text": "10/12 周一",
+          "visible": true
+        },
+        {
+          "id": "33:1283",
+          "text": "可预约",
+          "visible": true
+        },
+        {
+          "id": "33:1285",
+          "text": "10/13 周二",
+          "visible": true
+        },
+        {
+          "id": "33:1286",
+          "text": "可预约",
+          "visible": true
+        },
+        {
+          "id": "33:1289",
+          "text": "10:00",
+          "visible": true
+        },
+        {
+          "id": "33:1291",
+          "text": "14:00",
+          "visible": true
+        },
+        {
+          "id": "33:1293",
+          "text": "16:00",
+          "visible": true
+        },
+        {
+          "id": "33:1294",
+          "text": "每天 08:00—17:00，请携带身份证到店。",
+          "visible": true
+        },
+        {
+          "id": "33:1298",
+          "text": "已阅读预约须知及隐私说明\n模拟资料，仅供测试",
+          "visible": true
+        },
+        {
+          "id": "I33:1300;16:3",
+          "text": "提交到店预约",
+          "visible": true
+        }
+      ],
+      "images": [
+        {
+          "id": "33:1258",
+          "name": "示例宠物照片",
+          "hash": "08b1df33f71fed3769848a3cdb6eefa70e88e998",
+          "width": 80,
+          "height": 84
+        }
+      ],
+      "destinations": [
+        {
+          "sourceId": "I33:1240;32:519",
+          "source": "返回 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "33:1300",
+          "source": "提交到店预约 → success",
+          "destinationId": "30:516"
+        }
+      ],
+      "layout": [
+        {
+          "id": "33:1240",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "33:1255",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 672,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 705
+        },
+        {
+          "id": "33:1299",
+          "name": "底部操作",
+          "y": 760,
+          "height": 84,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 60
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "30:516",
+      "name": "小程序 / 05 预约已提交",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 45,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I35:675;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I35:675;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I35:675;32:521",
+          "text": "预约已提交",
+          "visible": true
+        },
+        {
+          "id": "35:701",
+          "text": "预约已提交",
+          "visible": true
+        },
+        {
+          "id": "35:702",
+          "text": "门店确认后，请按约定时间到店。",
+          "visible": true
+        },
+        {
+          "id": "35:704",
+          "text": "等待门店确认",
+          "visible": true
+        },
+        {
+          "id": "35:705",
+          "text": "奶糖 · 柯基",
+          "visible": true
+        },
+        {
+          "id": "35:706",
+          "text": "10月11日 周日  10:00",
+          "visible": true
+        },
+        {
+          "id": "35:707",
+          "text": "预约编号  DEMO-APPT-001",
+          "visible": true
+        },
+        {
+          "id": "35:708",
+          "text": "联系人 张同学  ·  138 **** 8000",
+          "visible": true
+        },
+        {
+          "id": "35:710",
+          "text": "请携带身份证到店。预约仅安排见面，现场核验材料后再决定。",
+          "visible": true
+        },
+        {
+          "id": "35:712",
+          "text": "① 已提交",
+          "visible": true
+        },
+        {
+          "id": "35:713",
+          "text": "② 待确认",
+          "visible": true
+        },
+        {
+          "id": "35:714",
+          "text": "③ 到店见面",
+          "visible": true
+        },
+        {
+          "id": "35:715",
+          "text": "练习项目 · 模拟预约，仅供测试",
+          "visible": true
+        },
+        {
+          "id": "I35:717;16:3",
+          "text": "查看我的预约",
+          "visible": true
+        }
+      ],
+      "images": [],
+      "destinations": [
+        {
+          "sourceId": "I35:675;32:519",
+          "source": "返回 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "35:717",
+          "source": "查看我的预约 → records",
+          "destinationId": "30:517"
+        }
+      ],
+      "layout": [
+        {
+          "id": "35:675",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "35:695",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 672,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 616
+        },
+        {
+          "id": "35:716",
+          "name": "底部操作",
+          "y": 760,
+          "height": 84,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 60
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "30:517",
+      "name": "小程序 / 06 我的预约",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 95,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I35:719;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I35:719;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I35:719;32:521",
+          "text": "我的预约",
+          "visible": true
+        },
+        {
+          "id": "35:769",
+          "text": "每一次见面，都值得期待",
+          "visible": true
+        },
+        {
+          "id": "35:770",
+          "text": "查看到店安排与确认状态",
+          "visible": true
+        },
+        {
+          "id": "35:773",
+          "text": "全部",
+          "visible": true
+        },
+        {
+          "id": "35:775",
+          "text": "待确认",
+          "visible": true
+        },
+        {
+          "id": "35:777",
+          "text": "待到店",
+          "visible": true
+        },
+        {
+          "id": "35:780",
+          "text": "DEMO-APPT-001",
+          "visible": true
+        },
+        {
+          "id": "35:781",
+          "text": "待确认",
+          "visible": true
+        },
+        {
+          "id": "35:785",
+          "text": "奶糖 · 柯基",
+          "visible": true
+        },
+        {
+          "id": "35:786",
+          "text": "4个月 · 弟弟",
+          "visible": true
+        },
+        {
+          "id": "35:787",
+          "text": "到店预约 · 线上不收款",
+          "visible": true
+        },
+        {
+          "id": "35:792",
+          "text": "10月11日 周日  10:00",
+          "visible": true
+        },
+        {
+          "id": "I35:793;16:9",
+          "text": "查看预约",
+          "visible": true
+        },
+        {
+          "id": "35:797",
+          "text": "DEMO-APPT-002",
+          "visible": true
+        },
+        {
+          "id": "35:798",
+          "text": "待确认",
+          "visible": true
+        },
+        {
+          "id": "35:802",
+          "text": "年糕 · 田园猫",
+          "visible": true
+        },
+        {
+          "id": "35:803",
+          "text": "5个月 · 妹妹",
+          "visible": true
+        },
+        {
+          "id": "35:804",
+          "text": "到店预约 · 线上不收款",
+          "visible": true
+        },
+        {
+          "id": "35:809",
+          "text": "10月12日 周一  14:00",
+          "visible": true
+        },
+        {
+          "id": "I35:810;16:9",
+          "text": "查看预约",
+          "visible": true
+        },
+        {
+          "id": "35:813",
+          "text": "预约状态以门店确认结果为准。示例预约仅供测试。",
+          "visible": true
+        },
+        {
+          "id": "35:814",
+          "text": "查看无预约状态 →",
+          "visible": true
+        },
+        {
+          "id": "I35:743;32:588",
+          "text": "首页",
+          "visible": true
+        },
+        {
+          "id": "I35:743;32:595",
+          "text": "选宠",
+          "visible": true
+        },
+        {
+          "id": "I35:743;32:600",
+          "text": "预约",
+          "visible": true
+        },
+        {
+          "id": "I35:743;32:605",
+          "text": "我的",
+          "visible": true
+        }
+      ],
+      "images": [
+        {
+          "id": "35:783",
+          "name": "示例宠物照片",
+          "hash": "08b1df33f71fed3769848a3cdb6eefa70e88e998",
+          "width": 80,
+          "height": 84
+        },
+        {
+          "id": "35:800",
+          "name": "示例宠物照片",
+          "hash": "a6edeaf9c2df201f3f1a47f1e789cddbf59d99e5",
+          "width": 80,
+          "height": 84
+        }
+      ],
+      "destinations": [
+        {
+          "sourceId": "35:793",
+          "source": "查看预约 → record",
+          "destinationId": "30:518"
+        },
+        {
+          "sourceId": "35:814",
+          "source": "查看无预约状态 → → empty",
+          "destinationId": "30:523"
+        },
+        {
+          "sourceId": "I35:743;32:584",
+          "source": "Tab / 首页 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "I35:743;32:589",
+          "source": "Tab / 选宠 → pets",
+          "destinationId": "30:513"
+        },
+        {
+          "sourceId": "I35:743;32:601",
+          "source": "Tab / 我的 → my",
+          "destinationId": "30:519"
+        }
+      ],
+      "layout": [
+        {
+          "id": "35:719",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "35:739",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 674,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 501
+        },
+        {
+          "id": "35:743",
+          "name": "小程序组件 / 底部导航",
+          "y": 762,
+          "height": 82,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 82
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "30:518",
+      "name": "小程序 / 07 预约详情",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 50,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I35:815;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I35:815;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I35:815;32:521",
+          "text": "预约详情",
+          "visible": true
+        },
+        {
+          "id": "35:842",
+          "text": "等待门店确认",
+          "visible": true
+        },
+        {
+          "id": "35:843",
+          "text": "门店确认后，请按约定时间到店。",
+          "visible": true
+        },
+        {
+          "id": "35:847",
+          "text": "奶糖 · 柯基",
+          "visible": true
+        },
+        {
+          "id": "35:848",
+          "text": "DEMO-PET-001 · 4个月 · 弟弟",
+          "visible": true
+        },
+        {
+          "id": "35:849",
+          "text": "已提交 · 等待确认",
+          "visible": true
+        },
+        {
+          "id": "35:851",
+          "text": "到店时间",
+          "visible": true
+        },
+        {
+          "id": "35:852",
+          "text": "10月11日 周日 10:00",
+          "visible": true
+        },
+        {
+          "id": "35:853",
+          "text": "每天 08:00—17:00 · 请携带身份证",
+          "visible": true
+        },
+        {
+          "id": "35:854",
+          "text": "查看到店指南 →",
+          "visible": true
+        },
+        {
+          "id": "35:856",
+          "text": "预约进度",
+          "visible": true
+        },
+        {
+          "id": "35:857",
+          "text": "✓ 已提交     ○ 待确认     ○ 待到店",
+          "visible": true
+        },
+        {
+          "id": "35:858",
+          "text": "预约编号  DEMO-APPT-001",
+          "visible": true
+        },
+        {
+          "id": "35:860",
+          "text": "宠物档案与预约均为模拟资料，仅供测试。线上不收款，到店核验后再决定。",
+          "visible": true
+        },
+        {
+          "id": "I35:862;16:3",
+          "text": "查看到店指南",
+          "visible": true
+        }
+      ],
+      "images": [
+        {
+          "id": "35:845",
+          "name": "示例宠物照片",
+          "hash": "08b1df33f71fed3769848a3cdb6eefa70e88e998",
+          "width": 80,
+          "height": 84
+        }
+      ],
+      "destinations": [
+        {
+          "sourceId": "I35:815;32:519",
+          "source": "返回 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "35:854",
+          "source": "查看到店指南 → → shop",
+          "destinationId": "30:521"
+        },
+        {
+          "sourceId": "35:862",
+          "source": "查看到店指南 → shop",
+          "destinationId": "30:521"
+        }
+      ],
+      "layout": [
+        {
+          "id": "35:815",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "35:835",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 672,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 591
+        },
+        {
+          "id": "35:861",
+          "name": "底部操作",
+          "y": 760,
+          "height": 84,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 60
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "30:519",
+      "name": "小程序 / 08 我的",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 104,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I35:864;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I35:864;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I35:864;32:521",
+          "text": "我的",
+          "visible": true
+        },
+        {
+          "id": "35:918",
+          "text": "张同学",
+          "visible": true
+        },
+        {
+          "id": "35:919",
+          "text": "138 **** 8000",
+          "visible": true
+        },
+        {
+          "id": "35:920",
+          "text": "和小伙伴的故事，从这里开始",
+          "visible": true
+        },
+        {
+          "id": "35:923",
+          "text": "1",
+          "visible": true
+        },
+        {
+          "id": "35:924",
+          "text": "待确认",
+          "visible": true
+        },
+        {
+          "id": "35:926",
+          "text": "0",
+          "visible": true
+        },
+        {
+          "id": "35:927",
+          "text": "待到店",
+          "visible": true
+        },
+        {
+          "id": "35:929",
+          "text": "0",
+          "visible": true
+        },
+        {
+          "id": "35:930",
+          "text": "已完成",
+          "visible": true
+        },
+        {
+          "id": "35:936",
+          "text": "预约记录",
+          "visible": true
+        },
+        {
+          "id": "35:937",
+          "text": "查看预约进度与到店安排",
+          "visible": true
+        },
+        {
+          "id": "35:945",
+          "text": "到店指南",
+          "visible": true
+        },
+        {
+          "id": "35:946",
+          "text": "营业时间与携带材料",
+          "visible": true
+        },
+        {
+          "id": "35:953",
+          "text": "养宠助手",
+          "visible": true
+        },
+        {
+          "id": "35:954",
+          "text": "让新手养宠更有底气",
+          "visible": true
+        },
+        {
+          "id": "35:962",
+          "text": "登录与授权",
+          "visible": true
+        },
+        {
+          "id": "35:963",
+          "text": "手机号登录与隐私说明",
+          "visible": true
+        },
+        {
+          "id": "35:966",
+          "text": "茸茸星球 · 练习项目",
+          "visible": true
+        },
+        {
+          "id": "I35:886;32:615",
+          "text": "首页",
+          "visible": true
+        },
+        {
+          "id": "I35:886;32:622",
+          "text": "选宠",
+          "visible": true
+        },
+        {
+          "id": "I35:886;32:627",
+          "text": "预约",
+          "visible": true
+        },
+        {
+          "id": "I35:886;32:632",
+          "text": "我的",
+          "visible": true
+        }
+      ],
+      "images": [],
+      "destinations": [
+        {
+          "sourceId": "35:922",
+          "source": "内容组 → records",
+          "destinationId": "30:517"
+        },
+        {
+          "sourceId": "35:925",
+          "source": "内容组 → records",
+          "destinationId": "30:517"
+        },
+        {
+          "sourceId": "35:928",
+          "source": "内容组 → empty",
+          "destinationId": "30:523"
+        },
+        {
+          "sourceId": "35:931",
+          "source": "预约记录 → records",
+          "destinationId": "30:517"
+        },
+        {
+          "sourceId": "35:940",
+          "source": "到店指南 → shop",
+          "destinationId": "30:521"
+        },
+        {
+          "sourceId": "35:949",
+          "source": "养宠助手 → ai",
+          "destinationId": "30:522"
+        },
+        {
+          "sourceId": "35:957",
+          "source": "登录与授权 → login",
+          "destinationId": "30:520"
+        },
+        {
+          "sourceId": "I35:886;32:611",
+          "source": "Tab / 首页 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "I35:886;32:616",
+          "source": "Tab / 选宠 → pets",
+          "destinationId": "30:513"
+        },
+        {
+          "sourceId": "I35:886;32:623",
+          "source": "Tab / 预约 → records",
+          "destinationId": "30:517"
+        }
+      ],
+      "layout": [
+        {
+          "id": "35:864",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "35:884",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 674,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 587
+        },
+        {
+          "id": "35:886",
+          "name": "小程序组件 / 底部导航",
+          "y": 762,
+          "height": 82,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 82
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "30:520",
+      "name": "小程序 / 09 手机号登录",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 44,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I36:803;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I36:803;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I36:803;32:521",
+          "text": "手机号登录",
+          "visible": true
+        },
+        {
+          "id": "36:825",
+          "text": "欢迎来到茸茸星球",
+          "visible": true
+        },
+        {
+          "id": "36:826",
+          "text": "登录后，预约和到店安排都能在这里查看。",
+          "visible": true
+        },
+        {
+          "id": "36:830",
+          "text": "手机号",
+          "visible": true
+        },
+        {
+          "id": "36:832",
+          "text": "138 **** 8000",
+          "visible": true
+        },
+        {
+          "id": "36:833",
+          "text": "短信验证码",
+          "visible": true
+        },
+        {
+          "id": "36:835",
+          "text": "123456",
+          "visible": true
+        },
+        {
+          "id": "36:836",
+          "text": "获取验证码",
+          "visible": true
+        },
+        {
+          "id": "36:837",
+          "text": "示例验证码，仅用于原型展示。",
+          "visible": true
+        },
+        {
+          "id": "36:841",
+          "text": "我已阅读并同意用户协议和隐私说明\n手机号仅用于账号登录与预约联系",
+          "visible": true
+        },
+        {
+          "id": "36:842",
+          "text": "你的每一次认真选择，都值得被好好对待。",
+          "visible": true
+        },
+        {
+          "id": "I36:844;16:3",
+          "text": "登录并继续预约",
+          "visible": true
+        }
+      ],
+      "images": [
+        {
+          "id": "36:827",
+          "name": "示例宠物照片",
+          "hash": "a6edeaf9c2df201f3f1a47f1e789cddbf59d99e5",
+          "width": 350,
+          "height": 176
+        }
+      ],
+      "destinations": [
+        {
+          "sourceId": "I36:803;32:519",
+          "source": "返回 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "36:844",
+          "source": "登录并继续预约 → booking",
+          "destinationId": "30:515"
+        }
+      ],
+      "layout": [
+        {
+          "id": "36:803",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "36:823",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 672,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 672
+        },
+        {
+          "id": "36:843",
+          "name": "底部操作",
+          "y": 760,
+          "height": 84,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 60
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "30:521",
+      "name": "小程序 / 10 到店指南",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 48,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I36:846;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I36:846;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I36:846;32:521",
+          "text": "到店指南",
+          "visible": true
+        },
+        {
+          "id": "36:872",
+          "text": "把线上心动，\n变成一次真实见面。",
+          "visible": true
+        },
+        {
+          "id": "36:874",
+          "text": "茸茸星球",
+          "visible": true
+        },
+        {
+          "id": "36:875",
+          "text": "门店地址",
+          "visible": true
+        },
+        {
+          "id": "36:876",
+          "text": "星绒市云朵区毛球路 27 号",
+          "visible": true
+        },
+        {
+          "id": "36:877",
+          "text": "虚构地址，仅供练习",
+          "visible": true
+        },
+        {
+          "id": "36:883",
+          "text": "每天 08:00—17:00",
+          "visible": true
+        },
+        {
+          "id": "36:884",
+          "text": "来店前，请先提交预约并等待确认。",
+          "visible": true
+        },
+        {
+          "id": "36:886",
+          "text": "见面前的小准备",
+          "visible": true
+        },
+        {
+          "id": "36:887",
+          "text": "01  携带身份证，按预约时间到店\n02  了解宠物性格与日常照护需求\n03  现场核验档案及相关材料",
+          "visible": true
+        },
+        {
+          "id": "36:889",
+          "text": "练习门店资料；宠物档案与协议均为模拟资料，仅供测试。",
+          "visible": true
+        },
+        {
+          "id": "I36:891;16:3",
+          "text": "去选宠，预约见面",
+          "visible": true
+        }
+      ],
+      "images": [],
+      "destinations": [
+        {
+          "sourceId": "I36:846;32:519",
+          "source": "返回 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "36:891",
+          "source": "去选宠，预约见面 → pets",
+          "destinationId": "30:513"
+        }
+      ],
+      "layout": [
+        {
+          "id": "36:846",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "36:866",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 672,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 646
+        },
+        {
+          "id": "36:890",
+          "name": "底部操作",
+          "y": 760,
+          "height": 84,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 60
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "30:522",
+      "name": "小程序 / 11 养宠助手",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 57,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I36:893;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I36:893;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I36:893;32:521",
+          "text": "养宠助手",
+          "visible": true
+        },
+        {
+          "id": "36:919",
+          "text": "养宠路上，陪你多想一步",
+          "visible": true
+        },
+        {
+          "id": "36:920",
+          "text": "准备清单、日常照护、到店须知",
+          "visible": true
+        },
+        {
+          "id": "36:922",
+          "text": "第一次养柯基，需要准备什么？",
+          "visible": true
+        },
+        {
+          "id": "36:924",
+          "text": "先从这 3 件小事开始",
+          "visible": true
+        },
+        {
+          "id": "36:925",
+          "text": "1. 准备食盆、水碗、牵引用品和固定休息区。\n\n2. 和家人确认照护安排，了解时间与费用投入。\n\n3. 到店观察性格，核验宠物档案，再决定是否合适。",
+          "visible": true
+        },
+        {
+          "id": "36:926",
+          "text": "参考：新手养宠准备清单 · 示例回复",
+          "visible": true
+        },
+        {
+          "id": "36:927",
+          "text": "健康问题请咨询兽医。",
+          "visible": true
+        },
+        {
+          "id": "36:932",
+          "text": "看看奶糖的成长档案",
+          "visible": true
+        },
+        {
+          "id": "36:940",
+          "text": "到店需要准备什么？",
+          "visible": true
+        },
+        {
+          "id": "36:945",
+          "text": "说说你的养宠疑问…",
+          "visible": true
+        }
+      ],
+      "images": [],
+      "destinations": [
+        {
+          "sourceId": "I36:893;32:519",
+          "source": "返回 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "36:928",
+          "source": "看看奶糖的成长档案 → detail",
+          "destinationId": "30:514"
+        },
+        {
+          "sourceId": "36:935",
+          "source": "到店需要准备什么？ → shop",
+          "destinationId": "30:521"
+        }
+      ],
+      "layout": [
+        {
+          "id": "36:893",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "36:913",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 672,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 633
+        },
+        {
+          "id": "36:943",
+          "name": "内容组",
+          "y": 760,
+          "height": 84,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 59
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "30:523",
+      "name": "小程序 / 12 空状态",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 70,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I36:949;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I36:949;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I36:949;32:521",
+          "text": "我的预约",
+          "visible": true
+        },
+        {
+          "id": "36:1008",
+          "text": "还没有到店预约",
+          "visible": true
+        },
+        {
+          "id": "36:1009",
+          "text": "慢慢挑选，找到合拍的小伙伴。\n有了喜欢的，再安排一次见面。",
+          "visible": true
+        },
+        {
+          "id": "I36:1010;16:3",
+          "text": "去看看小伙伴",
+          "visible": true
+        },
+        {
+          "id": "36:1017",
+          "text": "第一次到店？",
+          "visible": true
+        },
+        {
+          "id": "36:1018",
+          "text": "了解营业时间与携带材料",
+          "visible": true
+        },
+        {
+          "id": "36:1021",
+          "text": "茸茸星球 · 练习项目",
+          "visible": true
+        },
+        {
+          "id": "I36:975;32:588",
+          "text": "首页",
+          "visible": true
+        },
+        {
+          "id": "I36:975;32:595",
+          "text": "选宠",
+          "visible": true
+        },
+        {
+          "id": "I36:975;32:600",
+          "text": "预约",
+          "visible": true
+        },
+        {
+          "id": "I36:975;32:605",
+          "text": "我的",
+          "visible": true
+        }
+      ],
+      "images": [],
+      "destinations": [
+        {
+          "sourceId": "36:1010",
+          "source": "去看看小伙伴 → pets",
+          "destinationId": "30:513"
+        },
+        {
+          "sourceId": "36:1012",
+          "source": "第一次到店？ → shop",
+          "destinationId": "30:521"
+        },
+        {
+          "sourceId": "I36:975;32:584",
+          "source": "Tab / 首页 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "I36:975;32:589",
+          "source": "Tab / 选宠 → pets",
+          "destinationId": "30:513"
+        },
+        {
+          "sourceId": "I36:975;32:596",
+          "source": "Tab / 预约 → records",
+          "destinationId": "30:517"
+        },
+        {
+          "sourceId": "I36:975;32:601",
+          "source": "Tab / 我的 → my",
+          "destinationId": "30:519"
+        }
+      ],
+      "layout": [
+        {
+          "id": "36:949",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "36:969",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 674,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 539
+        },
+        {
+          "id": "36:975",
+          "name": "小程序组件 / 底部导航",
+          "y": 762,
+          "height": 82,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 82
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "50:616",
+      "name": "小程序 / 修正 / 年糕 / 宠物详情",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 55,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I50:617;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I50:617;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I50:617;32:521",
+          "text": "宠物详情",
+          "visible": true
+        },
+        {
+          "id": "50:622",
+          "text": "年糕 · 田园猫",
+          "visible": true
+        },
+        {
+          "id": "50:624",
+          "text": "可预约",
+          "visible": true
+        },
+        {
+          "id": "50:625",
+          "text": "活泼亲人，喜欢在你身边蹦蹦跳跳。",
+          "visible": true
+        },
+        {
+          "id": "50:627",
+          "text": "¥ 1,800",
+          "visible": true
+        },
+        {
+          "id": "50:628",
+          "text": "参考价 · 到店确认",
+          "visible": true
+        },
+        {
+          "id": "50:631",
+          "text": "5个月",
+          "visible": true
+        },
+        {
+          "id": "50:632",
+          "text": "年龄",
+          "visible": true
+        },
+        {
+          "id": "50:634",
+          "text": "妹妹",
+          "visible": true
+        },
+        {
+          "id": "50:635",
+          "text": "性别",
+          "visible": true
+        },
+        {
+          "id": "50:637",
+          "text": "田园猫",
+          "visible": true
+        },
+        {
+          "id": "50:638",
+          "text": "品种",
+          "visible": true
+        },
+        {
+          "id": "50:644",
+          "text": "成长档案",
+          "visible": true
+        },
+        {
+          "id": "50:645",
+          "text": "疫苗、驱虫与健康记录可在到店时核验。",
+          "visible": true
+        },
+        {
+          "id": "50:646",
+          "text": "模拟资料，仅供测试 · DEMO-PET-002",
+          "visible": true
+        },
+        {
+          "id": "50:648",
+          "text": "预约仅用于安排到店时间，线上不收款。",
+          "visible": true
+        },
+        {
+          "id": "I50:650;16:3",
+          "text": "预约到店，见见年糕",
+          "visible": true
+        }
+      ],
+      "images": [
+        {
+          "id": "50:620",
+          "name": "示例宠物照片",
+          "hash": "a6edeaf9c2df201f3f1a47f1e789cddbf59d99e5",
+          "width": 350,
+          "height": 220
+        }
+      ],
+      "destinations": [
+        {
+          "sourceId": "I50:617;32:519",
+          "source": "返回 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "50:650",
+          "source": "预约到店，见见奶糖 → login",
+          "destinationId": "50:671"
+        }
+      ],
+      "layout": [
+        {
+          "id": "50:617",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "50:618",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 672,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 631
+        },
+        {
+          "id": "50:649",
+          "name": "底部操作",
+          "y": 760,
+          "height": 84,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 60
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "50:671",
+      "name": "小程序 / 修正 / 年糕 / 手机号登录",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 44,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I50:672;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I50:672;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I50:672;32:521",
+          "text": "手机号登录",
+          "visible": true
+        },
+        {
+          "id": "50:675",
+          "text": "欢迎来到茸茸星球",
+          "visible": true
+        },
+        {
+          "id": "50:676",
+          "text": "登录后，预约和到店安排都能在这里查看。",
+          "visible": true
+        },
+        {
+          "id": "50:680",
+          "text": "手机号",
+          "visible": true
+        },
+        {
+          "id": "50:682",
+          "text": "138 **** 8000",
+          "visible": true
+        },
+        {
+          "id": "50:683",
+          "text": "短信验证码",
+          "visible": true
+        },
+        {
+          "id": "50:685",
+          "text": "123456",
+          "visible": true
+        },
+        {
+          "id": "50:686",
+          "text": "获取验证码",
+          "visible": true
+        },
+        {
+          "id": "50:687",
+          "text": "示例验证码，仅用于原型展示。",
+          "visible": true
+        },
+        {
+          "id": "50:691",
+          "text": "我已阅读并同意用户协议和隐私说明\n手机号仅用于账号登录与预约联系",
+          "visible": true
+        },
+        {
+          "id": "50:692",
+          "text": "你的每一次认真选择，都值得被好好对待。",
+          "visible": true
+        },
+        {
+          "id": "I50:694;16:3",
+          "text": "登录并继续预约",
+          "visible": true
+        }
+      ],
+      "images": [
+        {
+          "id": "50:677",
+          "name": "示例宠物照片",
+          "hash": "a6edeaf9c2df201f3f1a47f1e789cddbf59d99e5",
+          "width": 350,
+          "height": 176
+        }
+      ],
+      "destinations": [
+        {
+          "sourceId": "I50:672;32:519",
+          "source": "返回 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "50:694",
+          "source": "登录并继续预约 → booking",
+          "destinationId": "50:715"
+        }
+      ],
+      "layout": [
+        {
+          "id": "50:672",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "50:673",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 672,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 672
+        },
+        {
+          "id": "50:693",
+          "name": "底部操作",
+          "y": 760,
+          "height": 84,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 60
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "50:715",
+      "name": "小程序 / 修正 / 年糕 / 到店预约",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 68,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I50:716;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I50:716;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I50:716;32:521",
+          "text": "到店预约",
+          "visible": true
+        },
+        {
+          "id": "50:722",
+          "text": "年糕 · 田园猫",
+          "visible": true
+        },
+        {
+          "id": "50:723",
+          "text": "DEMO-PET-002 · 5个月 · 妹妹",
+          "visible": true
+        },
+        {
+          "id": "50:724",
+          "text": "参考价 ¥ 1,800",
+          "visible": true
+        },
+        {
+          "id": "50:726",
+          "text": "预约不收款 · 提交后等待门店确认。",
+          "visible": true
+        },
+        {
+          "id": "50:728",
+          "text": "联系信息",
+          "visible": true
+        },
+        {
+          "id": "50:730",
+          "text": "联系人",
+          "visible": true
+        },
+        {
+          "id": "50:732",
+          "text": "张同学",
+          "visible": true
+        },
+        {
+          "id": "50:734",
+          "text": "手机号",
+          "visible": true
+        },
+        {
+          "id": "50:736",
+          "text": "138 **** 8000",
+          "visible": true
+        },
+        {
+          "id": "50:738",
+          "text": "选择到店时间",
+          "visible": true
+        },
+        {
+          "id": "50:741",
+          "text": "10/11 周日",
+          "visible": true
+        },
+        {
+          "id": "50:742",
+          "text": "已选择",
+          "visible": true
+        },
+        {
+          "id": "50:744",
+          "text": "10/12 周一",
+          "visible": true
+        },
+        {
+          "id": "50:745",
+          "text": "可预约",
+          "visible": true
+        },
+        {
+          "id": "50:747",
+          "text": "10/13 周二",
+          "visible": true
+        },
+        {
+          "id": "50:748",
+          "text": "可预约",
+          "visible": true
+        },
+        {
+          "id": "50:751",
+          "text": "10:00",
+          "visible": true
+        },
+        {
+          "id": "50:753",
+          "text": "14:00",
+          "visible": true
+        },
+        {
+          "id": "50:755",
+          "text": "16:00",
+          "visible": true
+        },
+        {
+          "id": "50:756",
+          "text": "每天 08:00—17:00，请携带身份证到店。",
+          "visible": true
+        },
+        {
+          "id": "50:760",
+          "text": "已阅读预约须知及隐私说明\n模拟资料，仅供测试",
+          "visible": true
+        },
+        {
+          "id": "I50:762;16:3",
+          "text": "提交到店预约",
+          "visible": true
+        }
+      ],
+      "images": [
+        {
+          "id": "50:720",
+          "name": "示例宠物照片",
+          "hash": "a6edeaf9c2df201f3f1a47f1e789cddbf59d99e5",
+          "width": 80,
+          "height": 84
+        }
+      ],
+      "destinations": [
+        {
+          "sourceId": "I50:716;32:519",
+          "source": "返回 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "50:762",
+          "source": "提交到店预约 → success",
+          "destinationId": "50:783"
+        }
+      ],
+      "layout": [
+        {
+          "id": "50:716",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "50:717",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 672,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 705
+        },
+        {
+          "id": "50:761",
+          "name": "底部操作",
+          "y": 760,
+          "height": 84,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 60
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "50:783",
+      "name": "小程序 / 修正 / 年糕 / 预约已提交",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 45,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I50:784;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I50:784;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I50:784;32:521",
+          "text": "预约已提交",
+          "visible": true
+        },
+        {
+          "id": "50:791",
+          "text": "预约已提交",
+          "visible": true
+        },
+        {
+          "id": "50:792",
+          "text": "门店确认后，请按约定时间到店。",
+          "visible": true
+        },
+        {
+          "id": "50:794",
+          "text": "等待门店确认",
+          "visible": true
+        },
+        {
+          "id": "50:795",
+          "text": "年糕 · 田园猫",
+          "visible": true
+        },
+        {
+          "id": "50:796",
+          "text": "10月11日 周日  10:00",
+          "visible": true
+        },
+        {
+          "id": "50:797",
+          "text": "预约编号  DEMO-APPT-001",
+          "visible": true
+        },
+        {
+          "id": "50:798",
+          "text": "联系人 张同学  ·  138 **** 8000",
+          "visible": true
+        },
+        {
+          "id": "50:800",
+          "text": "请携带身份证到店。预约仅安排见面，现场核验材料后再决定。",
+          "visible": true
+        },
+        {
+          "id": "50:802",
+          "text": "① 已提交",
+          "visible": true
+        },
+        {
+          "id": "50:803",
+          "text": "② 待确认",
+          "visible": true
+        },
+        {
+          "id": "50:804",
+          "text": "③ 到店见面",
+          "visible": true
+        },
+        {
+          "id": "50:805",
+          "text": "练习项目 · 模拟预约，仅供测试",
+          "visible": true
+        },
+        {
+          "id": "I50:807;16:3",
+          "text": "查看我的预约",
+          "visible": true
+        }
+      ],
+      "images": [],
+      "destinations": [
+        {
+          "sourceId": "I50:784;32:519",
+          "source": "返回 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "50:807",
+          "source": "查看我的预约 → records",
+          "destinationId": "50:828"
+        }
+      ],
+      "layout": [
+        {
+          "id": "50:784",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "50:785",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 672,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 616
+        },
+        {
+          "id": "50:806",
+          "name": "底部操作",
+          "y": 760,
+          "height": 84,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 60
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "50:828",
+      "name": "小程序 / 修正 / 年糕 / 我的预约",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 95,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I50:829;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I50:829;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I50:829;32:521",
+          "text": "我的预约",
+          "visible": true
+        },
+        {
+          "id": "50:832",
+          "text": "每一次见面，都值得期待",
+          "visible": true
+        },
+        {
+          "id": "50:833",
+          "text": "查看到店安排与确认状态",
+          "visible": true
+        },
+        {
+          "id": "50:836",
+          "text": "全部",
+          "visible": true
+        },
+        {
+          "id": "50:838",
+          "text": "待确认",
+          "visible": true
+        },
+        {
+          "id": "50:840",
+          "text": "待到店",
+          "visible": true
+        },
+        {
+          "id": "50:843",
+          "text": "DEMO-APPT-001",
+          "visible": true
+        },
+        {
+          "id": "50:844",
+          "text": "待确认",
+          "visible": true
+        },
+        {
+          "id": "50:848",
+          "text": "年糕 · 田园猫",
+          "visible": true
+        },
+        {
+          "id": "50:849",
+          "text": "5个月 · 妹妹",
+          "visible": true
+        },
+        {
+          "id": "50:850",
+          "text": "到店预约 · 线上不收款",
+          "visible": true
+        },
+        {
+          "id": "50:855",
+          "text": "10月11日 周日  10:00",
+          "visible": true
+        },
+        {
+          "id": "I50:856;16:9",
+          "text": "查看预约",
+          "visible": true
+        },
+        {
+          "id": "50:859",
+          "text": "DEMO-APPT-002",
+          "visible": true
+        },
+        {
+          "id": "50:860",
+          "text": "待确认",
+          "visible": true
+        },
+        {
+          "id": "50:864",
+          "text": "年糕 · 田园猫",
+          "visible": true
+        },
+        {
+          "id": "50:865",
+          "text": "5个月 · 妹妹",
+          "visible": true
+        },
+        {
+          "id": "50:866",
+          "text": "到店预约 · 线上不收款",
+          "visible": true
+        },
+        {
+          "id": "50:871",
+          "text": "10月12日 周一  14:00",
+          "visible": true
+        },
+        {
+          "id": "I50:872;16:9",
+          "text": "查看预约",
+          "visible": true
+        },
+        {
+          "id": "50:874",
+          "text": "预约状态以门店确认结果为准。示例预约仅供测试。",
+          "visible": true
+        },
+        {
+          "id": "50:875",
+          "text": "查看无预约状态 →",
+          "visible": true
+        },
+        {
+          "id": "I50:876;32:588",
+          "text": "首页",
+          "visible": true
+        },
+        {
+          "id": "I50:876;32:595",
+          "text": "选宠",
+          "visible": true
+        },
+        {
+          "id": "I50:876;32:600",
+          "text": "预约",
+          "visible": true
+        },
+        {
+          "id": "I50:876;32:605",
+          "text": "我的",
+          "visible": true
+        }
+      ],
+      "images": [
+        {
+          "id": "50:846",
+          "name": "示例宠物照片",
+          "hash": "a6edeaf9c2df201f3f1a47f1e789cddbf59d99e5",
+          "width": 80,
+          "height": 84
+        },
+        {
+          "id": "50:862",
+          "name": "示例宠物照片",
+          "hash": "a6edeaf9c2df201f3f1a47f1e789cddbf59d99e5",
+          "width": 80,
+          "height": 84
+        }
+      ],
+      "destinations": [
+        {
+          "sourceId": "50:856",
+          "source": "查看预约 → record",
+          "destinationId": "50:923"
+        },
+        {
+          "sourceId": "50:875",
+          "source": "查看无预约状态 → → empty",
+          "destinationId": "30:523"
+        },
+        {
+          "sourceId": "I50:876;32:584",
+          "source": "Tab / 首页 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "I50:876;32:589",
+          "source": "Tab / 选宠 → pets",
+          "destinationId": "30:513"
+        },
+        {
+          "sourceId": "I50:876;32:601",
+          "source": "Tab / 我的 → my",
+          "destinationId": "30:519"
+        }
+      ],
+      "layout": [
+        {
+          "id": "50:829",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "50:830",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 674,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 501
+        },
+        {
+          "id": "50:876",
+          "name": "小程序组件 / 底部导航",
+          "y": 762,
+          "height": 82,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 82
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "50:923",
+      "name": "小程序 / 修正 / 年糕 / 预约详情",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 50,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I50:924;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I50:924;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I50:924;32:521",
+          "text": "预约详情",
+          "visible": true
+        },
+        {
+          "id": "50:932",
+          "text": "等待门店确认",
+          "visible": true
+        },
+        {
+          "id": "50:933",
+          "text": "门店确认后，请按约定时间到店。",
+          "visible": true
+        },
+        {
+          "id": "50:937",
+          "text": "年糕 · 田园猫",
+          "visible": true
+        },
+        {
+          "id": "50:938",
+          "text": "DEMO-PET-002 · 5个月 · 妹妹",
+          "visible": true
+        },
+        {
+          "id": "50:939",
+          "text": "已提交 · 等待确认",
+          "visible": true
+        },
+        {
+          "id": "50:941",
+          "text": "到店时间",
+          "visible": true
+        },
+        {
+          "id": "50:942",
+          "text": "10月11日 周日 10:00",
+          "visible": true
+        },
+        {
+          "id": "50:943",
+          "text": "每天 08:00—17:00 · 请携带身份证",
+          "visible": true
+        },
+        {
+          "id": "50:944",
+          "text": "查看到店指南 →",
+          "visible": true
+        },
+        {
+          "id": "50:946",
+          "text": "预约进度",
+          "visible": true
+        },
+        {
+          "id": "50:947",
+          "text": "✓ 已提交     ○ 待确认     ○ 待到店",
+          "visible": true
+        },
+        {
+          "id": "50:948",
+          "text": "预约编号  DEMO-APPT-001",
+          "visible": true
+        },
+        {
+          "id": "50:950",
+          "text": "宠物档案与预约均为模拟资料，仅供测试。线上不收款，到店核验后再决定。",
+          "visible": true
+        },
+        {
+          "id": "I50:952;16:3",
+          "text": "查看到店指南",
+          "visible": true
+        }
+      ],
+      "images": [
+        {
+          "id": "50:935",
+          "name": "示例宠物照片",
+          "hash": "a6edeaf9c2df201f3f1a47f1e789cddbf59d99e5",
+          "width": 80,
+          "height": 84
+        }
+      ],
+      "destinations": [
+        {
+          "sourceId": "I50:924;32:519",
+          "source": "返回 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "50:944",
+          "source": "查看到店指南 → → shop",
+          "destinationId": "30:521"
+        },
+        {
+          "sourceId": "50:952",
+          "source": "查看到店指南 → shop",
+          "destinationId": "30:521"
+        }
+      ],
+      "layout": [
+        {
+          "id": "50:924",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "50:925",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 672,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 591
+        },
+        {
+          "id": "50:951",
+          "name": "底部操作",
+          "y": 760,
+          "height": 84,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 60
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "50:979",
+      "name": "小程序 / 修正 / 松饼 / 宠物详情",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 55,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I50:980;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I50:980;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I50:980;32:521",
+          "text": "宠物详情",
+          "visible": true
+        },
+        {
+          "id": "50:985",
+          "text": "松饼 · 金毛",
+          "visible": true
+        },
+        {
+          "id": "50:987",
+          "text": "可预约",
+          "visible": true
+        },
+        {
+          "id": "50:988",
+          "text": "活泼亲人，喜欢在你身边蹦蹦跳跳。",
+          "visible": true
+        },
+        {
+          "id": "50:990",
+          "text": "¥ 3,600",
+          "visible": true
+        },
+        {
+          "id": "50:991",
+          "text": "参考价 · 到店确认",
+          "visible": true
+        },
+        {
+          "id": "50:994",
+          "text": "3个月",
+          "visible": true
+        },
+        {
+          "id": "50:995",
+          "text": "年龄",
+          "visible": true
+        },
+        {
+          "id": "50:997",
+          "text": "弟弟",
+          "visible": true
+        },
+        {
+          "id": "50:998",
+          "text": "性别",
+          "visible": true
+        },
+        {
+          "id": "50:1000",
+          "text": "金毛",
+          "visible": true
+        },
+        {
+          "id": "50:1001",
+          "text": "品种",
+          "visible": true
+        },
+        {
+          "id": "50:1007",
+          "text": "成长档案",
+          "visible": true
+        },
+        {
+          "id": "50:1008",
+          "text": "疫苗、驱虫与健康记录可在到店时核验。",
+          "visible": true
+        },
+        {
+          "id": "50:1009",
+          "text": "模拟资料，仅供测试 · DEMO-PET-003",
+          "visible": true
+        },
+        {
+          "id": "50:1011",
+          "text": "预约仅用于安排到店时间，线上不收款。",
+          "visible": true
+        },
+        {
+          "id": "I50:1013;16:3",
+          "text": "预约到店，见见松饼",
+          "visible": true
+        }
+      ],
+      "images": [
+        {
+          "id": "50:983",
+          "name": "示例宠物照片",
+          "hash": "199b94884be6c1babff99bb8f0b95ac59730907d",
+          "width": 350,
+          "height": 220
+        }
+      ],
+      "destinations": [
+        {
+          "sourceId": "I50:980;32:519",
+          "source": "返回 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "50:1013",
+          "source": "预约到店，见见奶糖 → login",
+          "destinationId": "50:1034"
+        }
+      ],
+      "layout": [
+        {
+          "id": "50:980",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "50:981",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 672,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 631
+        },
+        {
+          "id": "50:1012",
+          "name": "底部操作",
+          "y": 760,
+          "height": 84,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 60
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "50:1034",
+      "name": "小程序 / 修正 / 松饼 / 手机号登录",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 44,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I50:1035;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I50:1035;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I50:1035;32:521",
+          "text": "手机号登录",
+          "visible": true
+        },
+        {
+          "id": "50:1038",
+          "text": "欢迎来到茸茸星球",
+          "visible": true
+        },
+        {
+          "id": "50:1039",
+          "text": "登录后，预约和到店安排都能在这里查看。",
+          "visible": true
+        },
+        {
+          "id": "50:1043",
+          "text": "手机号",
+          "visible": true
+        },
+        {
+          "id": "50:1045",
+          "text": "138 **** 8000",
+          "visible": true
+        },
+        {
+          "id": "50:1046",
+          "text": "短信验证码",
+          "visible": true
+        },
+        {
+          "id": "50:1048",
+          "text": "123456",
+          "visible": true
+        },
+        {
+          "id": "50:1049",
+          "text": "获取验证码",
+          "visible": true
+        },
+        {
+          "id": "50:1050",
+          "text": "示例验证码，仅用于原型展示。",
+          "visible": true
+        },
+        {
+          "id": "50:1054",
+          "text": "我已阅读并同意用户协议和隐私说明\n手机号仅用于账号登录与预约联系",
+          "visible": true
+        },
+        {
+          "id": "50:1055",
+          "text": "你的每一次认真选择，都值得被好好对待。",
+          "visible": true
+        },
+        {
+          "id": "I50:1057;16:3",
+          "text": "登录并继续预约",
+          "visible": true
+        }
+      ],
+      "images": [
+        {
+          "id": "50:1040",
+          "name": "示例宠物照片",
+          "hash": "a6edeaf9c2df201f3f1a47f1e789cddbf59d99e5",
+          "width": 350,
+          "height": 176
+        }
+      ],
+      "destinations": [
+        {
+          "sourceId": "I50:1035;32:519",
+          "source": "返回 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "50:1057",
+          "source": "登录并继续预约 → booking",
+          "destinationId": "50:1078"
+        }
+      ],
+      "layout": [
+        {
+          "id": "50:1035",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "50:1036",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 672,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 672
+        },
+        {
+          "id": "50:1056",
+          "name": "底部操作",
+          "y": 760,
+          "height": 84,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 60
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "50:1078",
+      "name": "小程序 / 修正 / 松饼 / 到店预约",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 68,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I50:1079;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I50:1079;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I50:1079;32:521",
+          "text": "到店预约",
+          "visible": true
+        },
+        {
+          "id": "50:1085",
+          "text": "松饼 · 金毛",
+          "visible": true
+        },
+        {
+          "id": "50:1086",
+          "text": "DEMO-PET-003 · 3个月 · 弟弟",
+          "visible": true
+        },
+        {
+          "id": "50:1087",
+          "text": "参考价 ¥ 3,600",
+          "visible": true
+        },
+        {
+          "id": "50:1089",
+          "text": "预约不收款 · 提交后等待门店确认。",
+          "visible": true
+        },
+        {
+          "id": "50:1091",
+          "text": "联系信息",
+          "visible": true
+        },
+        {
+          "id": "50:1093",
+          "text": "联系人",
+          "visible": true
+        },
+        {
+          "id": "50:1095",
+          "text": "张同学",
+          "visible": true
+        },
+        {
+          "id": "50:1097",
+          "text": "手机号",
+          "visible": true
+        },
+        {
+          "id": "50:1099",
+          "text": "138 **** 8000",
+          "visible": true
+        },
+        {
+          "id": "50:1101",
+          "text": "选择到店时间",
+          "visible": true
+        },
+        {
+          "id": "50:1104",
+          "text": "10/11 周日",
+          "visible": true
+        },
+        {
+          "id": "50:1105",
+          "text": "已选择",
+          "visible": true
+        },
+        {
+          "id": "50:1107",
+          "text": "10/12 周一",
+          "visible": true
+        },
+        {
+          "id": "50:1108",
+          "text": "可预约",
+          "visible": true
+        },
+        {
+          "id": "50:1110",
+          "text": "10/13 周二",
+          "visible": true
+        },
+        {
+          "id": "50:1111",
+          "text": "可预约",
+          "visible": true
+        },
+        {
+          "id": "50:1114",
+          "text": "10:00",
+          "visible": true
+        },
+        {
+          "id": "50:1116",
+          "text": "14:00",
+          "visible": true
+        },
+        {
+          "id": "50:1118",
+          "text": "16:00",
+          "visible": true
+        },
+        {
+          "id": "50:1119",
+          "text": "每天 08:00—17:00，请携带身份证到店。",
+          "visible": true
+        },
+        {
+          "id": "50:1123",
+          "text": "已阅读预约须知及隐私说明\n模拟资料，仅供测试",
+          "visible": true
+        },
+        {
+          "id": "I50:1125;16:3",
+          "text": "提交到店预约",
+          "visible": true
+        }
+      ],
+      "images": [
+        {
+          "id": "50:1083",
+          "name": "示例宠物照片",
+          "hash": "199b94884be6c1babff99bb8f0b95ac59730907d",
+          "width": 80,
+          "height": 84
+        }
+      ],
+      "destinations": [
+        {
+          "sourceId": "I50:1079;32:519",
+          "source": "返回 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "50:1125",
+          "source": "提交到店预约 → success",
+          "destinationId": "50:1146"
+        }
+      ],
+      "layout": [
+        {
+          "id": "50:1079",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "50:1080",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 672,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 705
+        },
+        {
+          "id": "50:1124",
+          "name": "底部操作",
+          "y": 760,
+          "height": 84,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 60
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "50:1146",
+      "name": "小程序 / 修正 / 松饼 / 预约已提交",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 45,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I50:1147;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I50:1147;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I50:1147;32:521",
+          "text": "预约已提交",
+          "visible": true
+        },
+        {
+          "id": "50:1154",
+          "text": "预约已提交",
+          "visible": true
+        },
+        {
+          "id": "50:1155",
+          "text": "门店确认后，请按约定时间到店。",
+          "visible": true
+        },
+        {
+          "id": "50:1157",
+          "text": "等待门店确认",
+          "visible": true
+        },
+        {
+          "id": "50:1158",
+          "text": "松饼 · 金毛",
+          "visible": true
+        },
+        {
+          "id": "50:1159",
+          "text": "10月11日 周日  10:00",
+          "visible": true
+        },
+        {
+          "id": "50:1160",
+          "text": "预约编号  DEMO-APPT-001",
+          "visible": true
+        },
+        {
+          "id": "50:1161",
+          "text": "联系人 张同学  ·  138 **** 8000",
+          "visible": true
+        },
+        {
+          "id": "50:1163",
+          "text": "请携带身份证到店。预约仅安排见面，现场核验材料后再决定。",
+          "visible": true
+        },
+        {
+          "id": "50:1165",
+          "text": "① 已提交",
+          "visible": true
+        },
+        {
+          "id": "50:1166",
+          "text": "② 待确认",
+          "visible": true
+        },
+        {
+          "id": "50:1167",
+          "text": "③ 到店见面",
+          "visible": true
+        },
+        {
+          "id": "50:1168",
+          "text": "练习项目 · 模拟预约，仅供测试",
+          "visible": true
+        },
+        {
+          "id": "I50:1170;16:3",
+          "text": "查看我的预约",
+          "visible": true
+        }
+      ],
+      "images": [],
+      "destinations": [
+        {
+          "sourceId": "I50:1147;32:519",
+          "source": "返回 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "50:1170",
+          "source": "查看我的预约 → records",
+          "destinationId": "50:1191"
+        }
+      ],
+      "layout": [
+        {
+          "id": "50:1147",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "50:1148",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 672,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 616
+        },
+        {
+          "id": "50:1169",
+          "name": "底部操作",
+          "y": 760,
+          "height": 84,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 60
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "50:1191",
+      "name": "小程序 / 修正 / 松饼 / 我的预约",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 95,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I50:1192;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I50:1192;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I50:1192;32:521",
+          "text": "我的预约",
+          "visible": true
+        },
+        {
+          "id": "50:1195",
+          "text": "每一次见面，都值得期待",
+          "visible": true
+        },
+        {
+          "id": "50:1196",
+          "text": "查看到店安排与确认状态",
+          "visible": true
+        },
+        {
+          "id": "50:1199",
+          "text": "全部",
+          "visible": true
+        },
+        {
+          "id": "50:1201",
+          "text": "待确认",
+          "visible": true
+        },
+        {
+          "id": "50:1203",
+          "text": "待到店",
+          "visible": true
+        },
+        {
+          "id": "50:1206",
+          "text": "DEMO-APPT-001",
+          "visible": true
+        },
+        {
+          "id": "50:1207",
+          "text": "待确认",
+          "visible": true
+        },
+        {
+          "id": "50:1211",
+          "text": "松饼 · 金毛",
+          "visible": true
+        },
+        {
+          "id": "50:1212",
+          "text": "3个月 · 弟弟",
+          "visible": true
+        },
+        {
+          "id": "50:1213",
+          "text": "到店预约 · 线上不收款",
+          "visible": true
+        },
+        {
+          "id": "50:1218",
+          "text": "10月11日 周日  10:00",
+          "visible": true
+        },
+        {
+          "id": "I50:1219;16:9",
+          "text": "查看预约",
+          "visible": true
+        },
+        {
+          "id": "50:1222",
+          "text": "DEMO-APPT-002",
+          "visible": true
+        },
+        {
+          "id": "50:1223",
+          "text": "待确认",
+          "visible": true
+        },
+        {
+          "id": "50:1227",
+          "text": "年糕 · 田园猫",
+          "visible": true
+        },
+        {
+          "id": "50:1228",
+          "text": "5个月 · 妹妹",
+          "visible": true
+        },
+        {
+          "id": "50:1229",
+          "text": "到店预约 · 线上不收款",
+          "visible": true
+        },
+        {
+          "id": "50:1234",
+          "text": "10月12日 周一  14:00",
+          "visible": true
+        },
+        {
+          "id": "I50:1235;16:9",
+          "text": "查看预约",
+          "visible": true
+        },
+        {
+          "id": "50:1237",
+          "text": "预约状态以门店确认结果为准。示例预约仅供测试。",
+          "visible": true
+        },
+        {
+          "id": "50:1238",
+          "text": "查看无预约状态 →",
+          "visible": true
+        },
+        {
+          "id": "I50:1239;32:588",
+          "text": "首页",
+          "visible": true
+        },
+        {
+          "id": "I50:1239;32:595",
+          "text": "选宠",
+          "visible": true
+        },
+        {
+          "id": "I50:1239;32:600",
+          "text": "预约",
+          "visible": true
+        },
+        {
+          "id": "I50:1239;32:605",
+          "text": "我的",
+          "visible": true
+        }
+      ],
+      "images": [
+        {
+          "id": "50:1209",
+          "name": "示例宠物照片",
+          "hash": "199b94884be6c1babff99bb8f0b95ac59730907d",
+          "width": 80,
+          "height": 84
+        },
+        {
+          "id": "50:1225",
+          "name": "示例宠物照片",
+          "hash": "a6edeaf9c2df201f3f1a47f1e789cddbf59d99e5",
+          "width": 80,
+          "height": 84
+        }
+      ],
+      "destinations": [
+        {
+          "sourceId": "50:1219",
+          "source": "查看预约 → record",
+          "destinationId": "50:1286"
+        },
+        {
+          "sourceId": "50:1238",
+          "source": "查看无预约状态 → → empty",
+          "destinationId": "30:523"
+        },
+        {
+          "sourceId": "I50:1239;32:584",
+          "source": "Tab / 首页 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "I50:1239;32:589",
+          "source": "Tab / 选宠 → pets",
+          "destinationId": "30:513"
+        },
+        {
+          "sourceId": "I50:1239;32:601",
+          "source": "Tab / 我的 → my",
+          "destinationId": "30:519"
+        }
+      ],
+      "layout": [
+        {
+          "id": "50:1192",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "50:1193",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 674,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 501
+        },
+        {
+          "id": "50:1239",
+          "name": "小程序组件 / 底部导航",
+          "y": 762,
+          "height": 82,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 82
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "50:1286",
+      "name": "小程序 / 修正 / 松饼 / 预约详情",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 50,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I50:1287;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I50:1287;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I50:1287;32:521",
+          "text": "预约详情",
+          "visible": true
+        },
+        {
+          "id": "50:1295",
+          "text": "等待门店确认",
+          "visible": true
+        },
+        {
+          "id": "50:1296",
+          "text": "门店确认后，请按约定时间到店。",
+          "visible": true
+        },
+        {
+          "id": "50:1300",
+          "text": "松饼 · 金毛",
+          "visible": true
+        },
+        {
+          "id": "50:1301",
+          "text": "DEMO-PET-003 · 3个月 · 弟弟",
+          "visible": true
+        },
+        {
+          "id": "50:1302",
+          "text": "已提交 · 等待确认",
+          "visible": true
+        },
+        {
+          "id": "50:1304",
+          "text": "到店时间",
+          "visible": true
+        },
+        {
+          "id": "50:1305",
+          "text": "10月11日 周日 10:00",
+          "visible": true
+        },
+        {
+          "id": "50:1306",
+          "text": "每天 08:00—17:00 · 请携带身份证",
+          "visible": true
+        },
+        {
+          "id": "50:1307",
+          "text": "查看到店指南 →",
+          "visible": true
+        },
+        {
+          "id": "50:1309",
+          "text": "预约进度",
+          "visible": true
+        },
+        {
+          "id": "50:1310",
+          "text": "✓ 已提交     ○ 待确认     ○ 待到店",
+          "visible": true
+        },
+        {
+          "id": "50:1311",
+          "text": "预约编号  DEMO-APPT-001",
+          "visible": true
+        },
+        {
+          "id": "50:1313",
+          "text": "宠物档案与预约均为模拟资料，仅供测试。线上不收款，到店核验后再决定。",
+          "visible": true
+        },
+        {
+          "id": "I50:1315;16:3",
+          "text": "查看到店指南",
+          "visible": true
+        }
+      ],
+      "images": [
+        {
+          "id": "50:1298",
+          "name": "示例宠物照片",
+          "hash": "199b94884be6c1babff99bb8f0b95ac59730907d",
+          "width": 80,
+          "height": 84
+        }
+      ],
+      "destinations": [
+        {
+          "sourceId": "I50:1287;32:519",
+          "source": "返回 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "50:1307",
+          "source": "查看到店指南 → → shop",
+          "destinationId": "30:521"
+        },
+        {
+          "sourceId": "50:1315",
+          "source": "查看到店指南 → shop",
+          "destinationId": "30:521"
+        }
+      ],
+      "layout": [
+        {
+          "id": "50:1287",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "50:1288",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 672,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 591
+        },
+        {
+          "id": "50:1314",
+          "name": "底部操作",
+          "y": 760,
+          "height": 84,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 60
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "50:1342",
+      "name": "小程序 / 修正 / 橘子 / 宠物详情",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 55,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I50:1343;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I50:1343;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I50:1343;32:521",
+          "text": "宠物详情",
+          "visible": true
+        },
+        {
+          "id": "50:1348",
+          "text": "橘子 · 田园猫",
+          "visible": true
+        },
+        {
+          "id": "50:1350",
+          "text": "可预约",
+          "visible": true
+        },
+        {
+          "id": "50:1351",
+          "text": "活泼亲人，喜欢在你身边蹦蹦跳跳。",
+          "visible": true
+        },
+        {
+          "id": "50:1353",
+          "text": "¥ 1,500",
+          "visible": true
+        },
+        {
+          "id": "50:1354",
+          "text": "参考价 · 到店确认",
+          "visible": true
+        },
+        {
+          "id": "50:1357",
+          "text": "6个月",
+          "visible": true
+        },
+        {
+          "id": "50:1358",
+          "text": "年龄",
+          "visible": true
+        },
+        {
+          "id": "50:1360",
+          "text": "妹妹",
+          "visible": true
+        },
+        {
+          "id": "50:1361",
+          "text": "性别",
+          "visible": true
+        },
+        {
+          "id": "50:1363",
+          "text": "田园猫",
+          "visible": true
+        },
+        {
+          "id": "50:1364",
+          "text": "品种",
+          "visible": true
+        },
+        {
+          "id": "50:1370",
+          "text": "成长档案",
+          "visible": true
+        },
+        {
+          "id": "50:1371",
+          "text": "疫苗、驱虫与健康记录可在到店时核验。",
+          "visible": true
+        },
+        {
+          "id": "50:1372",
+          "text": "模拟资料，仅供测试 · DEMO-PET-004",
+          "visible": true
+        },
+        {
+          "id": "50:1374",
+          "text": "预约仅用于安排到店时间，线上不收款。",
+          "visible": true
+        },
+        {
+          "id": "I50:1376;16:3",
+          "text": "预约到店，见见橘子",
+          "visible": true
+        }
+      ],
+      "images": [
+        {
+          "id": "50:1346",
+          "name": "示例宠物照片",
+          "hash": "7770cfd048bbf9034127290f6c2b6a359938a697",
+          "width": 350,
+          "height": 220
+        }
+      ],
+      "destinations": [
+        {
+          "sourceId": "I50:1343;32:519",
+          "source": "返回 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "50:1376",
+          "source": "预约到店，见见奶糖 → login",
+          "destinationId": "50:1397"
+        }
+      ],
+      "layout": [
+        {
+          "id": "50:1343",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "50:1344",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 672,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 631
+        },
+        {
+          "id": "50:1375",
+          "name": "底部操作",
+          "y": 760,
+          "height": 84,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 60
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "50:1397",
+      "name": "小程序 / 修正 / 橘子 / 手机号登录",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 44,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I50:1398;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I50:1398;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I50:1398;32:521",
+          "text": "手机号登录",
+          "visible": true
+        },
+        {
+          "id": "50:1401",
+          "text": "欢迎来到茸茸星球",
+          "visible": true
+        },
+        {
+          "id": "50:1402",
+          "text": "登录后，预约和到店安排都能在这里查看。",
+          "visible": true
+        },
+        {
+          "id": "50:1406",
+          "text": "手机号",
+          "visible": true
+        },
+        {
+          "id": "50:1408",
+          "text": "138 **** 8000",
+          "visible": true
+        },
+        {
+          "id": "50:1409",
+          "text": "短信验证码",
+          "visible": true
+        },
+        {
+          "id": "50:1411",
+          "text": "123456",
+          "visible": true
+        },
+        {
+          "id": "50:1412",
+          "text": "获取验证码",
+          "visible": true
+        },
+        {
+          "id": "50:1413",
+          "text": "示例验证码，仅用于原型展示。",
+          "visible": true
+        },
+        {
+          "id": "50:1417",
+          "text": "我已阅读并同意用户协议和隐私说明\n手机号仅用于账号登录与预约联系",
+          "visible": true
+        },
+        {
+          "id": "50:1418",
+          "text": "你的每一次认真选择，都值得被好好对待。",
+          "visible": true
+        },
+        {
+          "id": "I50:1420;16:3",
+          "text": "登录并继续预约",
+          "visible": true
+        }
+      ],
+      "images": [
+        {
+          "id": "50:1403",
+          "name": "示例宠物照片",
+          "hash": "a6edeaf9c2df201f3f1a47f1e789cddbf59d99e5",
+          "width": 350,
+          "height": 176
+        }
+      ],
+      "destinations": [
+        {
+          "sourceId": "I50:1398;32:519",
+          "source": "返回 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "50:1420",
+          "source": "登录并继续预约 → booking",
+          "destinationId": "50:1441"
+        }
+      ],
+      "layout": [
+        {
+          "id": "50:1398",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "50:1399",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 672,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 672
+        },
+        {
+          "id": "50:1419",
+          "name": "底部操作",
+          "y": 760,
+          "height": 84,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 60
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "50:1441",
+      "name": "小程序 / 修正 / 橘子 / 到店预约",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 68,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I50:1442;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I50:1442;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I50:1442;32:521",
+          "text": "到店预约",
+          "visible": true
+        },
+        {
+          "id": "50:1448",
+          "text": "橘子 · 田园猫",
+          "visible": true
+        },
+        {
+          "id": "50:1449",
+          "text": "DEMO-PET-004 · 6个月 · 妹妹",
+          "visible": true
+        },
+        {
+          "id": "50:1450",
+          "text": "参考价 ¥ 1,500",
+          "visible": true
+        },
+        {
+          "id": "50:1452",
+          "text": "预约不收款 · 提交后等待门店确认。",
+          "visible": true
+        },
+        {
+          "id": "50:1454",
+          "text": "联系信息",
+          "visible": true
+        },
+        {
+          "id": "50:1456",
+          "text": "联系人",
+          "visible": true
+        },
+        {
+          "id": "50:1458",
+          "text": "张同学",
+          "visible": true
+        },
+        {
+          "id": "50:1460",
+          "text": "手机号",
+          "visible": true
+        },
+        {
+          "id": "50:1462",
+          "text": "138 **** 8000",
+          "visible": true
+        },
+        {
+          "id": "50:1464",
+          "text": "选择到店时间",
+          "visible": true
+        },
+        {
+          "id": "50:1467",
+          "text": "10/11 周日",
+          "visible": true
+        },
+        {
+          "id": "50:1468",
+          "text": "已选择",
+          "visible": true
+        },
+        {
+          "id": "50:1470",
+          "text": "10/12 周一",
+          "visible": true
+        },
+        {
+          "id": "50:1471",
+          "text": "可预约",
+          "visible": true
+        },
+        {
+          "id": "50:1473",
+          "text": "10/13 周二",
+          "visible": true
+        },
+        {
+          "id": "50:1474",
+          "text": "可预约",
+          "visible": true
+        },
+        {
+          "id": "50:1477",
+          "text": "10:00",
+          "visible": true
+        },
+        {
+          "id": "50:1479",
+          "text": "14:00",
+          "visible": true
+        },
+        {
+          "id": "50:1481",
+          "text": "16:00",
+          "visible": true
+        },
+        {
+          "id": "50:1482",
+          "text": "每天 08:00—17:00，请携带身份证到店。",
+          "visible": true
+        },
+        {
+          "id": "50:1486",
+          "text": "已阅读预约须知及隐私说明\n模拟资料，仅供测试",
+          "visible": true
+        },
+        {
+          "id": "I50:1488;16:3",
+          "text": "提交到店预约",
+          "visible": true
+        }
+      ],
+      "images": [
+        {
+          "id": "50:1446",
+          "name": "示例宠物照片",
+          "hash": "7770cfd048bbf9034127290f6c2b6a359938a697",
+          "width": 80,
+          "height": 84
+        }
+      ],
+      "destinations": [
+        {
+          "sourceId": "I50:1442;32:519",
+          "source": "返回 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "50:1488",
+          "source": "提交到店预约 → success",
+          "destinationId": "50:1509"
+        }
+      ],
+      "layout": [
+        {
+          "id": "50:1442",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "50:1443",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 672,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 705
+        },
+        {
+          "id": "50:1487",
+          "name": "底部操作",
+          "y": 760,
+          "height": 84,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 60
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "50:1509",
+      "name": "小程序 / 修正 / 橘子 / 预约已提交",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 45,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I50:1510;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I50:1510;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I50:1510;32:521",
+          "text": "预约已提交",
+          "visible": true
+        },
+        {
+          "id": "50:1517",
+          "text": "预约已提交",
+          "visible": true
+        },
+        {
+          "id": "50:1518",
+          "text": "门店确认后，请按约定时间到店。",
+          "visible": true
+        },
+        {
+          "id": "50:1520",
+          "text": "等待门店确认",
+          "visible": true
+        },
+        {
+          "id": "50:1521",
+          "text": "橘子 · 田园猫",
+          "visible": true
+        },
+        {
+          "id": "50:1522",
+          "text": "10月11日 周日  10:00",
+          "visible": true
+        },
+        {
+          "id": "50:1523",
+          "text": "预约编号  DEMO-APPT-001",
+          "visible": true
+        },
+        {
+          "id": "50:1524",
+          "text": "联系人 张同学  ·  138 **** 8000",
+          "visible": true
+        },
+        {
+          "id": "50:1526",
+          "text": "请携带身份证到店。预约仅安排见面，现场核验材料后再决定。",
+          "visible": true
+        },
+        {
+          "id": "50:1528",
+          "text": "① 已提交",
+          "visible": true
+        },
+        {
+          "id": "50:1529",
+          "text": "② 待确认",
+          "visible": true
+        },
+        {
+          "id": "50:1530",
+          "text": "③ 到店见面",
+          "visible": true
+        },
+        {
+          "id": "50:1531",
+          "text": "练习项目 · 模拟预约，仅供测试",
+          "visible": true
+        },
+        {
+          "id": "I50:1533;16:3",
+          "text": "查看我的预约",
+          "visible": true
+        }
+      ],
+      "images": [],
+      "destinations": [
+        {
+          "sourceId": "I50:1510;32:519",
+          "source": "返回 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "50:1533",
+          "source": "查看我的预约 → records",
+          "destinationId": "50:1554"
+        }
+      ],
+      "layout": [
+        {
+          "id": "50:1510",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "50:1511",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 672,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 616
+        },
+        {
+          "id": "50:1532",
+          "name": "底部操作",
+          "y": 760,
+          "height": 84,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 60
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "50:1554",
+      "name": "小程序 / 修正 / 橘子 / 我的预约",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 95,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I50:1555;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I50:1555;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I50:1555;32:521",
+          "text": "我的预约",
+          "visible": true
+        },
+        {
+          "id": "50:1558",
+          "text": "每一次见面，都值得期待",
+          "visible": true
+        },
+        {
+          "id": "50:1559",
+          "text": "查看到店安排与确认状态",
+          "visible": true
+        },
+        {
+          "id": "50:1562",
+          "text": "全部",
+          "visible": true
+        },
+        {
+          "id": "50:1564",
+          "text": "待确认",
+          "visible": true
+        },
+        {
+          "id": "50:1566",
+          "text": "待到店",
+          "visible": true
+        },
+        {
+          "id": "50:1569",
+          "text": "DEMO-APPT-001",
+          "visible": true
+        },
+        {
+          "id": "50:1570",
+          "text": "待确认",
+          "visible": true
+        },
+        {
+          "id": "50:1574",
+          "text": "橘子 · 田园猫",
+          "visible": true
+        },
+        {
+          "id": "50:1575",
+          "text": "6个月 · 妹妹",
+          "visible": true
+        },
+        {
+          "id": "50:1576",
+          "text": "到店预约 · 线上不收款",
+          "visible": true
+        },
+        {
+          "id": "50:1581",
+          "text": "10月11日 周日  10:00",
+          "visible": true
+        },
+        {
+          "id": "I50:1582;16:9",
+          "text": "查看预约",
+          "visible": true
+        },
+        {
+          "id": "50:1585",
+          "text": "DEMO-APPT-002",
+          "visible": true
+        },
+        {
+          "id": "50:1586",
+          "text": "待确认",
+          "visible": true
+        },
+        {
+          "id": "50:1590",
+          "text": "年糕 · 田园猫",
+          "visible": true
+        },
+        {
+          "id": "50:1591",
+          "text": "5个月 · 妹妹",
+          "visible": true
+        },
+        {
+          "id": "50:1592",
+          "text": "到店预约 · 线上不收款",
+          "visible": true
+        },
+        {
+          "id": "50:1597",
+          "text": "10月12日 周一  14:00",
+          "visible": true
+        },
+        {
+          "id": "I50:1598;16:9",
+          "text": "查看预约",
+          "visible": true
+        },
+        {
+          "id": "50:1600",
+          "text": "预约状态以门店确认结果为准。示例预约仅供测试。",
+          "visible": true
+        },
+        {
+          "id": "50:1601",
+          "text": "查看无预约状态 →",
+          "visible": true
+        },
+        {
+          "id": "I50:1602;32:588",
+          "text": "首页",
+          "visible": true
+        },
+        {
+          "id": "I50:1602;32:595",
+          "text": "选宠",
+          "visible": true
+        },
+        {
+          "id": "I50:1602;32:600",
+          "text": "预约",
+          "visible": true
+        },
+        {
+          "id": "I50:1602;32:605",
+          "text": "我的",
+          "visible": true
+        }
+      ],
+      "images": [
+        {
+          "id": "50:1572",
+          "name": "示例宠物照片",
+          "hash": "7770cfd048bbf9034127290f6c2b6a359938a697",
+          "width": 80,
+          "height": 84
+        },
+        {
+          "id": "50:1588",
+          "name": "示例宠物照片",
+          "hash": "a6edeaf9c2df201f3f1a47f1e789cddbf59d99e5",
+          "width": 80,
+          "height": 84
+        }
+      ],
+      "destinations": [
+        {
+          "sourceId": "50:1582",
+          "source": "查看预约 → record",
+          "destinationId": "50:1649"
+        },
+        {
+          "sourceId": "50:1601",
+          "source": "查看无预约状态 → → empty",
+          "destinationId": "30:523"
+        },
+        {
+          "sourceId": "I50:1602;32:584",
+          "source": "Tab / 首页 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "I50:1602;32:589",
+          "source": "Tab / 选宠 → pets",
+          "destinationId": "30:513"
+        },
+        {
+          "sourceId": "I50:1602;32:601",
+          "source": "Tab / 我的 → my",
+          "destinationId": "30:519"
+        }
+      ],
+      "layout": [
+        {
+          "id": "50:1555",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "50:1556",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 674,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 501
+        },
+        {
+          "id": "50:1602",
+          "name": "小程序组件 / 底部导航",
+          "y": 762,
+          "height": 82,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 82
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "50:1649",
+      "name": "小程序 / 修正 / 橘子 / 预约详情",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 50,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I50:1650;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I50:1650;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I50:1650;32:521",
+          "text": "预约详情",
+          "visible": true
+        },
+        {
+          "id": "50:1658",
+          "text": "等待门店确认",
+          "visible": true
+        },
+        {
+          "id": "50:1659",
+          "text": "门店确认后，请按约定时间到店。",
+          "visible": true
+        },
+        {
+          "id": "50:1663",
+          "text": "橘子 · 田园猫",
+          "visible": true
+        },
+        {
+          "id": "50:1664",
+          "text": "DEMO-PET-004 · 6个月 · 妹妹",
+          "visible": true
+        },
+        {
+          "id": "50:1665",
+          "text": "已提交 · 等待确认",
+          "visible": true
+        },
+        {
+          "id": "50:1667",
+          "text": "到店时间",
+          "visible": true
+        },
+        {
+          "id": "50:1668",
+          "text": "10月11日 周日 10:00",
+          "visible": true
+        },
+        {
+          "id": "50:1669",
+          "text": "每天 08:00—17:00 · 请携带身份证",
+          "visible": true
+        },
+        {
+          "id": "50:1670",
+          "text": "查看到店指南 →",
+          "visible": true
+        },
+        {
+          "id": "50:1672",
+          "text": "预约进度",
+          "visible": true
+        },
+        {
+          "id": "50:1673",
+          "text": "✓ 已提交     ○ 待确认     ○ 待到店",
+          "visible": true
+        },
+        {
+          "id": "50:1674",
+          "text": "预约编号  DEMO-APPT-001",
+          "visible": true
+        },
+        {
+          "id": "50:1676",
+          "text": "宠物档案与预约均为模拟资料，仅供测试。线上不收款，到店核验后再决定。",
+          "visible": true
+        },
+        {
+          "id": "I50:1678;16:3",
+          "text": "查看到店指南",
+          "visible": true
+        }
+      ],
+      "images": [
+        {
+          "id": "50:1661",
+          "name": "示例宠物照片",
+          "hash": "7770cfd048bbf9034127290f6c2b6a359938a697",
+          "width": 80,
+          "height": 84
+        }
+      ],
+      "destinations": [
+        {
+          "sourceId": "I50:1650;32:519",
+          "source": "返回 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "50:1670",
+          "source": "查看到店指南 → → shop",
+          "destinationId": "30:521"
+        },
+        {
+          "sourceId": "50:1678",
+          "source": "查看到店指南 → shop",
+          "destinationId": "30:521"
+        }
+      ],
+      "layout": [
+        {
+          "id": "50:1650",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "50:1651",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 672,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 591
+        },
+        {
+          "id": "50:1677",
+          "name": "底部操作",
+          "y": 760,
+          "height": 84,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 60
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "50:1705",
+      "name": "小程序 / 修正 / 选宠 / 猫咪",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 87,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I50:1706;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I50:1706;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I50:1706;32:521",
+          "text": "选宠",
+          "visible": true
+        },
+        {
+          "id": "50:1709",
+          "text": "找到你的合拍伙伴",
+          "visible": true
+        },
+        {
+          "id": "50:1710",
+          "text": "先了解性格，再安排一次到店见面。",
+          "visible": true
+        },
+        {
+          "id": "50:1715",
+          "text": "搜索名字、品种",
+          "visible": true
+        },
+        {
+          "id": "50:1720",
+          "text": "全部",
+          "visible": true
+        },
+        {
+          "id": "50:1722",
+          "text": "猫咪",
+          "visible": true
+        },
+        {
+          "id": "50:1724",
+          "text": "狗狗",
+          "visible": true
+        },
+        {
+          "id": "50:1726",
+          "text": "筛选",
+          "visible": true
+        },
+        {
+          "id": "50:1728",
+          "text": "2 位示例小伙伴",
+          "visible": true
+        },
+        {
+          "id": "50:1729",
+          "text": "默认排序 ↓",
+          "visible": true
+        },
+        {
+          "id": "I50:1732;34:665",
+          "text": "年糕 · 田园猫",
+          "visible": true
+        },
+        {
+          "id": "I50:1732;34:666",
+          "text": "5个月 · 妹妹",
+          "visible": true
+        },
+        {
+          "id": "I50:1732;34:667",
+          "text": "¥ 1,800",
+          "visible": true
+        },
+        {
+          "id": "I50:1732;34:668",
+          "text": "",
+          "visible": false
+        },
+        {
+          "id": "I50:1735;34:679",
+          "text": "橘子 · 田园猫",
+          "visible": true
+        },
+        {
+          "id": "I50:1735;34:680",
+          "text": "6个月 · 妹妹",
+          "visible": true
+        },
+        {
+          "id": "I50:1735;34:681",
+          "text": "¥ 1,500",
+          "visible": true
+        },
+        {
+          "id": "I50:1735;34:682",
+          "text": "",
+          "visible": false
+        },
+        {
+          "id": "50:1737",
+          "text": "DEMO 示例展示 · 先预约，到店了解后再决定。",
+          "visible": true
+        },
+        {
+          "id": "I50:1738;32:561",
+          "text": "首页",
+          "visible": true
+        },
+        {
+          "id": "I50:1738;32:568",
+          "text": "选宠",
+          "visible": true
+        },
+        {
+          "id": "I50:1738;32:573",
+          "text": "预约",
+          "visible": true
+        },
+        {
+          "id": "I50:1738;32:578",
+          "text": "我的",
+          "visible": true
+        }
+      ],
+      "images": [
+        {
+          "id": "I50:1732;34:663",
+          "name": "Rectangle",
+          "hash": "a6edeaf9c2df201f3f1a47f1e789cddbf59d99e5",
+          "width": 169,
+          "height": 142
+        },
+        {
+          "id": "I50:1735;34:677",
+          "name": "Rectangle",
+          "hash": "7770cfd048bbf9034127290f6c2b6a359938a697",
+          "width": 169,
+          "height": 142
+        }
+      ],
+      "destinations": [
+        {
+          "sourceId": "50:1716",
+          "source": "图标 / filter → empty",
+          "destinationId": "50:1909"
+        },
+        {
+          "sourceId": "50:1719",
+          "source": "全部",
+          "destinationId": "30:513"
+        },
+        {
+          "sourceId": "50:1723",
+          "source": "狗狗 → detail",
+          "destinationId": "50:1807"
+        },
+        {
+          "sourceId": "50:1725",
+          "source": "筛选 → empty",
+          "destinationId": "50:1909"
+        },
+        {
+          "sourceId": "50:1732",
+          "source": "宠物卡片 / 年糕 · 田园猫 → detail",
+          "destinationId": "50:616"
+        },
+        {
+          "sourceId": "50:1735",
+          "source": "宠物卡片 / 橘子 · 田园猫 → detail",
+          "destinationId": "50:1342"
+        },
+        {
+          "sourceId": "I50:1738;32:557",
+          "source": "Tab / 首页 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "I50:1738;32:569",
+          "source": "Tab / 预约 → records",
+          "destinationId": "30:517"
+        },
+        {
+          "sourceId": "I50:1738;32:574",
+          "source": "Tab / 我的 → my",
+          "destinationId": "30:519"
+        }
+      ],
+      "layout": [
+        {
+          "id": "50:1706",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "50:1707",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 674,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 578
+        },
+        {
+          "id": "50:1738",
+          "name": "小程序组件 / 底部导航",
+          "y": 762,
+          "height": 82,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 82
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "50:1807",
+      "name": "小程序 / 修正 / 选宠 / 狗狗",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 87,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I50:1808;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I50:1808;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I50:1808;32:521",
+          "text": "选宠",
+          "visible": true
+        },
+        {
+          "id": "50:1811",
+          "text": "找到你的合拍伙伴",
+          "visible": true
+        },
+        {
+          "id": "50:1812",
+          "text": "先了解性格，再安排一次到店见面。",
+          "visible": true
+        },
+        {
+          "id": "50:1817",
+          "text": "搜索名字、品种",
+          "visible": true
+        },
+        {
+          "id": "50:1822",
+          "text": "全部",
+          "visible": true
+        },
+        {
+          "id": "50:1824",
+          "text": "猫咪",
+          "visible": true
+        },
+        {
+          "id": "50:1826",
+          "text": "狗狗",
+          "visible": true
+        },
+        {
+          "id": "50:1828",
+          "text": "筛选",
+          "visible": true
+        },
+        {
+          "id": "50:1830",
+          "text": "2 位示例小伙伴",
+          "visible": true
+        },
+        {
+          "id": "50:1831",
+          "text": "默认排序 ↓",
+          "visible": true
+        },
+        {
+          "id": "I50:1833;34:658",
+          "text": "奶糖 · 柯基",
+          "visible": true
+        },
+        {
+          "id": "I50:1833;34:659",
+          "text": "4个月 · 弟弟",
+          "visible": true
+        },
+        {
+          "id": "I50:1833;34:660",
+          "text": "¥ 4,800",
+          "visible": true
+        },
+        {
+          "id": "I50:1833;34:661",
+          "text": "",
+          "visible": false
+        },
+        {
+          "id": "I50:1836;34:672",
+          "text": "松饼 · 金毛",
+          "visible": true
+        },
+        {
+          "id": "I50:1836;34:673",
+          "text": "3个月 · 弟弟",
+          "visible": true
+        },
+        {
+          "id": "I50:1836;34:674",
+          "text": "¥ 3,600",
+          "visible": true
+        },
+        {
+          "id": "I50:1836;34:675",
+          "text": "",
+          "visible": false
+        },
+        {
+          "id": "50:1839",
+          "text": "DEMO 示例展示 · 先预约，到店了解后再决定。",
+          "visible": true
+        },
+        {
+          "id": "I50:1840;32:561",
+          "text": "首页",
+          "visible": true
+        },
+        {
+          "id": "I50:1840;32:568",
+          "text": "选宠",
+          "visible": true
+        },
+        {
+          "id": "I50:1840;32:573",
+          "text": "预约",
+          "visible": true
+        },
+        {
+          "id": "I50:1840;32:578",
+          "text": "我的",
+          "visible": true
+        }
+      ],
+      "images": [
+        {
+          "id": "I50:1833;34:656",
+          "name": "Rectangle",
+          "hash": "08b1df33f71fed3769848a3cdb6eefa70e88e998",
+          "width": 169,
+          "height": 142
+        },
+        {
+          "id": "I50:1836;34:670",
+          "name": "Rectangle",
+          "hash": "199b94884be6c1babff99bb8f0b95ac59730907d",
+          "width": 169,
+          "height": 142
+        }
+      ],
+      "destinations": [
+        {
+          "sourceId": "50:1818",
+          "source": "图标 / filter → empty",
+          "destinationId": "50:1909"
+        },
+        {
+          "sourceId": "50:1821",
+          "source": "全部",
+          "destinationId": "30:513"
+        },
+        {
+          "sourceId": "50:1823",
+          "source": "猫咪 → empty",
+          "destinationId": "50:1705"
+        },
+        {
+          "sourceId": "50:1827",
+          "source": "筛选 → empty",
+          "destinationId": "50:1909"
+        },
+        {
+          "sourceId": "50:1833",
+          "source": "宠物卡片 / 奶糖 · 柯基 → detail",
+          "destinationId": "30:514"
+        },
+        {
+          "sourceId": "50:1836",
+          "source": "宠物卡片 / 松饼 · 金毛 → detail",
+          "destinationId": "50:979"
+        },
+        {
+          "sourceId": "I50:1840;32:557",
+          "source": "Tab / 首页 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "I50:1840;32:569",
+          "source": "Tab / 预约 → records",
+          "destinationId": "30:517"
+        },
+        {
+          "sourceId": "I50:1840;32:574",
+          "source": "Tab / 我的 → my",
+          "destinationId": "30:519"
+        }
+      ],
+      "layout": [
+        {
+          "id": "50:1808",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "50:1809",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 674,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 578
+        },
+        {
+          "id": "50:1840",
+          "name": "小程序组件 / 底部导航",
+          "y": 762,
+          "height": 82,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 82
+        }
+      ],
+      "unresolvedTargets": []
+    },
+    {
+      "id": "50:1909",
+      "name": "小程序 / 修正 / 选宠 / 2千以内",
+      "width": 390,
+      "height": 844,
+      "nodeCount": 87,
+      "nodeTypes": [
+        "FRAME",
+        "INSTANCE",
+        "TEXT",
+        "VECTOR",
+        "ELLIPSE",
+        "RECTANGLE"
+      ],
+      "fonts": [
+        "Noto Sans SC"
+      ],
+      "texts": [
+        {
+          "id": "I50:1910;32:514",
+          "text": "9:41",
+          "visible": true
+        },
+        {
+          "id": "I50:1910;32:516",
+          "text": "▮▮▮  5G",
+          "visible": true
+        },
+        {
+          "id": "I50:1910;32:521",
+          "text": "选宠",
+          "visible": true
+        },
+        {
+          "id": "50:1913",
+          "text": "找到你的合拍伙伴",
+          "visible": true
+        },
+        {
+          "id": "50:1914",
+          "text": "先了解性格，再安排一次到店见面。",
+          "visible": true
+        },
+        {
+          "id": "50:1919",
+          "text": "搜索名字、品种",
+          "visible": true
+        },
+        {
+          "id": "50:1924",
+          "text": "全部",
+          "visible": true
+        },
+        {
+          "id": "50:1926",
+          "text": "猫咪",
+          "visible": true
+        },
+        {
+          "id": "50:1928",
+          "text": "狗狗",
+          "visible": true
+        },
+        {
+          "id": "50:1930",
+          "text": "2千以内",
+          "visible": true
+        },
+        {
+          "id": "50:1932",
+          "text": "2 位示例小伙伴",
+          "visible": true
+        },
+        {
+          "id": "50:1933",
+          "text": "默认排序 ↓",
+          "visible": true
+        },
+        {
+          "id": "I50:1936;34:665",
+          "text": "年糕 · 田园猫",
+          "visible": true
+        },
+        {
+          "id": "I50:1936;34:666",
+          "text": "5个月 · 妹妹",
+          "visible": true
+        },
+        {
+          "id": "I50:1936;34:667",
+          "text": "¥ 1,800",
+          "visible": true
+        },
+        {
+          "id": "I50:1936;34:668",
+          "text": "",
+          "visible": false
+        },
+        {
+          "id": "I50:1939;34:679",
+          "text": "橘子 · 田园猫",
+          "visible": true
+        },
+        {
+          "id": "I50:1939;34:680",
+          "text": "6个月 · 妹妹",
+          "visible": true
+        },
+        {
+          "id": "I50:1939;34:681",
+          "text": "¥ 1,500",
+          "visible": true
+        },
+        {
+          "id": "I50:1939;34:682",
+          "text": "",
+          "visible": false
+        },
+        {
+          "id": "50:1941",
+          "text": "DEMO 示例展示 · 先预约，到店了解后再决定。",
+          "visible": true
+        },
+        {
+          "id": "I50:1942;32:561",
+          "text": "首页",
+          "visible": true
+        },
+        {
+          "id": "I50:1942;32:568",
+          "text": "选宠",
+          "visible": true
+        },
+        {
+          "id": "I50:1942;32:573",
+          "text": "预约",
+          "visible": true
+        },
+        {
+          "id": "I50:1942;32:578",
+          "text": "我的",
+          "visible": true
+        }
+      ],
+      "images": [
+        {
+          "id": "I50:1936;34:663",
+          "name": "Rectangle",
+          "hash": "a6edeaf9c2df201f3f1a47f1e789cddbf59d99e5",
+          "width": 169,
+          "height": 142
+        },
+        {
+          "id": "I50:1939;34:677",
+          "name": "Rectangle",
+          "hash": "7770cfd048bbf9034127290f6c2b6a359938a697",
+          "width": 169,
+          "height": 142
+        }
+      ],
+      "destinations": [
+        {
+          "sourceId": "50:1923",
+          "source": "全部",
+          "destinationId": "30:513"
+        },
+        {
+          "sourceId": "50:1925",
+          "source": "猫咪 → empty",
+          "destinationId": "50:1705"
+        },
+        {
+          "sourceId": "50:1927",
+          "source": "狗狗 → detail",
+          "destinationId": "50:1807"
+        },
+        {
+          "sourceId": "50:1936",
+          "source": "宠物卡片 / 年糕 · 田园猫 → detail",
+          "destinationId": "50:616"
+        },
+        {
+          "sourceId": "50:1939",
+          "source": "宠物卡片 / 橘子 · 田园猫 → detail",
+          "destinationId": "50:1342"
+        },
+        {
+          "sourceId": "I50:1942;32:557",
+          "source": "Tab / 首页 → home",
+          "destinationId": "30:512"
+        },
+        {
+          "sourceId": "I50:1942;32:569",
+          "source": "Tab / 预约 → records",
+          "destinationId": "30:517"
+        },
+        {
+          "sourceId": "I50:1942;32:574",
+          "source": "Tab / 我的 → my",
+          "destinationId": "30:519"
+        }
+      ],
+      "layout": [
+        {
+          "id": "50:1910",
+          "name": "微信导航",
+          "y": 0,
+          "height": 88,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 88
+        },
+        {
+          "id": "50:1911",
+          "name": "内容滚动区",
+          "y": 88,
+          "height": 674,
+          "overflowDirection": "VERTICAL",
+          "clipsContent": true,
+          "contentBottom": 578
+        },
+        {
+          "id": "50:1942",
+          "name": "小程序组件 / 底部导航",
+          "y": 762,
+          "height": 82,
+          "overflowDirection": "NONE",
+          "clipsContent": false,
+          "contentBottom": 82
+        }
+      ],
+      "unresolvedTargets": []
+    }
+  ]
+}
