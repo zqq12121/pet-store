@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 
 import com.warmpaw.common.ApiException;
 import com.warmpaw.common.ProviderSupport;
+import com.warmpaw.repository.BusinessRepository;
 import com.warmpaw.service.*;
 import java.time.Instant;
 import java.util.Map;
@@ -18,17 +19,36 @@ class AppointmentSmsNotifierTest {
     return map(
         "id",
         "order_sms_test",
+        "ownerId", "user_sms_test",
         "contactPhone",
         "13900000000",
         "appointment",
         map("visitAt", "2026-09-14T02:00:00Z"));
   }
 
+  BusinessRepository verifiedOwner() {
+    var store = mock(BusinessRepository.class);
+    when(store.get("user", "user_sms_test")).thenReturn(map("phone", "13900000000"));
+    return store;
+  }
+
+  @Test
+  void manualWechatContactDoesNotEnqueueOrSendSms() {
+    var store = mock(BusinessRepository.class);
+    when(store.get("user", "user_sms_test")).thenReturn(map("phone", null));
+    var outbox = mock(AppointmentSmsOutbox.class);
+    var worker = mock(AppointmentSmsWorker.class);
+    var notifier = new AppointmentSmsNotifier(outbox, worker, store);
+    for (String event : new String[] {"submitted", "confirmed", "cancelled", "expired", "completed"})
+      notifier.notifyAfterCommit(order(), event);
+    verifyNoInteractions(outbox, worker);
+  }
+
   @Test
   void transactionPersistsBeforeCommitAndRollbackNeverDispatches() {
     AppointmentSmsOutbox outbox = mock(AppointmentSmsOutbox.class);
     AppointmentSmsWorker worker = mock(AppointmentSmsWorker.class);
-    var notifier = new AppointmentSmsNotifier(outbox, worker);
+    var notifier = new AppointmentSmsNotifier(outbox, worker, verifiedOwner());
     when(outbox.enqueue(anyString(), anyString(), anyString(), anyMap(), any())).thenReturn(true);
 
     TransactionSynchronizationManager.initSynchronization();
@@ -67,7 +87,7 @@ class AppointmentSmsNotifierTest {
   void immediateDispatchFailureDoesNotFailCommittedAppointment() {
     AppointmentSmsOutbox outbox = mock(AppointmentSmsOutbox.class);
     AppointmentSmsWorker worker = mock(AppointmentSmsWorker.class);
-    var notifier = new AppointmentSmsNotifier(outbox, worker);
+    var notifier = new AppointmentSmsNotifier(outbox, worker, verifiedOwner());
     when(outbox.enqueue(anyString(), anyString(), anyString(), anyMap(), any())).thenReturn(true);
     doThrow(new IllegalStateException("database temporarily unavailable"))
         .when(worker).dispatch(anyString());
@@ -86,7 +106,7 @@ class AppointmentSmsNotifierTest {
   void duplicateBusinessEventDoesNotRegisterAnotherDispatch() {
     AppointmentSmsOutbox outbox = mock(AppointmentSmsOutbox.class);
     AppointmentSmsWorker worker = mock(AppointmentSmsWorker.class);
-    var notifier = new AppointmentSmsNotifier(outbox, worker);
+    var notifier = new AppointmentSmsNotifier(outbox, worker, verifiedOwner());
     when(outbox.enqueue(anyString(), anyString(), anyString(), anyMap(), any())).thenReturn(false);
     TransactionSynchronizationManager.initSynchronization();
     TransactionSynchronizationManager.setActualTransactionActive(true);

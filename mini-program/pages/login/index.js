@@ -1,0 +1,38 @@
+const { request, saveAuth } = require('../../utils/api')
+const config = require('../../config')
+Page({
+  data: { demo: config.demo, accepted: false, busy: false, error: '' },
+  onLoad(q) {
+    // 微信保留 URL 编码；解码后仅允许项目内目的页。
+    let target = '/pages/my/index'
+    try { target = decodeURIComponent(q.redirect || target) } catch (_) { /* 损坏参数使用默认目的页。 */ }
+    this.target = /^\/pages\/(booking|record|success|records|my|ai)\/index(?:\?|$)/.test(target) ? target : '/pages/my/index'
+  },
+  onUnload() { this.disposed = true },
+  accept(e) { this.setData({ accepted: e.detail.value.includes('yes') }) },
+  privacy() { wx.showModal({ title: '微信登录与隐私说明', content: '本项目仅供个人练习。微信身份用于登录和查询本人预约，不读取微信手机号、头像或昵称。到店预约需另行填写联系号码，仅用于到店联系。本地演示使用模拟身份，预约保存在本机。', showCancel: false }) },
+  async login() {
+    if (this.data.busy) return
+    if (!this.data.accepted) { this.setData({ error: '请先阅读并同意微信登录与隐私说明' }); return }
+    this.setData({ busy: true, error: '' })
+    try {
+      let code
+      // 演示不申请真实凭证；真实模式只在用户点击后调用 wx.login。
+      if (!config.demo) code = await new Promise((resolve, reject) => wx.login({
+        timeout: 10000,
+        success: r => r.code ? resolve(r.code) : reject(new Error('未获取到微信登录凭证，请重试')),
+        fail: () => reject(new Error('微信登录暂不可用，请重试'))
+      }))
+      if (this.disposed) return
+      const r = await request('POST', '/auth/mini-wechat/login', config.demo ? {} : { code })
+      // 离开页面后的异步响应不得覆盖身份或触发跳转。
+      if (this.disposed) return
+      saveAuth(r)
+      const pages = getCurrentPages(), previous = pages[pages.length - 2]
+      if (previous && '/' + previous.route === this.target.split('?')[0]) wx.navigateBack()
+      else if (/^\/pages\/(my|records)\/index$/.test(this.target)) wx.switchTab({ url: this.target })
+      else wx.redirectTo({ url: this.target })
+    } catch (e) { if (!this.disposed) this.setData({ error: e.message }) }
+    finally { if (!this.disposed) this.setData({ busy: false }) }
+  }
+})

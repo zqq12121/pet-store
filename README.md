@@ -28,6 +28,7 @@ AI 使用 DeepSeek API 与 RAG；中文嵌入模型为 `BAAI/bge-small-zh-v1.5`�
 | `frontend/buyer-web/` | Vue 3 + TypeScript + Vite 买家端 |
 | `frontend/admin-web/` | Vue 3 + Element Plus 管理后台 |
 | `frontend/shared/` | 双端请求、类型与 SSE 处理 |
+| `mini-program/` | 原生微信小程序，导入与联调见 [小程序说明](mini-program/README.md) |
 | `backend/` | JDK 21、Spring Boot 4、Spring Cloud、Nacos、OpenFeign |
 | `backend/common/` | 业务逻辑、持久化、安全与第三方服务接入 |
 | `backend/order-server/` | 订单、预约与短信通知队列 |

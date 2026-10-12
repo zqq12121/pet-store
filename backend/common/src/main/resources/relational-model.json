@@ -2837,6 +2837,473 @@
         "FOREIGN KEY (session_id) REFERENCES ai_sessions(id)",
         "FOREIGN KEY (message_id) REFERENCES ai_messages(id)"
       ]
+    },
+    {
+      "kind": "community_content",
+      "table": "community_contents",
+      "label": "社区帖子与店铺评价",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "type",
+          "column": "type",
+          "sql": "VARCHAR(16)",
+          "json": false
+        },
+        {
+          "field": "title",
+          "column": "title",
+          "sql": "VARCHAR(160)",
+          "json": false
+        },
+        {
+          "field": "body",
+          "column": "body",
+          "sql": "LONGTEXT",
+          "json": false
+        },
+        {
+          "field": "category",
+          "column": "category",
+          "sql": "VARCHAR(16)",
+          "json": false
+        },
+        {
+          "field": "rating",
+          "column": "rating",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "orderId",
+          "column": "order_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        }
+      ],
+      "children": [
+        {
+          "table": "community_images",
+          "path": "imageFileIds",
+          "fields": [
+            {
+              "field": "fileId",
+              "column": "file_id",
+              "sql": "VARCHAR(64)",
+              "json": false
+            }
+          ],
+          "mode": "list",
+          "children": [],
+          "scalar": "fileId"
+        }
+      ],
+      "constraints": [
+        "UNIQUE (order_id)",
+        "FOREIGN KEY (owner_id) REFERENCES users(id)",
+        "FOREIGN KEY (order_id) REFERENCES orders(id)",
+        "CHECK (rating IS NULL OR rating BETWEEN 1 AND 5)",
+        "INDEX idx_community_contents (type,status,created_at)"
+      ]
+    },
+    {
+      "kind": "community_comment",
+      "table": "community_comments",
+      "label": "社区评论与两层回复",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "contentId",
+          "column": "content_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "rootId",
+          "column": "root_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "replyToId",
+          "column": "reply_to_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "authorRole",
+          "column": "author_role",
+          "sql": "VARCHAR(16)",
+          "json": false
+        },
+        {
+          "field": "body",
+          "column": "body",
+          "sql": "LONGTEXT",
+          "json": false
+        }
+      ],
+      "children": [],
+      "constraints": [
+        "FOREIGN KEY (content_id) REFERENCES community_contents(id)",
+        "FOREIGN KEY (root_id) REFERENCES community_comments(id)",
+        "FOREIGN KEY (reply_to_id) REFERENCES community_comments(id)",
+        "INDEX idx_community_comments (content_id,status,created_at)"
+      ]
+    },
+    {
+      "kind": "community_reaction",
+      "table": "community_reactions",
+      "label": "帖子点赞与收藏",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "contentId",
+          "column": "content_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "type",
+          "column": "type",
+          "sql": "VARCHAR(16)",
+          "json": false
+        }
+      ],
+      "children": [],
+      "constraints": [
+        "FOREIGN KEY (content_id) REFERENCES community_contents(id)",
+        "FOREIGN KEY (owner_id) REFERENCES users(id)",
+        "UNIQUE (owner_id,content_id,type)"
+      ]
+    },
+    {
+      "kind": "community_notice",
+      "table": "community_notices",
+      "label": "评论回复站内通知",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "contentId",
+          "column": "content_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "commentId",
+          "column": "comment_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "actorName",
+          "column": "actor_name",
+          "sql": "VARCHAR(30)",
+          "json": false
+        },
+        {
+          "field": "message",
+          "column": "message",
+          "sql": "VARCHAR(100)",
+          "json": false
+        },
+        {
+          "field": "read",
+          "column": "is_read",
+          "sql": "BOOLEAN",
+          "json": false
+        }
+      ],
+      "children": [],
+      "constraints": [
+        "FOREIGN KEY (owner_id) REFERENCES users(id)",
+        "FOREIGN KEY (content_id) REFERENCES community_contents(id)",
+        "FOREIGN KEY (comment_id) REFERENCES community_comments(id)",
+        "INDEX idx_community_notices (owner_id,created_at)"
+      ]
+    },
+    {
+      "kind": "community_report",
+      "table": "community_reports",
+      "label": "社区内容举报",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "targetId",
+          "column": "target_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "targetType",
+          "column": "target_type",
+          "sql": "VARCHAR(16)",
+          "json": false
+        },
+        {
+          "field": "reason",
+          "column": "reason",
+          "sql": "VARCHAR(500)",
+          "json": false
+        },
+        {
+          "field": "action",
+          "column": "action",
+          "sql": "VARCHAR(16)",
+          "json": false
+        },
+        {
+          "field": "handledBy",
+          "column": "handled_by",
+          "sql": "VARCHAR(64)",
+          "json": false
+        }
+      ],
+      "children": [],
+      "constraints": [
+        "FOREIGN KEY (owner_id) REFERENCES users(id)",
+        "INDEX idx_community_reports (status,created_at)"
+      ]
+    },
+    {
+      "kind": "community_word",
+      "table": "community_words",
+      "label": "管理员维护的恶意词库",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "term",
+          "column": "term",
+          "sql": "VARCHAR(160)",
+          "json": false
+        },
+        {
+          "field": "normalized",
+          "column": "normalized",
+          "sql": "VARCHAR(160)",
+          "json": false
+        },
+        {
+          "field": "enabled",
+          "column": "enabled",
+          "sql": "BOOLEAN",
+          "json": false
+        }
+      ],
+      "children": [],
+      "constraints": [
+        "UNIQUE (normalized)"
+      ]
     }
   ]
 }

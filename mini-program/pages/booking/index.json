@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "到店预约",
+  "usingComponents": {
+    "load-state": "/components/load-state/index"
+  }
+}

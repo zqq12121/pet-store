@@ -57,7 +57,7 @@ public class FileService {
                 "pet_video",
                 "quarantine_public",
                 "quarantine_original")
-            : List.of("avatar", "diagnosis", "after_sale_evidence");
+            : List.of("avatar", "diagnosis", "after_sale_evidence", "community_image");
     require(allowed.contains(purpose), 422, "FILE_PURPOSE_MISMATCH", "不允许上传此用途文件");
     temp.limit("upload:" + actor.id(), 30, 60);
     boolean orderFile = List.of("diagnosis", "after_sale_evidence").contains(purpose);
@@ -70,7 +70,7 @@ public class FileService {
             ? 100
             : purpose.equals("avatar")
                 ? 2
-                : List.of("pet_image", "banner").contains(purpose) ? 5 : 10;
+                : List.of("pet_image", "banner", "community_image").contains(purpose) ? 5 : 10;
     require(
         !file.isEmpty() && file.getSize() <= limit * 1024L * 1024,
         413,
@@ -288,8 +288,13 @@ public class FileService {
   public Path content(String id, String token) {
     Map<String, Object> f = store.get("file", id);
     require("ready".equals(text(f, "status")), 404, "RESOURCE_NOT_FOUND", "文件不可访问");
+    // 社区草稿图片仅本人可授权预览；关联公开内容后可浏览，隐藏或删除后撤销公开读取。
+    boolean communityPublic = "community_image".equals(text(f, "purpose"))
+        && store.list("community_content").stream().anyMatch(c ->
+            "published".equals(text(c, "status")) && strings(c, "imageFileIds").contains(id));
     require(
         "public".equals(text(f, "visibility"))
+            || communityPublic
             || token != null && id.equals(temp.get("file-link:" + hash(token))),
         404,
         "RESOURCE_NOT_FOUND",

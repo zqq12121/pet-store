@@ -12,6 +12,8 @@ const router=createRouter({history:createWebHistory(import.meta.env.BASE_URL),ro
  {path:'/knowledge',component:()=>import('./views/Knowledge.vue'),meta:{title:'知识库'}},
  {path:'/agreements',component:()=>import('./views/Agreements.vue'),meta:{title:'协议管理'}},
  {path:'/shop',component:()=>import('./views/Shop.vue'),meta:{title:'门店设置'}},
+ {path:'/community',component:()=>import('./views/Community.vue'),meta:{title:'社区管理'}},
+ {path:'/community/:id',component:()=>import('./views/CommunityDetail.vue'),meta:{title:'社区内容与讨论'}},
  {path:'/:pathMatch(.*)*',redirect:'/'}
 ]})
 router.beforeEach(to=>to.path!=='/login'&&!auth('admin')?{path:'/login',query:{redirect:to.fullPath}}:true)

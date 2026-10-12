@@ -1,0 +1,1 @@
+<view class="card" bindtap="open"><image class="photo" src="{{pet.coverUrl}}" mode="aspectFill"/><view class="body"><view class="name">{{pet.name}} · {{pet.breed}}</view><view class="meta">{{pet.ageMonths}}个月 · {{pet.genderText}}</view><view class="price">{{pet.priceText}}</view></view></view>

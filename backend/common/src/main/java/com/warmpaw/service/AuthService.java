@@ -62,6 +62,8 @@ public class AuthService {
   }
 
   public static String mask(String phone) {
+    // 微信账号可以没有手机号，个人资料不生成虚构号码。
+    if (phone == null || phone.isBlank()) return null;
     return phone.substring(0, 3) + "****" + phone.substring(7);
   }
 

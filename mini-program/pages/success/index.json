@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "预约已提交",
+  "usingComponents": {
+    "load-state": "/components/load-state/index"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/pets/index",
+    "pages/records/index",
+    "pages/my/index",
+    "pages/detail/index",
+    "pages/booking/index",
+    "pages/success/index",
+    "pages/record/index",
+    "pages/login/index",
+    "pages/shop/index",
+    "pages/ai/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "灵宠小珠",
+    "navigationBarBackgroundColor": "#FBF8F3",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#FBF8F3"
+  },
+  "tabBar": {
+    "color": "#746B63",
+    "selectedColor": "#B9512B",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "首页",
+        "iconPath": "assets/home.png",
+        "selectedIconPath": "assets/home-active.png"
+      },
+      {
+        "pagePath": "pages/pets/index",
+        "text": "选宠",
+        "iconPath": "assets/paw.png",
+        "selectedIconPath": "assets/paw-active.png"
+      },
+      {
+        "pagePath": "pages/records/index",
+        "text": "预约",
+        "iconPath": "assets/calendar.png",
+        "selectedIconPath": "assets/calendar-active.png"
+      },
+      {
+        "pagePath": "pages/my/index",
+        "text": "我的",
+        "iconPath": "assets/user.png",
+        "selectedIconPath": "assets/user-active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents",
+  "sitemapLocation": "sitemap.json"
+}

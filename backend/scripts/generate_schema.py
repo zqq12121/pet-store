@@ -63,6 +63,17 @@ model('knowledge_job','knowledge_jobs','知识导入及索引任务（待实现�
  child('knowledge_job_errors','errors','sourceRow:int message:text')])
 model('ai_timing','ai_timings','AI客户端耗时（待实现业务）','eventId:VARCHAR(36) sessionId:id messageId:id firstRenderedMs:int completedRenderedMs:int',constraints=['UNIQUE (owner_id,event_id)','FOREIGN KEY (session_id) REFERENCES ai_sessions(id)','FOREIGN KEY (message_id) REFERENCES ai_messages(id)'])
 
+# 宠友社区沿用显式关系映射；评价及互动的业务唯一键删除后仍保留。
+model('community_content','community_contents','社区帖子与店铺评价','type:VARCHAR(16) title:VARCHAR(160) body:text category:VARCHAR(16) rating:int orderId:id',[
+ ids('community_images','imageFileIds')],constraints=['UNIQUE (order_id)','FOREIGN KEY (owner_id) REFERENCES users(id)','FOREIGN KEY (order_id) REFERENCES orders(id)','CHECK (rating IS NULL OR rating BETWEEN 1 AND 5)','INDEX idx_community_contents (type,status,created_at)'])
+model('community_comment','community_comments','社区评论与两层回复','contentId:id rootId:id replyToId:id authorRole:VARCHAR(16) body:text',constraints=['FOREIGN KEY (content_id) REFERENCES community_contents(id)','FOREIGN KEY (root_id) REFERENCES community_comments(id)','FOREIGN KEY (reply_to_id) REFERENCES community_comments(id)','INDEX idx_community_comments (content_id,status,created_at)'])
+model('community_reaction','community_reactions','帖子点赞与收藏','contentId:id type:VARCHAR(16)',constraints=['FOREIGN KEY (content_id) REFERENCES community_contents(id)','FOREIGN KEY (owner_id) REFERENCES users(id)','UNIQUE (owner_id,content_id,type)'])
+community_notice=model('community_notice','community_notices','评论回复站内通知','contentId:id commentId:id actorName:VARCHAR(30) message:VARCHAR(100) read:bool',constraints=['FOREIGN KEY (owner_id) REFERENCES users(id)','FOREIGN KEY (content_id) REFERENCES community_contents(id)','FOREIGN KEY (comment_id) REFERENCES community_comments(id)','INDEX idx_community_notices (owner_id,created_at)'])
+# read 是 MySQL 保留字；接口仍使用 read，存储列改为 is_read。
+next(f for f in community_notice['fields'] if f['field']=='read')['column']='is_read'
+model('community_report','community_reports','社区内容举报','targetId:id targetType:VARCHAR(16) reason:VARCHAR(500) action:VARCHAR(16) handledBy:id',constraints=['FOREIGN KEY (owner_id) REFERENCES users(id)','INDEX idx_community_reports (status,created_at)'])
+model('community_word','community_words','管理员维护的恶意词库','term:VARCHAR(160) normalized:VARCHAR(160) enabled:bool',constraints=['UNIQUE (normalized)'])
+
 def ddl(m,parent=None):
     cols=[]
     if parent:

@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "到店指南",
+  "usingComponents": {
+    "load-state": "/components/load-state/index"
+  }
+}

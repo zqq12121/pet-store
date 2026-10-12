@@ -2,6 +2,7 @@ package com.warmpaw.service;
 
 import static com.warmpaw.common.Json.*;
 
+import com.warmpaw.repository.BusinessRepository;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -19,12 +20,18 @@ public class AppointmentSmsNotifier {
   private final AppointmentSmsOutbox outbox;
   private final AppointmentSmsWorker worker;
 
-  public AppointmentSmsNotifier(AppointmentSmsOutbox outbox, AppointmentSmsWorker worker) {
+  private final BusinessRepository store;
+
+  public AppointmentSmsNotifier(AppointmentSmsOutbox outbox, AppointmentSmsWorker worker, BusinessRepository store) {
+    this.store = store;
     this.outbox = outbox;
     this.worker = worker;
   }
 
   public void notifyAfterCommit(Map<String, Object> order, String event) {
+    // 手填联系号码没有通过短信核验，不自动向该号码发送通知。
+    Map<String, Object> user = store.get("user", text(order, "ownerId"));
+    if (!text(order, "contactPhone").equals(text(user, "phone"))) return;
     // 提前保存本次状态的快照，避免同一事务内后续修改影响短信内容。
     String id = text(order, "id"), phone = text(order, "contactPhone");
     String visitAt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")

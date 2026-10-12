@@ -1201,6 +1201,33 @@ class CommerceIntegrationTest {
     assertEquals("FAIL", text(read(result.getContentAsString()), "code"));
     assertEquals(before, store.list("payment_fact").size());
   }
+  @Test
+  void wechatOnlyAppointmentUsesManualContactAndAccountOwnership() {
+    // 独立 H2 中创建可信微信绑定；联系号码不绑定用户、不自动发送短信。
+    var wechat = tx.execute(status -> {
+      store.lock();
+      var user = store.create("user", null, null, map("phone", null, "nickname", "微信用户"));
+      String id = text(user, "id");
+      store.create("wechat", id, "test-mini:" + id, map("appId", "test-mini", "openid", id));
+      return new AuthService.Actor(id, "buyer", null, "");
+    });
+    var p = pet();
+    var body = orderBody(p, wechat);
+    body.put("contactPhone", "13800008000");
+    var legacy = new LinkedHashMap<>(body);
+    legacy.remove("visitAt");
+    assertCode("VALIDATION_ERROR", () -> tx.execute(status -> orders.create(legacy, wechat)));
+    var o = call("POST", "/orders", body, wechat);
+    assertEquals("138****8000", o.get("contactPhoneMasked"));
+    String id = text(o, "id");
+    assertEquals(wechat.id(), store.get("order", id).get("ownerId"));
+    assertNull(store.get("user", wechat.id()).get("phone"));
+    assertFalse(Files.exists(Path.of("data/local-inbox/sms-appointment-" + id + "-submitted.txt")));
+    assertCode("RESOURCE_NOT_FOUND", () -> call("GET", "/orders/" + id, map(), other));
+    call("POST", "/orders/" + id + "/cancel", map(), wechat);
+    assertEquals("cancelled", store.get("order", id).get("status"));
+  }
+
   Map<String, Object> appointment() {
     Map<String, Object> pet = pet();
     return call("POST", "/orders", orderBody(pet, buyer), buyer);

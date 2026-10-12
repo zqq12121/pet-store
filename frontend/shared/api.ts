@@ -36,7 +36,7 @@ export const money=(amount:number) => new Intl.NumberFormat('zh-CN',{style:'curr
 export const date=(value:string|null|undefined) => value?new Date(value).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false,month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'—'
 export function safeUrl(value:string) { try { const url=new URL(value,location.origin);return ['http:','https:'].includes(url.protocol)?url.href:'#' } catch { return '#' } }
 export async function upload(role:Role,file:File,purpose:string,orderId?:string) {
-  const limit=purpose==='pet_video'?100:10
+  const limit=purpose==='pet_video'?100:purpose==='community_image'?5:10
   if(file.size>limit*1024*1024)throw new Error(`文件不能超过 ${limit}MB`)
   const body=new FormData();body.append('file',file);body.append('purpose',purpose);if(orderId)body.append('orderId',orderId)
   return client(role)<{id:string;publicUrl:string|null}>('POST',role==='admin'?'/admin/files':'/files',body)

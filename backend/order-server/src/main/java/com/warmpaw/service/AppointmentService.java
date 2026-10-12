@@ -33,7 +33,7 @@ public class AppointmentService {
     // 内部复用原订单快照和一宠一锁，不创建微信支付单；事务提交前切换为预约状态。
     Map<String, Object> orderBody = new LinkedHashMap<>(body);
     orderBody.remove("visitAt");
-    Map<String, Object> order = orders.create(orderBody, actor);
+    Map<String, Object> order = orders.createAppointment(orderBody, actor);
     Instant deadline = now.plus(Duration.ofHours(24));
     if (visit.isBefore(deadline)) deadline = visit;
     order.put("status", "pending_confirmation");

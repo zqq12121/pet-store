@@ -1,0 +1,1 @@
+{ "desc": "练习项目", "rules": [{ "action": "disallow", "page": "*" }] }

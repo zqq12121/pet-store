@@ -1,0 +1,1 @@
+.cover{display:block;width:100%;height:423rpx;border-radius:38rpx;margin-bottom:30rpx}.pet-title{font-size:40rpx;margin:0}.price-row{margin:24rpx 0}.facts{display:flex;justify-content:space-around;text-align:center;padding:22rpx 10rpx}.facts view{font-size:27rpx;font-weight:600}.facts text{display:block;font-size:21rpx;color:#827A70;font-weight:400}.archive-text{margin:16rpx 0}

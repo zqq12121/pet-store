@@ -60,6 +60,19 @@ public class OrderService {
   }
 
   public Map<String, Object> create(Map<String, Object> body, AuthService.Actor actor) {
+    return create(body, actor, false);
+  }
+
+  /** 仅到店预约允许无手机号的微信账号手填联系号码；订单仍归当前账号。 */
+  public Map<String, Object> createAppointment(Map<String, Object> body, AuthService.Actor actor) {
+    AuthService.role(actor, "buyer");
+    Map<String, Object> user = store.get("user", actor.id());
+    boolean wechatOnly = Objects.toString(user.get("phone"), "").isBlank()
+        && store.list("wechat").stream().anyMatch(w -> actor.id().equals(text(w, "ownerId")));
+    return create(body, actor, wechatOnly);
+  }
+
+  private Map<String, Object> create(Map<String, Object> body, AuthService.Actor actor, boolean manualContact) {
     Input in =
         new Input(
             body,
@@ -81,7 +94,7 @@ public class OrderService {
         "AGREEMENT_CHANGED",
         "协议已更新，请重新阅读");
     String phone = in.phone("contactPhone");
-    require(phone.equals(actor.phone()), 400, "VALIDATION_ERROR", "联系人必须为登录手机号本人");
+    require(manualContact || phone.equals(actor.phone()), 400, "VALIDATION_ERROR", "联系人必须为登录手机号本人");
     Instant now = Instant.now();
     Map<String, Object> s = catalog.shop();
     Map<String, Object> o =

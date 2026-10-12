@@ -34,3 +34,7 @@
 
 /* 全局咨询入口不遮挡手机底部导航和表单。 */
 .floating-ai{position:fixed;right:24px;bottom:48px;z-index:15;background:var(--brand);color:#fff;padding:14px 20px;border-radius:30px;box-shadow:0 5px 22px #56270c20;font-size:13px}.nav{gap:22px}@media(max-width:760px){.desktop-profile,.floating-ai{display:none}}
+
+/* 社区导航增加后保持平板和手机入口可用。 */
+@media(max-width:1100px) and (min-width:761px){.nav .brand span{display:none}.nav nav{gap:14px}.nav{gap:14px}}
+@media(max-width:760px){.header-community-notices{display:none}}

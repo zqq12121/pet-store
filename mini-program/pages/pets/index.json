@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "选宠",
+  "usingComponents": {
+    "pet-card": "/components/pet-card/index",
+    "load-state": "/components/load-state/index"
+  }
+}

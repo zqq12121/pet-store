@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "宠物详情",
+  "usingComponents": {
+    "load-state": "/components/load-state/index"
+  }
+}

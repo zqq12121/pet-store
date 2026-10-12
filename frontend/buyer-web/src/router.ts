@@ -16,6 +16,12 @@ const router=createRouter({history:createWebHistory(import.meta.env.BASE_URL),sc
  {path:'/after-sales/:id',component:()=>import('./views/AfterSale.vue'),meta:{auth:true}},
  {path:'/ai',component:()=>import('./views/Chat.vue')},
  {path:'/shop',component:()=>import('./views/Shop.vue')},
+ // 公开社区与受保护的发布、消息入口使用同一买家会话。
+ {path:'/community',component:()=>import('./views/Community.vue')},
+ {path:'/community/new',component:()=>import('./views/CommunityEditor.vue'),meta:{auth:true}},
+ {path:'/community/notices',component:()=>import('./views/CommunityNotices.vue'),meta:{auth:true}},
+ {path:'/community/:id/edit',component:()=>import('./views/CommunityEditor.vue'),meta:{auth:true}},
+ {path:'/community/:id',component:()=>import('./views/CommunityContent.vue')},
  {path:'/profile',component:()=>import('./views/Profile.vue'),meta:{auth:true}},
  {path:'/:pathMatch(.*)*',component:()=>import('./views/NotFound.vue')}
 ]})
