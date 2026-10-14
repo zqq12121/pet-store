@@ -18,7 +18,8 @@ def model(kind,table,label,cols,children=None,constraints=None):
     common='id:id ownerId:id status:VARCHAR(40) version:'+('VARCHAR(32)' if kind=='agreement' else 'int')+' createdAt:time updatedAt:time'
     obj={'kind':kind,'table':table,'label':label,'fields':fields(common+' '+cols),'children':children or [],'constraints':constraints or []}
     models.append(obj);return obj
-model('admin','admins','管理员','username:VARCHAR(32) passwordHash:s passwordChangedAt:time',None,['UNIQUE (username)'])
+# 店长和接待员工共用账号表，旧账号的空角色由登录服务兼容为店长。
+model('admin','admins','管理员','username:VARCHAR(32) passwordHash:s passwordChangedAt:time role:VARCHAR(16) displayName:VARCHAR(30) phone:VARCHAR(11)',None,['UNIQUE (username)'])
 model('user','users','买家用户','phone:VARCHAR(11) nickname:VARCHAR(30) avatarUrl:VARCHAR(2048) username:VARCHAR(32) passwordHash:s passwordChangedAt:time usernameChangedAt:time',constraints=['UNIQUE (phone)', 'UNIQUE (username)'])
 model('wechat','wechat_accounts','微信账号绑定','appId:VARCHAR(64) openid:VARCHAR(128)',constraints=['UNIQUE (app_id,openid)','UNIQUE (app_id,owner_id)','FOREIGN KEY (owner_id) REFERENCES users(id)'])
 model('wechat_openid','wechat_openid_claims','微信身份唯一归属','appId:VARCHAR(64)',constraints=['FOREIGN KEY (owner_id) REFERENCES users(id)'])
@@ -73,6 +74,9 @@ community_notice=model('community_notice','community_notices','评论回复站�
 next(f for f in community_notice['fields'] if f['field']=='read')['column']='is_read'
 model('community_report','community_reports','社区内容举报','targetId:id targetType:VARCHAR(16) reason:VARCHAR(500) action:VARCHAR(16) handledBy:id',constraints=['FOREIGN KEY (owner_id) REFERENCES users(id)','INDEX idx_community_reports (status,created_at)'])
 model('community_word','community_words','管理员维护的恶意词库','term:VARCHAR(160) normalized:VARCHAR(160) enabled:bool',constraints=['UNIQUE (normalized)'])
+
+# 动物收藏归属当前买家；一人一宠仅保留一条记录，取消后可以再次收藏。
+model('pet_favorite','pet_favorites','买家动物收藏','petId:id',constraints=['FOREIGN KEY (owner_id) REFERENCES users(id)','FOREIGN KEY (pet_id) REFERENCES pets(id)','UNIQUE (owner_id,pet_id)','INDEX idx_pet_favorites_owner (owner_id,status,created_at)'])
 
 def ddl(m,parent=None):
     cols=[]

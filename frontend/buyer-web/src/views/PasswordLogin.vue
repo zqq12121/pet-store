@@ -5,9 +5,14 @@ import {buyer,saveAuth} from '../../../shared/api'
 import type {LoginResult} from '../../../shared/types'
 import {useLoad} from '../../../shared/useLoad'
 import {useGraphCaptcha} from '../../../shared/useGraphCaptcha'
+import LoginConsent from '../components/LoginConsent.vue'
 const graph=useGraphCaptcha()
+const accepted=ref(false)
 const router=useRouter(),route=useRoute(),account=ref(''),password=ref(''),{loading,error,run}=useLoad()
-async function submit(){if(loading.value)return;await run(async()=>{
+async function submit(){
+ // 按钮和 Enter 共用校验，未同意时不加载图形认证或提交账号密码。
+ if(!accepted.value){error.value='请先阅读并同意《用户服务协议》和《隐私政策》';return}
+ if(loading.value)return;await run(async()=>{
  // 点击或按 Enter 提交后验证，通过前不请求密码登录接口。
  const proof=await graph.verify()
  if(!proof)return
@@ -25,6 +30,7 @@ async function submit(){if(loading.value)return;await run(async()=>{
 <label>手机号或用户名<input v-model="account" :readonly="loading" required maxlength="32" autocomplete="username"></label>
 <label>密码<input v-model="password" :readonly="loading" type="password" required maxlength="128" autocomplete="current-password"></label>
 <p class="small muted">点击登录后，请完成图形验证。</p>
-<p v-if="error" class="error-text" role="alert">{{error}}</p><button class="btn" :disabled="loading">登录</button>
+<LoginConsent v-model="accepted" :disabled="loading"/>
+<p v-if="error" class="error-text" role="alert">{{error}}</p><button class="btn" :disabled="loading||!accepted">登录</button>
 <RouterLink :to="{path:'/password-reset'}">忘记密码／首次设置密码</RouterLink><RouterLink :to="{path:'/login',query:route.query}">使用短信验证码登录</RouterLink>
 </form></div></template>

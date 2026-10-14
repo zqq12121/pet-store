@@ -20,19 +20,19 @@ public class AdminPetController {
     this.service = service;
   }
 
-  /** GET /admin/pets；访问级别：ADMIN。 */
+  /** GET /admin/pets；店长和员工均可只读查看。 */
   @GetMapping("/admin/pets")
   public ResponseEntity<Object> list(
       @RequestParam Map<String, Object> query, HttpServletRequest request) {
     return requests.execute(
-        request, Map.of(), AccessLevel.ADMIN, false, context -> service.adminPets(query));
+        request, Map.of(), AccessLevel.STAFF, false, context -> service.adminPets(query));
   }
 
-  /** GET /admin/pets/{petId}；访问级别：ADMIN。 */
+  /** GET /admin/pets/{petId}；店长和员工均可只读查看。 */
   @GetMapping("/admin/pets/{petId}")
   public ResponseEntity<Object> detail(@PathVariable String petId, HttpServletRequest request) {
     return requests.execute(
-        request, Map.of(), AccessLevel.ADMIN, false, context -> service.adminPet(petId));
+        request, Map.of(), AccessLevel.STAFF, false, context -> service.adminPet(petId));
   }
 
   /** POST /admin/pets；访问级别：ADMIN。 */

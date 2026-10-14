@@ -45,6 +45,34 @@
       {
         "value": "README.md",
         "type": "file"
+      },
+      {
+        "type": "folder",
+        "value": "pages/booking"
+      },
+      {
+        "type": "folder",
+        "value": "pages/success"
+      },
+      {
+        "type": "folder",
+        "value": "pages/record"
+      },
+      {
+        "type": "folder",
+        "value": "pages/records"
+      },
+      {
+        "type": "folder",
+        "value": "pages/ai"
+      },
+      {
+        "type": "folder",
+        "value": "pages/shop"
+      },
+      {
+        "type": "file",
+        "value": "utils/sse.js"
       }
     ],
     "include": []

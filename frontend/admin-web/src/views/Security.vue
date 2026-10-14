@@ -10,11 +10,11 @@ onMounted(()=>run(async()=>{security.value=await admin('GET','/admin/auth/securi
 async function submit(){await run(async()=>{
  if(newPassword.value!==confirm.value)throw new Error('两次密码不一致')
  await admin('PUT','/admin/auth/password',{oldPassword:oldPassword.value,newPassword:newPassword.value})
- // 服务端已撤销全部管理员会话，清除本机凭证并返回登录页。
+ // 服务端已撤销当前后台账号的全部会话，清除本机凭证并返回登录页。
  clearAuth('admin');ElMessage.success('密码已修改，请重新登录');await router.replace('/login')
 })}
 </script>
-<template><section class="panel"><h2>修改管理员密码</h2><p>账号：{{security?.username}}</p><p>密码每7天只能修改一次，修改后所有设备需重新登录。</p>
+<template><section class="panel"><h2>修改后台账号密码</h2><p>账号：{{security?.username}}</p><p>密码每7天只能修改一次，修改后所有设备需重新登录。</p>
 <p v-if="security?.passwordChangeAvailableAt">下次可修改时间：{{date(security.passwordChangeAvailableAt)}}</p>
 <form class="stack" style="max-width:480px" @submit.prevent="submit">
 <label>原密码<el-input v-model="oldPassword" type="password" show-password required autocomplete="current-password"/></label>

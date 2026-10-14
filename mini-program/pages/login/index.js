@@ -6,11 +6,11 @@ Page({
     // 微信保留 URL 编码；解码后仅允许项目内目的页。
     let target = '/pages/my/index'
     try { target = decodeURIComponent(q.redirect || target) } catch (_) { /* 损坏参数使用默认目的页。 */ }
-    this.target = /^\/pages\/(booking|record|success|records|my|ai)\/index(?:\?|$)/.test(target) ? target : '/pages/my/index'
+    this.target = /^\/pages\/(detail|favorites|my)\/index(?:\?|$)/.test(target) ? target : '/pages/my/index'
   },
   onUnload() { this.disposed = true },
   accept(e) { this.setData({ accepted: e.detail.value.includes('yes') }) },
-  privacy() { wx.showModal({ title: '微信登录与隐私说明', content: '本项目仅供个人练习。微信身份用于登录和查询本人预约，不读取微信手机号、头像或昵称。到店预约需另行填写联系号码，仅用于到店联系。本地演示使用模拟身份，预约保存在本机。', showCancel: false }) },
+  privacy() { wx.showModal({ title: '微信登录与隐私说明', content: '本项目仅供个人练习。微信身份用于登录和保存本人动物收藏，不读取微信手机号、头像或昵称。真实模式收藏保存在账号中，可在其他设备登录查看。本地演示使用模拟身份，收藏仅保存在本机。', showCancel: false }) },
   async login() {
     if (this.data.busy) return
     if (!this.data.accepted) { this.setData({ error: '请先阅读并同意微信登录与隐私说明' }); return }
@@ -30,7 +30,7 @@ Page({
       saveAuth(r)
       const pages = getCurrentPages(), previous = pages[pages.length - 2]
       if (previous && '/' + previous.route === this.target.split('?')[0]) wx.navigateBack()
-      else if (/^\/pages\/(my|records)\/index$/.test(this.target)) wx.switchTab({ url: this.target })
+      else if (/^\/pages\/(my|favorites)\/index$/.test(this.target)) wx.switchTab({ url: this.target })
       else wx.redirectTo({ url: this.target })
     } catch (e) { if (!this.disposed) this.setData({ error: e.message }) }
     finally { if (!this.disposed) this.setData({ busy: false }) }

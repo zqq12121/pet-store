@@ -61,6 +61,9 @@ public class AppointmentService {
   }
 
   public void process(Map<String, Object> order, String action, Map<String, Object> body, AuthService.Actor actor) {
+    // 员工只能完成到店交付；确认或取消预约仍由店长决策。
+    if ("complete".equals(action)) AuthService.staff(actor);
+    else AuthService.role(actor, "admin");
     require(order.containsKey("appointment"), 409, "ORDER_STATE_CONFLICT", "该记录不是到店预约");
     Input input = new Input(body, "reason,paymentReceived,deliveryConfirmed,quarantineVerified");
     require(List.of("confirm", "cancel", "complete").contains(action), 404, "RESOURCE_NOT_FOUND", "预约操作不存在");

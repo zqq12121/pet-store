@@ -10,6 +10,7 @@ public enum AccessLevel {
   PUBLIC,
   BUYER,
   ADMIN,
+  STAFF,
   VISITOR;
 
   public void check(AuthService.Actor actor) {
@@ -17,6 +18,7 @@ public enum AccessLevel {
       case PUBLIC -> {}
       case BUYER -> AuthService.role(actor, "buyer");
       case ADMIN -> AuthService.role(actor, "admin");
+      case STAFF -> AuthService.staff(actor);
       case VISITOR ->
           require(
               actor != null && List.of("buyer", "guest").contains(actor.role()),

@@ -2,15 +2,10 @@
   "pages": [
     "pages/home/index",
     "pages/pets/index",
-    "pages/records/index",
+    "pages/favorites/index",
     "pages/my/index",
     "pages/detail/index",
-    "pages/booking/index",
-    "pages/success/index",
-    "pages/record/index",
-    "pages/login/index",
-    "pages/shop/index",
-    "pages/ai/index"
+    "pages/login/index"
   ],
   "window": {
     "navigationBarTitleText": "灵宠小珠",
@@ -37,10 +32,10 @@
         "selectedIconPath": "assets/paw-active.png"
       },
       {
-        "pagePath": "pages/records/index",
-        "text": "预约",
-        "iconPath": "assets/calendar.png",
-        "selectedIconPath": "assets/calendar-active.png"
+        "pagePath": "pages/favorites/index",
+        "text": "收藏",
+        "iconPath": "assets/heart.png",
+        "selectedIconPath": "assets/heart-active.png"
       },
       {
         "pagePath": "pages/my/index",

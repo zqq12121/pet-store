@@ -14,9 +14,11 @@ import org.springframework.stereotype.Service;
 public class BusinessOperationExecutor {
   private final BusinessRepository store;
   private final BusinessHooks hooks;
-  public BusinessOperationExecutor(BusinessRepository store, BusinessHooks hooks) {
+  private final AuthService auth;
+  public BusinessOperationExecutor(BusinessRepository store, BusinessHooks hooks, AuthService auth) {
     this.store = store;
     this.hooks = hooks;
+    this.auth = auth;
   }
 
   /** 一次业务调用一个事务：先鉴权，再加锁、重放、执行业务、保存幂等结果。 */
@@ -29,9 +31,12 @@ public class BusinessOperationExecutor {
       java.util.function.Supplier<OperationResult> operation) {
     String method = context.method(), path = context.path(), key = context.idempotencyKey();
     AuthService.Actor actor = context.actor();
-    boolean admin = access == AccessLevel.ADMIN, write = !context.method().equals("GET");
+    boolean admin = access == AccessLevel.ADMIN || access == AccessLevel.STAFF, write = !context.method().equals("GET");
     access.check(context.actor());
     if (write) store.lock();
+    // 取得写锁后再次校验，等待期间被停用或重置密码的员工不能继续交付。
+    if (write && (access == AccessLevel.ADMIN || access == AccessLevel.STAFF))
+      auth.requireActiveSession(actor);
     boolean idem = write && idempotent;
     String scope = null;
     if (idem) {

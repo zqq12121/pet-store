@@ -14,8 +14,13 @@ public class AdminTransactionController {
     this.orders = orders; this.auth = auth;
   }
   private Map<String, String> headers(HttpServletRequest request) {
+    return headers(request, false);
+  }
+  /** 仅接待入口接受员工；订单服务收到转发后仍会再次检查具体操作权限。 */
+  private Map<String, String> headers(HttpServletRequest request, boolean reception) {
     String token = request.getHeader("Authorization");
-    AuthService.role(auth.identify(token), "admin");
+    if (reception) AuthService.staff(auth.identify(token));
+    else AuthService.role(auth.identify(token), "admin");
     Map<String, String> headers = new LinkedHashMap<>();
     headers.put("Authorization", token);
     if (request.getHeader("Idempotency-Key") != null)
@@ -37,27 +42,27 @@ public class AdminTransactionController {
   @PostMapping("/admin/orders/{orderId}/appointment/{action}")
   public ResponseEntity<byte[]> appointment(@PathVariable String orderId, @PathVariable String action,
       @RequestBody(required = false) Map<String, Object> body, HttpServletRequest request) throws java.io.IOException {
-    return relay(orders.appointment(orderId, action, body == null ? Map.of() : body, headers(request)));
+    return relay(orders.appointment(orderId, action, body == null ? Map.of() : body, headers(request, "complete".equals(action))));
   }
-  /** GET /admin/orders：由订单服务执行并再次校验管理员身份。 */
+  /** GET /admin/orders：由订单服务执行并再次校验后台身份。 */
   @GetMapping("/admin/orders")
   public ResponseEntity<byte[]> orders(@RequestParam Map<String, Object> query, HttpServletRequest request) throws java.io.IOException {
-    return relay(orders.orders(query, headers(request)));
+    return relay(orders.orders(query, headers(request, true)));
   }
-  /** GET /admin/orders/{orderId}：由订单服务执行并再次校验管理员身份。 */
+  /** GET /admin/orders/{orderId}：由订单服务执行并再次校验后台身份。 */
   @GetMapping("/admin/orders/{orderId}")
   public ResponseEntity<byte[]> order(@PathVariable("orderId") String orderId, @RequestParam Map<String, Object> query, HttpServletRequest request) throws java.io.IOException {
-    return relay(orders.order(orderId, query, headers(request)));
+    return relay(orders.order(orderId, query, headers(request, true)));
   }
-  /** POST /admin/pickups/lookup：由订单服务执行并再次校验管理员身份。 */
+  /** POST /admin/pickups/lookup：由订单服务执行并再次校验后台身份。 */
   @PostMapping("/admin/pickups/lookup")
   public ResponseEntity<byte[]> lookup(@RequestBody(required = false) Map<String, Object> body, HttpServletRequest request) throws java.io.IOException {
-    return relay(orders.lookup(body == null ? Map.of() : body, headers(request)));
+    return relay(orders.lookup(body == null ? Map.of() : body, headers(request, true)));
   }
-  /** POST /admin/orders/{orderId}/pickup：由订单服务执行并再次校验管理员身份。 */
+  /** POST /admin/orders/{orderId}/pickup：由订单服务执行并再次校验后台身份。 */
   @PostMapping("/admin/orders/{orderId}/pickup")
   public ResponseEntity<byte[]> pickup(@PathVariable("orderId") String orderId, @RequestBody(required = false) Map<String, Object> body, HttpServletRequest request) throws java.io.IOException {
-    return relay(orders.pickup(orderId, body == null ? Map.of() : body, headers(request)));
+    return relay(orders.pickup(orderId, body == null ? Map.of() : body, headers(request, true)));
   }
   /** GET /admin/after-sales：由订单服务执行并再次校验管理员身份。 */
   @GetMapping("/admin/after-sales")

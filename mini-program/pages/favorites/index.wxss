@@ -1,0 +1,2 @@
+/* 收藏卡片保持目录样式，下架占位保留取消操作。 */
+.favorite-item{min-width:0}.remove{width:100%;margin:12rpx 0 22rpx}.unavailable{min-height:380rpx;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18rpx}.empty{text-align:center;padding:60rpx 20rpx}.empty-symbol{font-size:110rpx;color:#B9512B}.empty .caption{margin:20rpx 0 36rpx}.empty .btn{margin-top:20rpx}

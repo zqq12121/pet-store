@@ -5,11 +5,11 @@ export const isJavaLocal = isDemo && import.meta.env.VITE_JAVA_LOCAL === 'true'
 export type Role = 'buyer' | 'admin'
 export class ApiError extends Error { constructor(message: string, public code = 'NETWORK_ERROR', public status = 0) { super(message) } }
 const storageKey = (role: Role) => `warmpaw:${role}:auth`
-export function auth(role: Role): {accessToken:string; expiresAt:number; user?:{nickname:string; phoneMasked:string}} | null {
+export function auth(role: Role): {accessToken:string; expiresAt:number; user?:{nickname:string; phoneMasked:string}; admin?:{id:string;username:string;role:'admin'|'staff';displayName?:string}} | null {
   try { const value=JSON.parse(sessionStorage.getItem(storageKey(role)) || 'null'); if(value?.expiresAt > Date.now()) return value } catch { /* 损坏或过期会话按未登录处理。 */ }
   sessionStorage.removeItem(storageKey(role)); return null
 }
-export function saveAuth(role:Role, data:{accessToken:string; expiresIn:number; user?:unknown}) { sessionStorage.setItem(storageKey(role), JSON.stringify({...data,expiresAt:Date.now()+data.expiresIn*1000})) }
+export function saveAuth(role:Role, data:{accessToken:string; expiresIn:number; user?:unknown; admin?:unknown}) { sessionStorage.setItem(storageKey(role), JSON.stringify({...data,expiresAt:Date.now()+data.expiresIn*1000})) }
 export function clearAuth(role:Role) { sessionStorage.removeItem(storageKey(role)) }
 export function headers(role:Role):Record<string,string> { const value=auth(role); return value?{Authorization:`Bearer ${value.accessToken}`} : {} }
 export function client(role:Role) {

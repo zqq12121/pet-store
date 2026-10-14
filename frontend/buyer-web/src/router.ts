@@ -7,6 +7,9 @@ const router=createRouter({history:createWebHistory(import.meta.env.BASE_URL),sc
  {path:'/login',component:()=>import('./views/Login.vue')},
  {path:'/password-login',component:()=>import('./views/PasswordLogin.vue')},
  {path:'/password-reset',component:()=>import('./views/PasswordReset.vue')},
+ // 协议无需登录即可阅读，登录页在新标签页打开以保留输入。
+ {path:'/terms',component:()=>import('./views/Legal.vue'),props:{kind:'terms'}},
+ {path:'/privacy',component:()=>import('./views/Legal.vue'),props:{kind:'privacy'}},
  {path:'/checkout/:petId',component:()=>import('./views/Checkout.vue'),meta:{auth:true}},
  {path:'/orders',component:()=>import('./views/Orders.vue'),meta:{auth:true}},
  {path:'/orders/:orderId',component:()=>import('./views/Order.vue'),meta:{auth:true}},

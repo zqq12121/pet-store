@@ -58,6 +58,24 @@
           "column": "password_changed_at",
           "sql": "VARCHAR(40)",
           "json": false
+        },
+        {
+          "field": "role",
+          "column": "role",
+          "sql": "VARCHAR(16)",
+          "json": false
+        },
+        {
+          "field": "displayName",
+          "column": "display_name",
+          "sql": "VARCHAR(30)",
+          "json": false
+        },
+        {
+          "field": "phone",
+          "column": "phone",
+          "sql": "VARCHAR(11)",
+          "json": false
         }
       ],
       "children": [],
@@ -3303,6 +3321,62 @@
       "children": [],
       "constraints": [
         "UNIQUE (normalized)"
+      ]
+    },
+    {
+      "kind": "pet_favorite",
+      "table": "pet_favorites",
+      "label": "买家动物收藏",
+      "fields": [
+        {
+          "field": "id",
+          "column": "id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "ownerId",
+          "column": "owner_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        },
+        {
+          "field": "status",
+          "column": "status",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "version",
+          "column": "version",
+          "sql": "INT",
+          "json": false
+        },
+        {
+          "field": "createdAt",
+          "column": "created_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "updatedAt",
+          "column": "updated_at",
+          "sql": "VARCHAR(40)",
+          "json": false
+        },
+        {
+          "field": "petId",
+          "column": "pet_id",
+          "sql": "VARCHAR(64)",
+          "json": false
+        }
+      ],
+      "children": [],
+      "constraints": [
+        "FOREIGN KEY (owner_id) REFERENCES users(id)",
+        "FOREIGN KEY (pet_id) REFERENCES pets(id)",
+        "UNIQUE (owner_id,pet_id)",
+        "INDEX idx_pet_favorites_owner (owner_id,status,created_at)"
       ]
     }
   ]

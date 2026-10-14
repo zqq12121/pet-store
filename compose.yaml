@@ -1,6 +1,6 @@
 name: warmpaw
 
-# 唯一宿主机入口为 web；服务之间通过 Compose DNS 连接，不访问宿主机 Java。
+# web 提供应用入口，MySQL 另开放本机连接端口；服务之间通过 Compose DNS 连接，不访问宿主机 Java。
 x-java-environment: &java-environment
   SPRING_PROFILES_ACTIVE: prod
   SERVER_ADDRESS: 0.0.0.0
@@ -92,6 +92,9 @@ services:
     image: mysql:8.4
     restart: unless-stopped
     mem_limit: 1g
+    # 仅允许本机数据库客户端连接，保留容器内的 3306 端口。
+    ports:
+      - "127.0.0.1:13306:3306"
     environment:
       MYSQL_DATABASE: warmpaw
       MYSQL_USER: warmpaw

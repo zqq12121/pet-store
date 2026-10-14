@@ -81,13 +81,27 @@ public class AuthService {
         "登录已过期");
     String user = text(session, "ownerId");
     Map<String, Object> account =
-        store.get("admin".equals(text(session, "role")) ? "admin" : "user", user);
+        store.get(List.of("admin", "staff").contains(text(session, "role")) ? "admin" : "user", user);
+    // 员工停用或角色改变后，已有会话不能继续使用。
+    if (List.of("admin", "staff").contains(text(session, "role")))
+      require(!"disabled".equals(text(account, "status"))
+          && text(session, "role").equals(accountRole(account)), 401, "UNAUTHORIZED", "请重新登录");
     return new Actor(user, text(session, "role"), text(account, "phone"), digest);
   }
 
   public static void role(Actor actor, String role) {
     require(actor != null, 401, "UNAUTHORIZED", "请先登录");
     require(role.equals(actor.role()), 403, "FORBIDDEN", "无操作权限");
+  }
+
+  /** 接待员工和店长共用的后台入口；店长专属接口仍检查 admin。 */
+  public static void staff(Actor actor) {
+    require(actor != null, 401, "UNAUTHORIZED", "请先登录");
+    require(List.of("admin", "staff").contains(actor.role()), 403, "FORBIDDEN", "无操作权限");
+  }
+
+  private String accountRole(Map<String, Object> account) {
+    return Objects.toString(account.get("role"), "admin");
   }
 
   public Map<String, Object> captcha(String purpose, String ip) {
@@ -207,7 +221,8 @@ public class AuthService {
 
   public Map<String, Object> login(Map<String, Object> account, String role) {
     String token = randomToken();
-    int seconds = role.equals("admin") ? 1800 : 7200;
+    boolean management = List.of("admin", "staff").contains(role);
+    int seconds = management ? 1800 : 7200;
     store.create(
         "session",
         text(account, "id"),
@@ -226,28 +241,31 @@ public class AuthService {
         "Bearer",
         "expiresIn",
         seconds,
-        role.equals("admin") ? "admin" : "user",
-        role.equals("admin")
-            ? map("id", account.get("id"), "username", account.get("username"), "role", "admin")
+        management ? "admin" : "user",
+        management
+            ? map("id", account.get("id"), "username", account.get("username"), "role", role,
+                "displayName", account.get("displayName"))
             : profile(account));
   }
 
   @Transactional
   public Map<String, Object> adminLogin(Map<String, Object> body, String ip) {
-    new Input(body, "username,password," + GraphCaptchaService.FIELDS);
+    new Input(body, "username,password");
+    // 后台不使用人机验证，保留账号失败锁定并限制来源 IP 的请求频率。
+    temp.limit("admin-login-ip:" + ip, 30, 60);
     String username = loginCredential(body, "username", 32);
     String password = loginCredential(body, "password", 128);
     temp.checkFailures("admin-login:" + hash(username), 5);
-    // 与买家入口共用阿里云二次校验；旧图片验证码不能绕过人机验证。
-    graphCaptcha.verify(body);
     store.lock();
     Map<String, Object> account = store.byKey("admin", username);
-    if (account == null || !passwordMatches(password, text(account, "passwordHash"))) {
+    if (account == null || "disabled".equals(text(account, "status"))
+        || !List.of("admin", "staff").contains(accountRole(account))
+        || !passwordMatches(password, text(account, "passwordHash"))) {
       temp.failed("admin-login:" + hash(username), 600);
       throw new ApiException(401, "UNAUTHORIZED", "账号或密码不正确");
     }
     temp.resetFailures("admin-login:" + hash(username));
-    return login(account, "admin");
+    return login(account, accountRole(account));
   }
 
   @Transactional
@@ -362,7 +380,8 @@ public class AuthService {
 
   @Transactional
   public Map<String, Object> changePassword(Actor actor, Map<String, Object> body, String role) {
-    role(actor, role);
+    if (role.equals("admin")) staff(actor);
+    else role(actor, role);
     Input in = new Input(body, "oldPassword,newPassword");
     String password = newPassword(in);
     store.lock();
@@ -374,17 +393,22 @@ public class AuthService {
       temp.failed(key, 600);
       throw new ApiException(400, "PASSWORD_INVALID", "原密码不正确；尚未设置密码请使用手机号验证设置");
     }
-    savePassword(account, password, role);
+    savePassword(account, password, actor.role());
     temp.resetFailures(key);
     return map("message", "密码已更新，请重新登录");
   }
 
   /** 写操作取得锁后再次认证，防止等待期间会话已被另一请求撤销。 */
-  private void requireActiveSession(Actor actor) {
+  public void requireActiveSession(Actor actor) {
     Map<String, Object> session = store.byKey("session", actor.tokenHash());
     require(session != null && "active".equals(text(session, "status"))
         && Instant.parse(text(session, "expiresAt")).isAfter(Instant.now()),
         401, "UNAUTHORIZED", "请重新登录");
+    if (List.of("admin", "staff").contains(actor.role())) {
+      Map<String, Object> account = store.get("admin", actor.id());
+      require(!"disabled".equals(text(account, "status"))
+          && actor.role().equals(accountRole(account)), 401, "UNAUTHORIZED", "请重新登录");
+    }
   }
 
   @Transactional
@@ -406,10 +430,16 @@ public class AuthService {
   }
 
   public Map<String, Object> adminSecurity(Actor actor) {
-    role(actor, "admin");
+    staff(actor);
     Map<String, Object> account = store.get("admin", actor.id());
-    return map("username", account.get("username"),
+    return map("username", account.get("username"), "role", accountRole(account),
+        "displayName", account.get("displayName"),
         "passwordChangeAvailableAt", nextChange(account, "passwordChangedAt", 7));
+  }
+
+  /** 店长重置员工密码也遵守现有七天冷却，并撤销该员工全部会话。 */
+  public void resetStaffPassword(Map<String, Object> account, Map<String, Object> body) {
+    savePassword(account, newPassword(new Input(body, "newPassword,version")), "staff");
   }
 
   /** 复用受权限保护的开发收件箱；真实模式不能写入模拟通知。 */

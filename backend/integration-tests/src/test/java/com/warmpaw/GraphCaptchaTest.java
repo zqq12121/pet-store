@@ -125,16 +125,15 @@ class GraphCaptchaTest {
       assertThrows(ApiException.class, () -> auth.sendLoginSms(map("phone", "13900000000", "purpose", purpose), "test"));
     }
     assertThrows(ApiException.class, () -> auth.passwordLogin(map("account", "alice", "password", "TestPassword123"), "test"));
-    assertThrows(ApiException.class, () -> auth.adminLogin(map("username", "admin", "password", "TestPassword123"), "test"));
-    verify(graph, times(5)).verify(anyMap());
+    verify(graph, times(4)).verify(anyMap());
     verifyNoInteractions(sms, store);
     // 旧图片验证码参数不能继续成为绕过新验证的入口。
     assertThrows(ApiException.class, () -> auth.sendLoginSms(map("phone", "13900000000", "purpose", "login",
         "captchaId", "old", "captchaCode", "1234"), "test"));
-    // 管理端必须拒绝旧图片凭据，不能回退到历史登录契约。
+    // 后台只接受账号密码，拒绝残留的旧验证码字段。
     assertEquals("VALIDATION_ERROR", assertThrows(ApiException.class, () -> auth.adminLogin(
         map("username", "admin", "password", "TestPassword123", "captchaId", "old", "captchaCode", "1234"), "test")).code);
-    verify(graph, times(5)).verify(anyMap());
+    verify(graph, times(4)).verify(anyMap());
     verifyNoInteractions(sms, store);
   }
 

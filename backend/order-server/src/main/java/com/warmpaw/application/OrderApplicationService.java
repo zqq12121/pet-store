@@ -120,6 +120,8 @@ public class OrderApplicationService {
   }
 
   public OperationResult pickup(String orderId, Map<String, Object> body, AuthService.Actor actor) {
+    // 员工核销只能使用已核验档案，不得借交付请求替换检疫材料。
+    if ("staff".equals(actor.role())) new Input(body, "confirmationId,pickupCode,qrPayload,quarantineVerified");
     return new OperationResult(
         200, orders.pickup(store.get("order", orderId), body, actor), "order", orderId);
   }
@@ -156,9 +158,10 @@ public class OrderApplicationService {
     new Input(
         q,
         admin
-            ? "orderNo,status,contactPhone,petId,createdFrom,createdTo,page,pageSize"
+            ? "orderNo,status,contactPhone,petId,createdFrom,createdTo,visitDate,page,pageSize"
             : "tab,page,pageSize");
     validateRange(q, "createdFrom", "createdTo");
+    LocalDate visitDate = q.containsKey("visitDate") ? CatalogReader.parseDate(text(q, "visitDate")) : null;
     String tab = Objects.toString(q.get("tab"), "all");
     require(
         List.of("all", "pending_confirmation", "reservation_confirmed", "pending_paid", "pending_pickup", "completed", "after_sale").contains(tab),
@@ -166,7 +169,7 @@ public class OrderApplicationService {
         "VALIDATION_ERROR",
         "订单标签不正确");
     if (q.containsKey("contactPhone")) {
-      new Input(q, "orderNo,status,contactPhone,petId,createdFrom,createdTo,page,pageSize")
+      new Input(q, "orderNo,status,contactPhone,petId,createdFrom,createdTo,visitDate,page,pageSize")
           .phone("contactPhone");
       store.audit(a.id(), "order.phone_search", null);
     }
@@ -180,6 +183,9 @@ public class OrderApplicationService {
             .filter(
                 o -> !q.containsKey("orderNo") || text(o, "orderNo").contains(text(q, "orderNo")))
             .filter(o -> inRange(o, "createdAt", q, "createdFrom", "createdTo"))
+            .filter(o -> visitDate == null || o.containsKey("appointment")
+                && Instant.parse(text(object(o, "appointment"), "visitAt"))
+                    .atZone(ZoneId.of("Asia/Shanghai")).toLocalDate().equals(visitDate))
             .filter(
                 o ->
                     switch (tab) {

@@ -15,6 +15,9 @@ CREATE TABLE IF NOT EXISTS admins (
   username VARCHAR(32) COMMENT 'username',
   password_hash VARCHAR(255) COMMENT 'passwordHash',
   password_changed_at VARCHAR(40) COMMENT 'passwordChangedAt',
+  role VARCHAR(16) COMMENT 'role',
+  display_name VARCHAR(30) COMMENT 'displayName',
+  phone VARCHAR(11) COMMENT 'phone',
   PRIMARY KEY (id),
   UNIQUE (username)
 ) COMMENT='管理员';
@@ -940,3 +943,20 @@ CREATE TABLE IF NOT EXISTS community_words (
   PRIMARY KEY (id),
   UNIQUE (normalized)
 ) COMMENT='管理员维护的恶意词库';
+
+-- 买家动物收藏
+CREATE TABLE IF NOT EXISTS pet_favorites (
+  business_key VARCHAR(190) UNIQUE COMMENT '业务幂等唯一键或凭证摘要',
+  id VARCHAR(64) NOT NULL COMMENT 'id',
+  owner_id VARCHAR(64) COMMENT 'ownerId',
+  status VARCHAR(40) NOT NULL COMMENT 'status',
+  version INT NOT NULL COMMENT 'version',
+  created_at VARCHAR(40) NOT NULL COMMENT 'createdAt',
+  updated_at VARCHAR(40) NOT NULL COMMENT 'updatedAt',
+  pet_id VARCHAR(64) COMMENT 'petId',
+  PRIMARY KEY (id),
+  FOREIGN KEY (owner_id) REFERENCES users(id),
+  FOREIGN KEY (pet_id) REFERENCES pets(id),
+  UNIQUE (owner_id,pet_id),
+  INDEX idx_pet_favorites_owner (owner_id,status,created_at)
+) COMMENT='买家动物收藏';

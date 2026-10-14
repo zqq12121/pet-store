@@ -20,34 +20,34 @@ public class AdminOrderController {
     this.service = service;
   }
 
-  /** 预约确认、取消、线下收款交付：只允许管理员操作。 */
+  /** 预约确认、取消、线下收款交付：员工仅允许登记完成，确认和取消由店长操作。 */
   @PostMapping("/admin/orders/{orderId}/appointment/{action}")
   public ResponseEntity<Object> appointment(@PathVariable String orderId, @PathVariable String action,
       @RequestBody(required = false) Map<String, Object> requestBody, HttpServletRequest request) {
     Map<String, Object> body = requestBody == null ? Map.of() : requestBody;
-    return requests.execute(request, body, AccessLevel.ADMIN, true,
+    return requests.execute(request, body, "complete".equals(action) ? AccessLevel.STAFF : AccessLevel.ADMIN, true,
         context -> service.appointmentAction(orderId, action, body, context.actor()));
   }
 
-  /** GET /admin/orders；访问级别：ADMIN。 */
+  /** GET /admin/orders；访问级别：STAFF。 */
   @GetMapping("/admin/orders")
   public ResponseEntity<Object> list(
       @RequestParam Map<String, Object> query, HttpServletRequest request) {
     return requests.execute(
         request,
         Map.of(),
-        AccessLevel.ADMIN,
+        AccessLevel.STAFF,
         false,
         context -> service.adminList(query, context.actor()));
   }
 
-  /** GET /admin/orders/{orderId}；访问级别：ADMIN。 */
+  /** GET /admin/orders/{orderId}；访问级别：STAFF。 */
   @GetMapping("/admin/orders/{orderId}")
   public ResponseEntity<Object> detail(@PathVariable String orderId, HttpServletRequest request) {
     return requests.execute(
         request,
         Map.of(),
-        AccessLevel.ADMIN,
+        AccessLevel.STAFF,
         false,
         context -> service.adminDetail(orderId, context.actor()));
   }

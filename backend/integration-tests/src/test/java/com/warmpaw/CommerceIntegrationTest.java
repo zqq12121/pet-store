@@ -196,7 +196,7 @@ class CommerceIntegrationTest {
                               text(
                                   auth.login(
                                       store.get(
-                                          actor.role().equals("admin") ? "admin" : "user", id),
+                                          List.of("admin", "staff").contains(actor.role()) ? "admin" : "user", id),
                                       actor.role()),
                                   "accessToken")));
           request.header("Authorization", "Bearer " + token);
@@ -1352,6 +1352,41 @@ class CommerceIntegrationTest {
     Instant now = Instant.parse("2026-09-12T00:00:00Z");
     assertThrows(ApiException.class, () -> AppointmentHours.validateVisit("2026-09-12T20:00:00+08:00", "每天 10:00-20:00", now));
     assertEquals(Instant.parse("2026-09-12T02:00:00Z"), AppointmentHours.validateVisit("2026-09-12T10:00:00+08:00", "每天 10:00-20:00", now));
+  }
+
+  /** 接待员工使用真实会话办理交付，经营类操作仍必须由店长处理。 */
+  @Test void staffCompletesAppointmentWithOperatorAuditAndIdempotency() {
+    var employee = tx.execute(status -> store.create("admin", null, "staff-" + buyer.id(),
+        map("username", "staff" + counter++, "role", "staff", "status", "active",
+            "passwordHash", auth.passwordHash("StaffTest2026!"))));
+    var staff = new AuthService.Actor(text(employee, "id"), "staff", null, "");
+    var appointment = appointment();
+    String id = text(appointment, "id"), petId = text(object(appointment, "product"), "id");
+    assertCode("FORBIDDEN", () -> call("POST", appointmentPath(appointment, "confirm"), map(), staff));
+    assertCode("FORBIDDEN", () -> call("POST", appointmentPath(appointment, "cancel"), map("reason", "员工不能取消"), staff));
+    call("POST", appointmentPath(appointment, "confirm"), map(), admin);
+    assertEquals(buyer.phone(), call("GET", "/admin/orders/" + id, map(), staff).get("contactPhone"));
+    assertEquals(petId, call("GET", "/admin/pets/" + petId, map(), staff).get("id"));
+    var date = Instant.parse(text(object(appointment, "appointment"), "visitAt"))
+        .atZone(AppointmentHours.ZONE).toLocalDate().toString();
+    var today = (Map<String,Object>) business.execute("GET", "/admin/orders", map(),
+        map("visitDate", date, "orderNo", appointment.get("orderNo")), null, staff, "test").data();
+    assertEquals(1, number(today, "total"));
+    var empty = (Map<String,Object>) business.execute("GET", "/admin/orders", map(),
+        map("visitDate", LocalDate.parse(date).plusDays(1).toString(), "orderNo", appointment.get("orderNo")), null, staff, "test").data();
+    assertEquals(0, number(empty, "total"));
+    Map<String,Object> body = map("paymentReceived", true, "deliveryConfirmed", true, "quarantineVerified", true);
+    assertCode("VALIDATION_ERROR", () -> call("POST", appointmentPath(appointment, "complete"), map(), staff));
+    String key = UUID.randomUUID().toString();
+    var first = business.execute("POST", appointmentPath(appointment, "complete"), body, map(), key, staff, "test").data();
+    var replay = business.execute("POST", appointmentPath(appointment, "complete"), body, map(), key, staff, "test").data();
+    assertEquals(first, replay);
+    var saved = store.get("order", id);
+    assertEquals("completed", saved.get("status"));
+    assertEquals(staff.id(), object(saved, "appointment").get("completedBy"));
+    assertEquals("offline_received", object(saved, "payment").get("status"));
+    assertEquals("sold", store.get("pet", petId).get("status"));
+    assertNull(store.occupation(petId));
   }
 
 }

@@ -143,7 +143,10 @@ public class AuthController {
       if (e.status == 401) return ok(200, null);
       throw e;
     }
-    if (a != null) AuthService.role(a, req.getRequestURI().contains("/admin/") ? "admin" : "buyer");
+    if (a != null) {
+      if (req.getRequestURI().contains("/admin/")) AuthService.staff(a);
+      else AuthService.role(a, "buyer");
+    }
     auth.logout(a);
     return ok(200, null);
   }

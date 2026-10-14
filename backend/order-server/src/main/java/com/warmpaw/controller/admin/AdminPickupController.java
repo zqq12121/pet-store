@@ -20,7 +20,7 @@ public class AdminPickupController {
     this.service = service;
   }
 
-  /** POST /admin/pickups/lookup；访问级别：ADMIN。 */
+  /** POST /admin/pickups/lookup；访问级别：STAFF。 */
   @PostMapping("/admin/pickups/lookup")
   public ResponseEntity<Object> lookup(
       @RequestBody(required = false) Map<String, Object> requestBody, HttpServletRequest request) {
@@ -28,12 +28,12 @@ public class AdminPickupController {
     return requests.execute(
         request,
         body,
-        AccessLevel.ADMIN,
+        AccessLevel.STAFF,
         false,
         context -> service.lookupPickup(body, context.actor()));
   }
 
-  /** POST /admin/orders/{orderId}/pickup；访问级别：ADMIN。 */
+  /** POST /admin/orders/{orderId}/pickup；访问级别：STAFF。 */
   @PostMapping("/admin/orders/{orderId}/pickup")
   public ResponseEntity<Object> pickup(
       @PathVariable String orderId,
@@ -43,7 +43,7 @@ public class AdminPickupController {
     return requests.execute(
         request,
         body,
-        AccessLevel.ADMIN,
+        AccessLevel.STAFF,
         true,
         context -> service.pickup(orderId, body, context.actor()));
   }
