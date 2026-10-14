@@ -81,7 +81,7 @@ public class AuthController {
   /** 登录页只展示当前可用入口；配置存在不代表第三方已验收。 */
   @GetMapping("/auth/capabilities")
   public ResponseEntity<Object> capabilities() {
-    return ok(200, map("wechatLogin", wechatLogin.configured()));
+    return ok(200, map("wechatLogin", wechatLogin.configured(), "wechatQrLogin", wechatLogin.qrConfigured()));
   }
 
   @PostMapping("/auth/sms-codes")

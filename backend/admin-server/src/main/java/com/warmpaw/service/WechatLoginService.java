@@ -20,6 +20,7 @@ public class WechatLoginService {
   private final TemporaryStore temp;
   private final AuthService auth;
   private final GraphCaptchaService graphCaptcha;
+  private final HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
 
   public WechatLoginService(BusinessRepository store, TemporaryStore temp, AuthService auth, GraphCaptchaService graphCaptcha) {
     this.store = store;
@@ -28,17 +29,32 @@ public class WechatLoginService {
     this.graphCaptcha = graphCaptcha;
   }
 
-  private String app() {
-    return com.warmpaw.common.ProviderSupport.env("PAW_WECHAT_APP_ID");
+  private String prefix(String mode) {
+    return "web".equals(mode) ? "PAW_WECHAT_WEB_" : "PAW_WECHAT_";
+  }
+
+  private String app(String mode) {
+    return ProviderSupport.env(prefix(mode) + "APP_ID");
   }
 
   /** 只公开是否具备配置，不向浏览器返回应用密钥或回调内部信息。 */
   public boolean configured() {
-    String callback = com.warmpaw.common.ProviderSupport.env("PAW_WECHAT_OAUTH_REDIRECT");
+    return configured("oauth");
+  }
+
+  public boolean qrConfigured() {
+    return configured("web");
+  }
+
+  private String callback(String mode) {
+    return ProviderSupport.env(prefix(mode) + ("web".equals(mode) ? "REDIRECT" : "OAUTH_REDIRECT"));
+  }
+
+  private boolean configured(String mode) {
     try {
-      URI uri = URI.create(callback);
-      return !app().isBlank()
-          && !com.warmpaw.common.ProviderSupport.env("PAW_WECHAT_APP_SECRET").isBlank()
+      URI uri = URI.create(callback(mode));
+      return !app(mode).isBlank()
+          && !ProviderSupport.env(prefix(mode) + "APP_SECRET").isBlank()
           && "https".equals(uri.getScheme()) && uri.getHost() != null
           && uri.getUserInfo() == null && uri.getFragment() == null;
     } catch (IllegalArgumentException e) {
@@ -48,16 +64,18 @@ public class WechatLoginService {
 
   public Map<String, Object> authorize(
       Map<String, Object> query, AuthService.Actor actor, String browser) {
-    Input in = new Input(query, "scene,returnPath," + GraphCaptchaService.FIELDS);
+    Input in = new Input(query, "mode,scene,returnPath," + GraphCaptchaService.FIELDS);
+    String mode = in.has("mode") ? in.choice("mode", "oauth,web") : "oauth";
     String scene = in.choice("scene", "login,pay"), path = in.str("returnPath", 1, 500);
     com.warmpaw.common.ProviderSupport.safePath(path);
+    require(!"web".equals(mode) || "login".equals(scene), 400, "VALIDATION_ERROR", "网站扫码仅用于登录");
     if (scene.equals("pay")) AuthService.role(actor, "buyer");
-    String callback = com.warmpaw.common.ProviderSupport.env("PAW_WECHAT_OAUTH_REDIRECT");
+    String callback = callback(mode), appId = app(mode);
     require(
-        configured(),
+        configured(mode),
         503,
         "SERVICE_UNAVAILABLE",
-        "微信网页授权尚未配置");
+        "web".equals(mode) ? "微信扫码登录尚未配置" : "微信网页授权尚未配置");
     // 登录授权必须先通过图形验证；回调沿用一次性 state 与浏览器 Cookie 绑定。
     if (scene.equals("login")) graphCaptcha.verify(query);
     String state = auth.randomToken();
@@ -69,6 +87,10 @@ public class WechatLoginService {
                 hash(browser),
                 "scene",
                 scene,
+                "mode",
+                mode,
+                "appId",
+                appId,
                 "userId",
                 actor == null ? null : actor.id(),
                 "returnPath",
@@ -76,11 +98,12 @@ public class WechatLoginService {
         300);
     return map(
         "authorizeUrl",
-        "https://open.weixin.qq.com/connect/oauth2/authorize?appid="
-            + enc(app())
+        ("web".equals(mode) ? "https://open.weixin.qq.com/connect/qrconnect?appid="
+            : "https://open.weixin.qq.com/connect/oauth2/authorize?appid=")
+            + enc(appId)
             + "&redirect_uri="
             + enc(callback)
-            + "&response_type=code&scope=snsapi_base&state="
+            + "&response_type=code&scope=" + ("web".equals(mode) ? "snsapi_login" : "snsapi_base") + "&state="
             + state
             + "#wechat_redirect",
         "expiresIn",
@@ -98,12 +121,15 @@ public class WechatLoginService {
         "WECHAT_AUTH_INVALID",
         "微信授权状态无效");
     Map<String, Object> context = read(saved);
+    // 凭据类型和应用归属取自服务端 state，不能由回调请求切换。
+    String mode = text(context, "mode"), appId = text(context, "appId");
+    require(appId.equals(app(mode)), 400, "WECHAT_AUTH_INVALID", "微信应用配置已变更，请重新扫码");
     boolean pay = "pay".equals(text(context, "scene"));
     if (pay) {
       AuthService.role(actor, "buyer");
       require(actor.id().equals(text(context, "userId")), 400, "WECHAT_AUTH_INVALID", "发起授权的账号不一致");
     }
-    String secret = com.warmpaw.common.ProviderSupport.env("PAW_WECHAT_APP_SECRET");
+    String secret = ProviderSupport.env(prefix(mode) + "APP_SECRET");
     require(!secret.isBlank(), 503, "SERVICE_UNAVAILABLE", "微信授权密钥尚未配置");
     Map<String, Object> result;
     try {
@@ -111,7 +137,7 @@ public class WechatLoginService {
           HttpRequest.newBuilder(
                   URI.create(
                       "https://api.weixin.qq.com/sns/oauth2/access_token?appid="
-                          + enc(app())
+                          + enc(appId)
                           + "&secret="
                           + enc(secret)
                           + "&code="
@@ -121,33 +147,33 @@ public class WechatLoginService {
               .GET()
               .build();
       HttpResponse<String> r =
-          HttpClient.newBuilder()
-              .connectTimeout(Duration.ofSeconds(10))
-              .build()
-              .send(request, HttpResponse.BodyHandlers.ofString());
+          client.send(request, HttpResponse.BodyHandlers.ofString());
       result = read(r.body());
       require(
           r.statusCode() == 200
-              && result.get("openid") instanceof String
+              && result.get("openid") instanceof String id && !id.isBlank() && id.length() <= 128
               && !result.containsKey("errcode"),
           400,
           "WECHAT_AUTH_INVALID",
           "微信授权码无效");
     } catch (ApiException e) {
       throw e;
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(502, "UPSTREAM_ERROR", "微信授权服务暂不可用");
     } catch (Exception e) {
       throw new ApiException(502, "UPSTREAM_ERROR", "微信授权服务暂不可用");
     }
     String openid = text(result, "openid");
     store.lock();
-    Map<String, Object> identity = store.byKey("wechat_openid", app() + ":" + openid);
+    Map<String, Object> identity = store.byKey("wechat_openid", appId + ":" + openid);
     if (pay) {
       require(
           identity == null || actor.id().equals(text(identity, "ownerId")),
           409,
           "WECHAT_ALREADY_BOUND",
           "微信已绑定其他账号");
-      bind(actor.id(), openid);
+      bind(actor.id(), appId, openid);
       return map("status", "wechat_ready");
     }
     if (identity != null)
@@ -156,14 +182,20 @@ public class WechatLoginService {
           "authenticated",
           "login",
           auth.login(store.get("user", text(identity, "ownerId")), "buyer"));
+    if ("web".equals(mode)) {
+      // 网站首次扫码直接建号；不读取手机号，也不按昵称合并其他账号。
+      var user = store.create("user", null, null, map("phone", null, "nickname", "微信用户", "avatarUrl", null));
+      bind(text(user, "id"), appId, openid);
+      return map("status", "authenticated", "login", auth.login(user, "buyer"));
+    }
     String ticket = auth.randomToken();
-    temp.put("bind:" + ticket, write(map("openid", openid, "appId", app())), 300);
+    temp.put("bind:" + ticket, write(map("openid", openid, "appId", appId)), 300);
     return map("status", "bind_required", "bindTicket", ticket, "expiresIn", 300);
   }
 
-  private void bind(String user, String openid) {
-    Map<String, Object> existing = store.byKey("wechat", app() + ":" + user),
-        identity = store.byKey("wechat_openid", app() + ":" + openid);
+  private void bind(String user, String appId, String openid) {
+    Map<String, Object> existing = store.byKey("wechat", appId + ":" + user),
+        identity = store.byKey("wechat_openid", appId + ":" + openid);
     require(
         (existing == null || openid.equals(text(existing, "openid")))
             && (identity == null || user.equals(text(identity, "ownerId"))),
@@ -171,9 +203,9 @@ public class WechatLoginService {
         "WECHAT_ALREADY_BOUND",
         "微信身份已绑定其他账号");
     if (existing == null)
-      store.create("wechat", user, app() + ":" + user, map("openid", openid, "appId", app()));
+      store.create("wechat", user, appId + ":" + user, map("openid", openid, "appId", appId));
     if (identity == null)
-      store.create("wechat_openid", user, app() + ":" + openid, map("appId", app()));
+      store.create("wechat_openid", user, appId + ":" + openid, map("appId", appId));
   }
 
   @Transactional
@@ -191,7 +223,7 @@ public class WechatLoginService {
       user =
           store.create(
               "user", null, phone, map("phone", phone, "nickname", "新用户", "avatarUrl", null));
-    bind(text(user, "id"), text(read(saved), "openid"));
+    bind(text(user, "id"), text(read(saved), "appId"), text(read(saved), "openid"));
     temp.take("bind:" + ticket);
     return auth.login(user, "buyer");
   }

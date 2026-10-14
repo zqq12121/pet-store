@@ -69,6 +69,7 @@ python3 scripts/init-compose-env.py
 | `DEEPSEEK_API_KEY`、`DEEPSEEK_MODEL`、`DEEPSEEK_API_BASE` | AI 模型调用，默认 `deepseek-chat` |
 | `PAW_OSS_ENABLED`、`PAW_OSS_BUCKET`、`PAW_OSS_ENDPOINT`、`OSS_ACCESS_KEY_*` | 可选私有 OSS 存储 |
 | `PAW_WECHAT_APP_ID`、`PAW_WECHAT_APP_SECRET`、`PAW_WECHAT_OAUTH_REDIRECT` | 可选微信授权；未完整配置时隐藏入口 |
+| `PAW_WECHAT_WEB_APP_ID`、`PAW_WECHAT_WEB_APP_SECRET`、`PAW_WECHAT_WEB_REDIRECT` | 微信开放平台网站扫码登录；首次扫码直接建号，无需手机号。配置见 [网站微信扫码登录](docs/WECHAT_WEB_LOGIN.md) |
 
 `.env` 只保存在本机，不提交或分享；图形认证 appKey 不得放入 `VITE_` 变量。
 图形认证未配置时登录会明确失败，不回退旧图片验证码。配置与真实验收见 [登录人机验证](docs/GRAPH_CAPTCHA.md)。
