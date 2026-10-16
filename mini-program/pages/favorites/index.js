@@ -9,11 +9,14 @@ Page({
     if (this.data.loggedIn) return this.reload()
   },
   reload() { if (!auth()) { this.onShow(); return } return this.fetch(1) },
-  fetch(page) { return load(this, async () => {
+  async fetch(page) { await load(this, async () => {
     const result = await request('GET', '/me/favorites', { page, pageSize: 12 })
     const pets = result.items.map(p => p.available ? pet(p) : p)
     return { pets: page === 1 ? pets : this.data.pets.concat(pets), total: result.total, page }
-  }) },
+  })
+    // 401 会清除会话，同时清空旧收藏并恢复登录入口，保留错误提示。
+    if (!auth()) this.setData({ loggedIn: false, pets: [], total: 0, page: 0 })
+  },
   onReachBottom() { if (!this.data.loading && this.data.pets.length < this.data.total) return this.fetch(this.data.page + 1) },
   login() { open('/pages/login/index?redirect=' + encodeURIComponent('/pages/favorites/index')) },
   browse() { switchTab('/pages/pets/index') },
@@ -24,7 +27,10 @@ Page({
       // 下架动物仍可取消收藏，成功后重新分页，防止列表缺项。
       await request('PUT', '/me/favorites/' + encodeURIComponent(this.data.removing), { active: false })
       await this.reload()
-    } catch (e) { this.setData({ error: e.message }) }
+    } catch (e) {
+      if (e.status === 401) this.onShow()
+      this.setData({ error: e.message })
+    }
     finally { this.setData({ removing: '' }) }
   }
 })

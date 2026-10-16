@@ -41,9 +41,26 @@ test('真实收藏接口携带认证，401 清理会话，网络失败不回退�
 test('微信演示重复登录身份稳定，旧短信会话及跨模式会话不复用', async () => {
   store.clear(); const first = await api.request('POST', '/auth/mini-wechat/login', {})
   const next = await api.request('POST', '/auth/mini-wechat/login', {})
+  assert.equal(first.isNewUser, true); assert.equal(next.isNewUser, false)
   assert.equal(first.user.id, next.user.id); assert.equal(first.user.phoneMasked, null)
   api.saveAuth(first); config.demo = false
   try { assert.equal(api.auth(), null) } finally { config.demo = true }
   wx.setStorageSync('rongrong:auth', { accessToken: 'old-sms', expiresAt: Date.now() + 60000 })
   assert.equal(api.auth(), null)
+})
+test('空响应与非 JSON 错误响应不会抛出回调异常，并保留重新登录状态', async () => {
+  config.demo = false
+  try {
+    for (const response of [{ statusCode: 200, data: null }, { statusCode: 502, data: '<html>Bad Gateway</html>' }]) {
+      wx.request = options => {
+        // 微信回调由事件循环触发，回调异常不会自动拒绝 request 的 Promise。
+        assert.doesNotThrow(() => options.success(response))
+      }
+      await assert.rejects(api.request('GET', '/home'), /请求失败，请重试/)
+    }
+    api.saveAuth({ accessToken: 'expired', expiresIn: 60, user: { id: 'u' } })
+    wx.request = options => { assert.doesNotThrow(() => options.success({ statusCode: 401, data: null })) }
+    await assert.rejects(api.request('GET', '/me'), e => e.status === 401)
+    assert.equal(api.auth(), null)
+  } finally { config.demo = true }
 })

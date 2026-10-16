@@ -44,8 +44,20 @@ public class WechatMiniLoginService {
       HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
       require(response.statusCode() == 200, 502, "UPSTREAM_ERROR", "微信登录服务暂不可用");
       result = read(response.body());
-      require((!result.containsKey("errcode") || number(result, "errcode") == 0)
-          && result.get("openid") instanceof String openid && !openid.isBlank() && openid.length() <= 128
+      // 微信业务错误也会返回 HTTP 200；区分凭证、频率和配置问题，不暴露上游明细。
+      long error = number(result, "errcode");
+      if (error != 0) {
+        if (error == 40029 || error == 40163)
+          throw new ApiException(401, "WECHAT_AUTH_INVALID", "微信登录凭证已失效，请重试");
+        if (error == 40226)
+          throw new ApiException(401, "WECHAT_AUTH_REJECTED", "当前微信登录受限，请稍后重试");
+        if (error == 45011)
+          throw new ApiException(429, "RATE_LIMITED", "微信登录过于频繁，请稍后再试");
+        if (error == 40013 || error == 40125)
+          throw new ApiException(503, "SERVICE_UNAVAILABLE", "小程序微信登录配置异常，请联系维护者");
+        throw new ApiException(502, "UPSTREAM_ERROR", "微信登录服务暂不可用");
+      }
+      require(result.get("openid") instanceof String openid && !openid.isBlank() && openid.length() <= 128
           && result.get("session_key") instanceof String key && !key.isBlank(),
           401, "WECHAT_AUTH_INVALID", "微信登录凭证已失效，请重试");
     } catch (ApiException e) {
@@ -61,7 +73,9 @@ public class WechatMiniLoginService {
     store.lock();
     Map<String, Object> identity = store.byKey("wechat_openid", identityKey);
     Map<String, Object> user;
-    if (identity == null) {
+    boolean isNewUser = identity == null;
+    if (isNewUser) {
+      // 首次验证通过才自动建号，账号及微信绑定在同一事务内保存。
       user = store.create("user", null, null, map("phone", null, "nickname", "微信用户", "avatarUrl", null));
       String userId = text(user, "id");
       store.create("wechat", userId, appId + ":" + userId, map("appId", appId, "openid", openid));
@@ -70,7 +84,9 @@ public class WechatMiniLoginService {
       // 同一应用、同一微信身份复用账号；一次性 code 不能作为用户标识。
       user = store.get("user", text(identity, "ownerId"));
     }
-    return auth.login(user, "buyer");
+    var login = auth.login(user, "buyer");
+    login.put("isNewUser", isNewUser);
+    return login;
   }
 
   private String enc(String value) {

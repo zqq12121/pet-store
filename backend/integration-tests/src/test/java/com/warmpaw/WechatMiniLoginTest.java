@@ -61,12 +61,18 @@ class WechatMiniLoginTest {
 
   @Test
   void repeatedIdentityUsesSameAccountAndOnlyOwnRevocableTokenIsReturned() throws Exception {
+    int usersBefore = store.list("user").size();
     var first = service.login(map("code", "first-code"), openid);
     var next = service.login(map("code", "new-code"), openid);
+    assertEquals(true, first.get("isNewUser"));
+    assertEquals(false, next.get("isNewUser"));
+    assertEquals(usersBefore + 1, store.list("user").size());
     String id = text(object(first, "user"), "id");
     assertEquals(id, object(next, "user").get("id"));
     assertNotEquals(first.get("accessToken"), next.get("accessToken"));
     assertNull(object(first, "user").get("phoneMasked"));
+    assertEquals("微信用户", object(first, "user").get("nickname"));
+    assertNull(object(first, "user").get("avatarUrl"));
     assertNull(store.get("user", id).get("phone"));
     assertFalse(write(first).contains("private-session-key"));
     assertFalse(first.containsKey("openid"));
@@ -83,8 +89,24 @@ class WechatMiniLoginTest {
     assertEquals("https", uri.getScheme()); assertEquals("api.weixin.qq.com", uri.getHost());
     assertEquals("/sns/jscode2session", uri.getPath());
     assertTrue(uri.getQuery().contains("js_code=new-code"));
+    assertTrue(uri.getQuery().contains("appid=test-mini"));
+    assertTrue(uri.getQuery().contains("secret=test-secret"));
     assertTrue(uri.getQuery().contains("grant_type=authorization_code"));
     assertEquals(id, store.byKey("wechat_openid", "test-mini:" + openid).get("ownerId"));
+  }
+
+  @Test
+  void providerBusyRateLimitAndConfigurationErrorsAreNotReportedAsExpiredCodes() throws Exception {
+    int users = store.list("user").size(), sessions = store.list("session").size();
+    // 微信业务错误常以 HTTP 200 返回，不能只看 HTTP 状态或统一提示 code 过期。
+    for (int[] item : new int[][] {{-1, 502}, {45011, 429}, {40013, 503}, {40125, 503}, {40029, 401}, {40163, 401}, {40226, 401}, {99999, 502}}) {
+      respond(200, write(map("errcode", item[0], "errmsg", "provider-private-detail")));
+      var failure = assertThrows(ApiException.class, () -> service.login(map("code", "test-code"), UUID.randomUUID().toString()));
+      assertEquals(item[1], failure.status);
+      assertFalse(failure.getMessage().contains("provider-private-detail"));
+    }
+    assertEquals(users, store.list("user").size());
+    assertEquals(sessions, store.list("session").size());
   }
 
   @Test
@@ -124,6 +146,7 @@ class WechatMiniLoginTest {
     mvc.perform(post("/api/v1/auth/mini-wechat/login").contentType("application/json")
         .content("{\"code\":\"valid\"}"))
         .andExpect(status().isOk()).andExpect(jsonPath("$.data.accessToken").isString())
+        .andExpect(jsonPath("$.data.isNewUser").value(true))
         .andExpect(jsonPath("$.data.user.phoneMasked").isEmpty())
         .andExpect(jsonPath("$.data.session_key").doesNotExist());
     for (String body : List.of("{}", "{\"code\":\"\"}", "{\"code\":\"valid\",\"openid\":\"forged\"}",

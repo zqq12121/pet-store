@@ -8,7 +8,12 @@ Page({
   onShow() { return this.reload() },
   reload() { return load(this, async () => {
     const product = await request('GET', '/pets/' + encodeURIComponent(this.id))
-    const state = auth() ? await request('GET', '/me/favorites/' + encodeURIComponent(this.id)) : { favorited: false }
+    let state = { favorited: false }
+    if (auth()) {
+      try { state = await request('GET', '/me/favorites/' + encodeURIComponent(this.id)) }
+      // 收藏会话过期不阻断公开动物资料；其他接口错误仍正常显示。
+      catch (e) { if (e.status !== 401) throw e }
+    }
     return { pet: pet(product), favorited: state.favorited }
   }) },
   async favorite() {

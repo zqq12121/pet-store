@@ -1,6 +1,6 @@
 {
-  "name": "rongrong-wechat-mini-program",
+  "name": "lingchong-xiaozhu-wechat-mini-program",
   "version": "0.1.0",
   "private": true,
-  "scripts": { "test": "node --test tests/*.test.js", "check": "node scripts/check.js" }
+  "scripts": { "test": "node --test tests/*.test.js", "check": "node scripts/check.js", "release": "node scripts/prepare-release.js" }
 }

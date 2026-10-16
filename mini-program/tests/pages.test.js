@@ -3,14 +3,15 @@ const assert = require('node:assert/strict')
 const path = require('node:path')
 const config = require('../config')
 const store = new Map()
-let definition, navigations = [], requests = []
+let definition, navigations = [], requests = [], notifications = []
 global.Page = value => { definition = value }
 global.getApp = () => ({ globalData: {} })
 global.getCurrentPages = () => []
 global.wx = {
   getStorageSync: k => store.get(k), setStorageSync: (k, v) => store.set(k, structuredClone(v)), removeStorageSync: k => store.delete(k),
   navigateTo: options => navigations.push(options), redirectTo: options => navigations.push(options), switchTab: options => navigations.push(options),
-  showModal: options => options.success({ confirm: true }), pageScrollTo() {}
+  showModal: options => options.success({ confirm: true }), pageScrollTo() {},
+  showToast: options => notifications.push(options)
 }
 function page(name) {
   const file = path.resolve(__dirname, '../pages', name, 'index.js'); delete require.cache[file]; require(file)
@@ -119,4 +120,116 @@ test('已取消的业务不注册、不打包，登录不能跳回旧预约', ()
     const content = fs.readFileSync(path.resolve(__dirname, '..', name + '.wxml'), 'utf8')
     assert.doesNotMatch(content, /预约|到店指南|养宠助手/)
   }
+})
+test('收藏列表和我的页面收到 401 后清除旧账号内容并显示登录入口', async () => {
+  config.demo = false; store.clear()
+  try {
+    wx.request = options => options.success({ statusCode: 401, data: { code: 'UNAUTHORIZED', message: '登录已失效，请重新登录' } })
+    for (const name of ['favorites', 'my']) {
+      api.saveAuth({ accessToken: 'expired', expiresIn: 60, user: { id: 'u', nickname: '旧账号' } })
+      const p = page(name)
+      if (name === 'favorites') p.setData({ pets: [fixture], total: 1, page: 1, loggedIn: true })
+      else p.setData({ user: { id: 'u' }, count: 1 })
+      await p.reload()
+      assert.equal(api.auth(), null); assert.equal(p.data.loading, false)
+      assert.equal(p.data.error, '登录已失效，请重新登录')
+      if (name === 'favorites') {
+        assert.equal(p.data.loggedIn, false); assert.deepEqual(p.data.pets, []); assert.equal(p.data.total, 0); assert.equal(p.data.page, 0)
+      } else { assert.equal(p.data.user, null); assert.equal(p.data.count, 0) }
+    }
+  } finally { config.demo = true }
+})
+test('取消收藏时登录失效会清空列表；退出时允许失效会话退出但保留网络失败会话', async () => {
+  config.demo = false; store.clear()
+  const originalModal = wx.showModal
+  try {
+    api.saveAuth({ accessToken: 'expired', expiresIn: 60, user: { id: 'u' } })
+    wx.request = options => options.success({ statusCode: 401, data: { code: 'UNAUTHORIZED', message: '登录已失效' } })
+    const favorites = page('favorites'); favorites.setData({ loggedIn: true, pets: [fixture], total: 1, page: 1 })
+    await favorites.remove({ currentTarget: { dataset: { id: 'p' } } })
+    assert.equal(favorites.data.loggedIn, false); assert.deepEqual(favorites.data.pets, [])
+    assert.equal(favorites.data.removing, ''); assert.equal(favorites.data.error, '登录已失效')
+    for (const expired of [false, true]) {
+      const user = { id: 'u' }
+      api.saveAuth({ accessToken: 'test', expiresIn: 60, user })
+      const profile = page('my'); profile.setData({ user, count: 1 })
+      wx.request = options => expired
+        ? options.success({ statusCode: 401, data: { code: 'UNAUTHORIZED', message: '登录已失效' } })
+        : options.fail({})
+      // 等待确认弹窗的异步退出处理，检查失败后仍可重试。
+      let completion
+      wx.showModal = options => { completion = options.success({ confirm: true }) }
+      profile.logout(); await completion
+      if (expired) { assert.equal(api.auth(), null); assert.equal(profile.data.user, null); assert.equal(profile.data.count, 0) }
+      else { assert.ok(api.auth()); assert.deepEqual(profile.data.user, user); assert.match(profile.data.error, /连接暂时中断/) }
+    }
+  } finally { config.demo = true; wx.showModal = originalModal }
+})
+test('选宠翻页沿用已提交筛选，新筛选失败后不会继续拼接旧结果', async () => {
+  config.demo = false; requests = []
+  try {
+    wx.request = options => requests.push(options)
+    const p = page('pets'), first = p.reload()
+    requests[0].success({ statusCode: 200, data: { code: 'OK', data: { items: [fixture], total: 20 } } }); await first
+    p.input({ detail: { value: '金毛' } })
+    const next = p.onReachBottom()
+    assert.equal(requests[1].data.keyword, undefined)
+    requests[1].success({ statusCode: 200, data: { code: 'OK', data: { items: [{ ...fixture, id: 'p2' }], total: 20 } } }); await next
+    const search = p.reload()
+    assert.equal(requests[2].data.keyword, '金毛')
+    requests[2].fail({}); await search
+    assert.deepEqual(p.data.pets, []); assert.equal(p.data.page, 0); assert.equal(p.data.total, 0)
+    p.onReachBottom(); assert.equal(requests.length, 3)
+  } finally { config.demo = true }
+})
+test('详情读取收藏状态遇到 401 仍展示动物资料，并允许重新登录收藏', async () => {
+  config.demo = false; store.clear(); navigations = []
+  try {
+    api.saveAuth({ accessToken: 'expired', expiresIn: 60, user: { id: 'u' } })
+    wx.request = options => options.success(options.url.endsWith('/pets/p')
+      ? { statusCode: 200, data: { code: 'OK', data: fixture } }
+      : { statusCode: 401, data: { code: 'UNAUTHORIZED', message: '登录已失效' } })
+    const p = page('detail'); p.onLoad({ id: 'p' }); p.setData({ favorited: true })
+    await p.onShow()
+    assert.equal(p.data.pet.id, 'p'); assert.equal(p.data.favorited, false); assert.equal(p.data.loading, false)
+    assert.equal(api.auth(), null)
+    await p.favorite(); assert.ok(navigations[0].url.includes('redirect=%2Fpages%2Fdetail'))
+    // 非认证错误仍需显示错误，不能把查询失败当作“未收藏”。
+    api.saveAuth({ accessToken: 'test', expiresIn: 60, user: { id: 'u' } })
+    wx.request = options => options.success(options.url.endsWith('/pets/p')
+      ? { statusCode: 200, data: { code: 'OK', data: fixture } }
+      : { statusCode: 503, data: { code: 'FAILED', message: '收藏暂不可用' } })
+    await p.reload(); assert.equal(p.data.error, '收藏暂不可用')
+  } finally { config.demo = true }
+})
+test('登录响应缺少令牌、账号或有效期时不保存登录态、不跳转或提示成功', async () => {
+  config.demo = false
+  try {
+    for (const result of [{}, { accessToken: 'token', user: { id: 'u' } }, { accessToken: 'token', expiresIn: 60 }, { accessToken: '', expiresIn: 60, user: { id: 'u' } }, { accessToken: 'token', expiresIn: -1, user: { id: 'u' } }]) {
+      store.clear(); navigations = []; notifications = []
+      wx.login = options => options.success({ code: 'test-code' })
+      wx.request = options => options.success({ statusCode: 200, data: { code: 'OK', data: result } })
+      const p = page('login'); p.onLoad({}); p.setData({ accepted: true }); await p.login()
+      assert.equal(api.auth(), null); assert.equal(navigations.length, 0); assert.equal(notifications.length, 0)
+      assert.equal(p.data.error, '微信登录响应不完整，请重试'); assert.equal(p.data.busy, false)
+    }
+  } finally { config.demo = true }
+})
+test('真实微信登录提示新用户自动注册，失败重试重新申请一次性 code', async () => {
+  config.demo = false; store.clear(); notifications = []; requests = []; navigations = []
+  let count = 0
+  try {
+    wx.login = options => options.success({ code: 'one-use-' + ++count })
+    wx.request = options => {
+      requests.push(options)
+      options.success(requests.length === 1
+        ? { statusCode: 502, data: { code: 'UPSTREAM_ERROR', message: '微信暂不可用' } }
+        : { statusCode: 200, data: { code: 'OK', data: { accessToken: 'token', expiresIn: 60, user: { id: 'u' }, isNewUser: requests.length === 2 } } })
+    }
+    const p = page('login'); p.onLoad({}); p.setData({ accepted: true })
+    await p.login(); assert.equal(api.auth(), null); assert.equal(notifications.length, 0)
+    await p.login(); assert.equal(notifications[0].title, '注册并登录成功')
+    await p.login(); assert.equal(notifications[1].title, '登录成功')
+    assert.deepEqual(requests.map(r => r.data), [{ code: 'one-use-1' }, { code: 'one-use-2' }, { code: 'one-use-3' }])
+  } finally { config.demo = true }
 })

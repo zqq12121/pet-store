@@ -10,7 +10,7 @@ import urllib.request
 from urllib.parse import urlsplit
 
 
-def configuration_errors(env):
+def configuration_errors(env, mini_program=False):
     errors = []
     domain = env.get("PAW_DOMAIN", "").strip()
     valid_domain = bool(re.fullmatch(r"(?=.{1,253}$)(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,63}", domain))
@@ -21,6 +21,13 @@ def configuration_errors(env):
     for key in ("MYSQL_ROOT_PASSWORD", "PAW_DB_PASSWORD", "PAW_REDIS_PASSWORD", "PAW_ADMIN_PASSWORD"):
         if len(env.get(key, "")) < 12:
             errors.append(key + " 至少需要 12 位；既有数据库和管理员密码须单独验证")
+    # 六页小程序只依赖浏览、微信登录和收藏，不要求短信、支付或 AI 配置。
+    if mini_program:
+        if not re.fullmatch(r"wx[0-9a-fA-F]{16}", env.get("PAW_WECHAT_MINI_APP_ID", "")):
+            errors.append("PAW_WECHAT_MINI_APP_ID 未配置有效小程序 AppID")
+        if not env.get("PAW_WECHAT_MINI_APP_SECRET", "").strip():
+            errors.append("PAW_WECHAT_MINI_APP_SECRET 未配置；只能保存在服务端")
+        return errors
     for key in ("DEEPSEEK_API_KEY", "PAW_SMS_SIGN_NAME"):
         if not env.get(key, "").strip():
             errors.append(key + " 未配置")
@@ -53,8 +60,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config-only", action="store_true")
     parser.add_argument("--public", action="store_true", help="通过真实公网 HTTPS 入口验收")
+    parser.add_argument("--mini-program", action="store_true", help="仅检查六页小程序所需配置及公开接口")
     args = parser.parse_args()
-    errors = configuration_errors(os.environ)
+    errors = configuration_errors(os.environ, args.mini_program)
     for error in errors:
         print("BLOCKED:", error)
     if not args.config_only:
@@ -62,18 +70,27 @@ def main():
         # 域名输入不合法时不访问任意外部地址；公网检查始终使用系统证书校验。
         if args.public and any(e.startswith("PAW_DOMAIN") for e in errors):
             return 1
-        for path, expected in (("/", 200), ("/admin/", 200), ("/api/v1/pets", 200), ("/api/v1/admin/pets", 401), ("/api/v1/orders", 401)):
+        endpoints = (("/", 200), ("/admin/", 200), ("/api/v1/pets", 200), ("/api/v1/admin/pets", 401), ("/api/v1/orders", 401))
+        if args.mini_program:
+            endpoints = (("/api/v1/home", 200), ("/api/v1/pets", 200), ("/api/v1/me", 401), ("/api/v1/me/favorites", 401), ("/api/v1/admin/pets", 401))
+        for path, expected in endpoints:
             try:
                 with urllib.request.urlopen(base + path, timeout=15) as response:
                     status = response.status
             except urllib.error.HTTPError as error:
                 status = error.code
+                error.close()
             except (OSError, ValueError):
                 status = None
             ok = status == expected
             print("PASS:" if ok else "BLOCKED:", path, "HTTP", status)
             if not ok:
                 errors.append("入口或权限校验失败")
+        if args.mini_program:
+            # GET 不能证明真实微信换码或账号收藏写入，明确保留人工验收项。
+            print("MANUAL: 核对收藏表迁移、图片 HTTPS、微信后台合法域名和备案；真机微信登录后验证收藏及跨设备同步。")
+            print("结果：存在小程序上线阻挡项" if errors else "结果：小程序配置及只读接口检查通过，仍需平台与真机验收")
+            return 1 if errors else 0
         try:
             shop = get_json(base, "/api/v1/shop")["data"]
             placeholders = ("待配置", "待店主配置", "请联系门店确认", "演示", "示例", "TEST ONLY")
@@ -89,7 +106,7 @@ def main():
         except (OSError, ValueError, KeyError, TypeError):
             errors.append("门店资料或正式协议无法读取")
             print("BLOCKED:", errors[-1])
-    print("MANUAL: 店主确认门店/宠物/检疫/协议真实有效；短信审核及送达、备份恢复、真实预约交付须单独验收。")
+    print("MANUAL: 微信平台配置、备案、真机登录和跨设备收藏须单独验收。" if args.mini_program else "MANUAL: 店主确认门店/宠物/检疫/协议真实有效；短信审核及送达、备份恢复、真实预约交付须单独验收。")
     print("结果：存在运营阻挡项" if errors else "结果：自动检查通过，仍需完成人工及第三方验收")
     return 1 if errors else 0
 

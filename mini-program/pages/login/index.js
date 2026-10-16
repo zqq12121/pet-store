@@ -10,7 +10,7 @@ Page({
   },
   onUnload() { this.disposed = true },
   accept(e) { this.setData({ accepted: e.detail.value.includes('yes') }) },
-  privacy() { wx.showModal({ title: '微信登录与隐私说明', content: '本项目仅供个人练习。微信身份用于登录和保存本人动物收藏，不读取微信手机号、头像或昵称。真实模式收藏保存在账号中，可在其他设备登录查看。本地演示使用模拟身份，收藏仅保存在本机。', showCancel: false }) },
+  privacy() { wx.showModal({ title: '微信登录与隐私说明', content: '本项目仅供个人练习。微信身份用于登录和保存本人动物收藏，首次登录会自动创建账号。不读取微信手机号、头像或昵称。真实模式收藏保存在账号中，可在其他设备登录查看。本地演示使用模拟身份，收藏仅保存在本机。', showCancel: false }) },
   async login() {
     if (this.data.busy) return
     if (!this.data.accepted) { this.setData({ error: '请先阅读并同意微信登录与隐私说明' }); return }
@@ -28,6 +28,8 @@ Page({
       // 离开页面后的异步响应不得覆盖身份或触发跳转。
       if (this.disposed) return
       saveAuth(r)
+      // 自动注册由 Java 后端判定，只有项目会话保存成功才显示成功提示。
+      wx.showToast({ title: config.demo ? '演示登录成功' : (r.isNewUser ? '注册并登录成功' : '登录成功'), icon: 'success' })
       const pages = getCurrentPages(), previous = pages[pages.length - 2]
       if (previous && '/' + previous.route === this.target.split('?')[0]) wx.navigateBack()
       else if (/^\/pages\/(my|favorites)\/index$/.test(this.target)) wx.switchTab({ url: this.target })

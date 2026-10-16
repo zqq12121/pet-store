@@ -1,5 +1,5 @@
 // 独立本机演示，不调用短信、支付或主数据库。所有动物均带 DEMO 标识。
-const shop = { id: 'DEMO-SHOP', name: '茸茸星球', address: '星球路 18 号（虚构地址，仅供练习）', phone: '', wechat: '', latitude: null, longitude: null, businessHours: '每天 08:00–17:00', pickupInstructions: '请携带身份证到店，先核验宠物档案再决定。' }
+const shop = { id: 'DEMO-SHOP', name: '灵宠小珠', address: '星球路 18 号（虚构地址，仅供练习）', phone: '', wechat: '', latitude: null, longitude: null, businessHours: '每天 08:00–17:00', pickupInstructions: '请携带身份证到店，先核验宠物档案再决定。' }
 const pets = [
   ['001', '奶糖', 'dog', '柯基', 'corgi', 480000, 4, 'male'],
   ['002', '年糕', 'cat', '田园猫', 'cat', 180000, 5, 'female'],
@@ -29,7 +29,10 @@ async function request(method, path, body = {}, header = {}) {
     // 固定本机模拟身份；一次性登录 code 不能充当稳定用户标识。
     let identity = wx.getStorageSync('rongrong:demo:wechatIdentity')
     if (!identity) { identity = require('./api').uniqueId(); write('wechatIdentity', identity) }
-    return { accessToken: 'DEMO-WECHAT-' + identity, expiresIn: 86400, user: { id: 'DEMO-WECHAT-USER-' + identity, nickname: '微信演示用户', phoneMasked: null } }
+    // 模拟首次建号与再次登录的区别；退出不会删除模拟账号。
+    const users = read('registeredIdentities'), isNewUser = !users.includes(identity)
+    if (isNewUser) write('registeredIdentities', users.concat(identity))
+    return { accessToken: 'DEMO-WECHAT-' + identity, expiresIn: 86400, isNewUser, user: { id: 'DEMO-WECHAT-USER-' + identity, nickname: '微信演示用户', phoneMasked: null } }
   }
   if (path === '/auth/logout') return {}
   const actor = signed()

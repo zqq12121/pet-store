@@ -7,7 +7,13 @@ function auth() {
   wx.removeStorageSync(AUTH)
   return null
 }
-function saveAuth(value) { wx.setStorageSync(AUTH, { ...value, demo: config.demo, expiresAt: Date.now() + value.expiresIn * 1000 }) }
+function saveAuth(value) {
+  // 只有后端返回完整有效的项目会话才视为登录成功，不把 code 或 OpenID 当令牌。
+  if (!value || typeof value.accessToken !== 'string' || !value.accessToken.trim()
+    || !Number.isFinite(value.expiresIn) || value.expiresIn <= 0
+    || !value.user || typeof value.user.id !== 'string' || !value.user.id.trim()) throw new Error('微信登录响应不完整，请重试')
+  wx.setStorageSync(AUTH, { ...value, demo: config.demo, expiresAt: Date.now() + value.expiresIn * 1000 })
+}
 function clearAuth() { wx.removeStorageSync(AUTH) }
 function headers() { const value = auth(); return value ? { Authorization: 'Bearer ' + value.accessToken } : {} }
 function request(method, path, data, extra = {}) {
@@ -17,8 +23,10 @@ function request(method, path, data, extra = {}) {
     header: { 'Content-Type': 'application/json', ...headers(), ...extra },
     success(res) {
       if (res.statusCode === 401) clearAuth()
-      if (res.statusCode >= 200 && res.statusCode < 300 && res.data.code === 'OK') resolve(res.data.data)
-      else { const e = new Error(res.data.message || '请求失败，请重试'); e.status = res.statusCode; e.code = res.data.code; reject(e) }
+      // 网关错误或空响应也必须结束请求，不能因回调异常一直停留在加载状态。
+      const body = res.data && typeof res.data === 'object' ? res.data : {}
+      if (res.statusCode >= 200 && res.statusCode < 300 && body.code === 'OK') resolve(body.data)
+      else { const e = new Error(body.message || '请求失败，请重试'); e.status = res.statusCode; e.code = body.code; reject(e) }
     },
     fail() { reject(new Error('连接暂时中断，请重试。你的表单已保留。')) }
   }))

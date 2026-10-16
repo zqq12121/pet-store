@@ -1,0 +1,57 @@
+# 2 GiB + 至少 4 GiB SWAP 的低并发公网演示覆盖配置；不代表生产容量保证。
+# 启动：docker compose -f compose.yaml -f compose.cloud-demo.yaml up -d --no-build --wait --wait-timeout 900
+services:
+  mysql:
+    mem_limit: 512m
+    memswap_limit: 1g
+    # 缩小缓存及连接上限，给三个 Java 服务和 AI 留出空间。
+    command: [--character-set-server=utf8mb4, --collation-server=utf8mb4_unicode_ci, --innodb-buffer-pool-size=64M, --max-connections=40, --performance-schema=OFF, --table-open-cache=256]
+  redis:
+    mem_limit: 64m
+    memswap_limit: 128m
+  nacos:
+    mem_limit: 512m
+    memswap_limit: 1g
+    environment:
+      JVM_XMS: 128m
+      JVM_XMX: 192m
+      JVM_XMN: 64m
+  admin-server:
+    build:
+      # 仅构建阶段使用宿主网络，供临时回环代理下载依赖。
+      network: host
+    mem_limit: 448m
+    memswap_limit: 896m
+    environment:
+      JAVA_TOOL_OPTIONS: -Xms64m -Xmx192m -XX:+UseSerialGC -XX:MaxMetaspaceSize=160m -XX:ReservedCodeCacheSize=64m -XX:MaxDirectMemorySize=32m -Xss512k -Djava.awt.headless=true
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 5
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: 1
+  order-server:
+    build:
+      network: host
+    mem_limit: 448m
+    memswap_limit: 896m
+    environment:
+      JAVA_TOOL_OPTIONS: -Xms64m -Xmx192m -XX:+UseSerialGC -XX:MaxMetaspaceSize=160m -XX:ReservedCodeCacheSize=64m -XX:MaxDirectMemorySize=32m -Xss512k -Djava.awt.headless=true
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 5
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: 1
+  gateway-server:
+    build:
+      network: host
+    mem_limit: 384m
+    memswap_limit: 768m
+    environment:
+      JAVA_TOOL_OPTIONS: -Xms64m -Xmx160m -XX:+UseSerialGC -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=48m -XX:MaxDirectMemorySize=32m -Xss512k -Djava.awt.headless=true
+  ai-service:
+    build:
+      network: host
+    mem_limit: 512m
+    memswap_limit: 1g
+  web:
+    build:
+      network: host
+    mem_limit: 64m
+    memswap_limit: 128m
+    # 用户选择先用公网 IP 演示；数据库、Redis、Nacos 和业务端口不对外发布。
+    ports: !override
+      - "80:80"

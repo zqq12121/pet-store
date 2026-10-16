@@ -42,6 +42,8 @@ AI 使用 DeepSeek API 与 RAG；中文嵌入模型为 `BAAI/bge-small-zh-v1.5`�
 
 ## Docker Compose 快速启动
 
+已购低配置云服务器的公网 IP 演示方式见 [云服务器演示环境](docs/CLOUD_DEMO.md)，使用额外的 `compose.cloud-demo.yaml` 覆盖配置。
+
 推荐使用根目录 `compose.yaml`。八项常驻服务为 `web`、`gateway-server`、`admin-server`、
 `order-server`、`ai-service`、`mysql`、`redis`、`nacos`；构建在容器内完成，不依赖宿主机 JDK、Node.js 或 uv。
 需要 Docker Desktop 或 Docker Engine + Compose v2；配置初始化和备份脚本另需 Python 3。

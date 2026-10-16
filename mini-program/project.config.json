@@ -3,7 +3,7 @@
   "miniprogramRoot": "./",
   "compileType": "miniprogram",
   "appid": "wx2dfb336ed95073ff",
-  "projectname": "rongrong-planet",
+  "projectname": "lingchong-xiaozhu",
   "libVersion": "3.7.1",
   "setting": {
     "es6": true,
@@ -47,32 +47,32 @@
         "type": "file"
       },
       {
-        "type": "folder",
-        "value": "pages/booking"
+        "value": "pages/booking",
+        "type": "folder"
       },
       {
-        "type": "folder",
-        "value": "pages/success"
+        "value": "pages/success",
+        "type": "folder"
       },
       {
-        "type": "folder",
-        "value": "pages/record"
+        "value": "pages/record",
+        "type": "folder"
       },
       {
-        "type": "folder",
-        "value": "pages/records"
+        "value": "pages/records",
+        "type": "folder"
       },
       {
-        "type": "folder",
-        "value": "pages/ai"
+        "value": "pages/ai",
+        "type": "folder"
       },
       {
-        "type": "folder",
-        "value": "pages/shop"
+        "value": "pages/shop",
+        "type": "folder"
       },
       {
-        "type": "file",
-        "value": "utils/sse.js"
+        "value": "utils/sse.js",
+        "type": "file"
       }
     ],
     "include": []
