@@ -15,6 +15,7 @@ class ProductionCheckTest(unittest.TestCase):
     def fixture(self):
         env = {k: "test-only-password" for k in ("MYSQL_ROOT_PASSWORD", "PAW_DB_PASSWORD", "PAW_REDIS_PASSWORD", "PAW_ADMIN_PASSWORD")}
         env.update(PAW_DOMAIN="shop.warmpaw.cn", ACME_EMAIL="ops@warmpaw.cn", DEEPSEEK_API_KEY="test-only",
+                   PAW_CAPTCHA_APP_ID="test-captcha", PAW_CAPTCHA_APP_KEY="test-key",
                    PAW_SMS_SIGN_NAME="测试", OSS_ACCESS_KEY_ID="test-id", OSS_ACCESS_KEY_SECRET="test-secret")
         env.update({"PAW_SMS_APPOINTMENT_" + event + "_TEMPLATE": "SMS_TEST" for event in ("SUBMITTED", "CONFIRMED", "CANCELLED", "EXPIRED", "COMPLETED")})
         return env
@@ -26,6 +27,20 @@ class ProductionCheckTest(unittest.TestCase):
         env = self.fixture()
         del env["PAW_SMS_APPOINTMENT_COMPLETED_TEMPLATE"]
         self.assertTrue(any("COMPLETED_TEMPLATE" in e for e in production.configuration_errors(env)))
+
+    def test_missing_captcha_or_partial_wechat_cannot_pass_readiness(self):
+        env = self.fixture()
+        del env["PAW_CAPTCHA_APP_KEY"]
+        self.assertTrue(any("PAW_CAPTCHA_APP_KEY" in e for e in production.configuration_errors(env)))
+        env = self.fixture()
+        env["PAW_WECHAT_WEB_APP_ID"] = "partial"
+        self.assertTrue(any("网站应用微信" in e for e in production.configuration_errors(env)))
+        env = self.fixture()
+        env["PAW_WECHAT_MINI_APP_ID"] = "wx0123456789abcdef"
+        self.assertTrue(any("小程序扫码" in e for e in production.configuration_errors(env)))
+        env["PAW_WECHAT_MINI_APP_SECRET"] = "test-secret"
+        env["PAW_WECHAT_MINI_ENV_VERSION"] = "develop"
+        self.assertTrue(any("release" in e for e in production.configuration_errors(env)))
 
     def test_partial_dedicated_credentials_do_not_fall_back(self):
         env = self.fixture()

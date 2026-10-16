@@ -101,4 +101,4 @@ npm --prefix frontend run build
 git diff --check
 ```
 
-社区集成测试使用独立 H2，不连接 Compose 数据库。需 JDK 21、Maven 及已安装的前端依赖。
+社区集成测试使用独立 H2，不连接 Compose 数据库。需 JDK 25、Maven 及已安装的前端依赖。

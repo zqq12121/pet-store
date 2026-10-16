@@ -52,6 +52,7 @@ async function main(){
   await buyer.goto(base+'/password-login')
   await buyer.getByLabel('手机号或用户名').fill('demo_buyer')
   await buyer.getByLabel('密码',{exact:true}).fill('DemoBuyer2026!')
+  await buyer.getByLabel('同意用户服务协议和隐私政策').check()
   await admin.goto(base+'/admin/login')
   await admin.locator('input[autocomplete="username"]').fill('admin')
   await admin.locator('input[autocomplete="current-password"]').fill('DemoAdmin2026!')
@@ -64,7 +65,6 @@ async function main(){
   await buyer.getByRole('button',{name:'通过模拟验证',exact:true}).click()
   await buyer.waitForURL('**/profile')
   await admin.getByRole('button',{name:'登录工作台',exact:true}).click()
-  await admin.getByRole('button',{name:'通过模拟验证',exact:true}).click()
   await admin.waitForURL(base+'/admin/')
   const shots=[]
   async function shot(page,name){
@@ -85,7 +85,7 @@ async function main(){
   await buyer.getByRole('button',{name:'关闭图片',exact:true}).click()
   await buyer.getByRole('link',{name:'预约到店',exact:true}).click()
   await buyer.getByLabel('联系人',{exact:true}).fill('模拟买家')
-  await buyer.getByLabel('已验证手机号').fill('13900000001')
+  await buyer.getByLabel('联系手机号').fill('13900000001')
   const tomorrow=new Date(Date.now()+86400000)
   const visit=new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(tomorrow)+'T13:00'
   await buyer.getByLabel('到店时间（北京时间）').fill(visit)

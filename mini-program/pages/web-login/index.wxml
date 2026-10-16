@@ -1,0 +1,21 @@
+<view class="page web-login">
+  <view class="card">
+    <text class="heading">暖爪网站登录</text>
+    <text class="description">请核对电脑与手机显示的核对码一致，仅确认你本人刚刚发起的登录。</text>
+    <text wx:if="{{code}}" class="code">{{code}}</text>
+    <text wx:if="{{loading}}" class="description">正在读取登录请求…</text>
+    <text wx:if="{{error}}" class="error" role="alert">{{error}}</text>
+    <block wx:if="{{status === 'pending' && !loading && !error}}">
+      <block wx:if="{{loggedIn}}">
+        <checkbox-group bindchange="accept"><label class="consent"><checkbox value="yes" checked="{{accepted}}" color="#B9512B"/>我确认这是本人打开的暖爪网站</label></checkbox-group>
+        <button class="confirm" disabled="{{busy || !accepted}}" loading="{{busy}}" data-approved="true" bindtap="decide">确认登录电脑网页</button>
+        <button disabled="{{busy}}" data-approved="false" bindtap="decide">取消本次登录</button>
+      </block>
+      <button wx:else class="confirm" bindtap="login">先使用微信登录</button>
+    </block>
+    <text wx:if="{{status === 'confirmed' || status === 'consumed'}}" class="result">已确认，请返回电脑查看登录结果。</text>
+    <text wx:if="{{status === 'rejected' || status === 'cancelled'}}" class="result">本次登录已取消，请在电脑上重新获取小程序码。</text>
+    <button wx:if="{{error}}" bindtap="load" disabled="{{loading}}">重新检查</button>
+    <text class="description">请勿确认聊天中他人发来的登录码。二维码有效期为五分钟。</text>
+  </view>
+</view>

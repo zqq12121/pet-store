@@ -38,7 +38,7 @@ sh scripts/stop-microservices.sh
 
 ## 在 IDEA 中开发
 
-1. 重新加载 **`backend/pom.xml`**，应看到 `common`、`order-server`、`admin-server`、`gateway-server`、`integration-tests` 五个子模块，JDK 选 21。
+1. 重新加载 **`backend/pom.xml`**，应看到 `common`、`order-server`、`admin-server`、`gateway-server`、`integration-tests` 五个子模块，JDK 选 25。
 2. 三个主类分别是 `OrderServerApplication`、`AdminServerApplication`、`GatewayServerApplication`。工作目录统一设置为项目的 **backend 目录**，分别使用各自模块的 classpath。
 3. 业务服务的环境变量使用 `backend/.env` 中的 MySQL、Redis 配置，活动 profile 设为 `local`。若 IDEA 支持导入 `.env`，直接选该文件；否则在运行配置的环境变量中配置，勿把密钥写进 Java/YAML。
 4. 先启动 Nacos，再分别启动订单 8081、管理 8082、网关 8080。不要同时运行脚本启动的服务与 IDEA 中相同端口的服务。

@@ -13,7 +13,7 @@ AI 提供知识问答和业务查询，不修改订单、价格或库存。
 - 买家端：宠物浏览与筛选、宠物档案、到店预约、本人订单与售后、个人资料及账号安全。
 - 管理后台：宠物与检疫材料、预约确认及线下交付、售后处理、门店设置、协议版本与管理员改密。
 - 登录：短信登录及自动注册、手机号或用户名密码登录、首次设置／找回密码、可选微信登录；
-  买家和管理员登录均接入阿里云弹出式图形认证。
+  买家登录接入阿里云弹出式图形认证；管理员使用密码验证、失败锁定与来源限流。
 - 智能助手：DeepSeek 流式回复、中文知识检索与来源引用、在售宠物推荐、本人预约查询、会话历史与反馈。
 - 知识运营：草稿审核发布、CSV/Excel 批量导入、导入错误记录、失败索引重试与 AI 统计。
 - 文件与通知：图片／视频上传、私有证明鉴权、可选阿里云 OSS 存储、预约短信队列及失败重试。
@@ -29,7 +29,7 @@ AI 使用 DeepSeek API 与 RAG；中文嵌入模型为 `BAAI/bge-small-zh-v1.5`�
 | `frontend/admin-web/` | Vue 3 + Element Plus 管理后台 |
 | `frontend/shared/` | 双端请求、类型与 SSE 处理 |
 | `mini-program/` | 原生微信小程序，导入与联调见 [小程序说明](mini-program/README.md) |
-| `backend/` | JDK 21、Spring Boot 4、Spring Cloud、Nacos、OpenFeign |
+| `backend/` | JDK 25、Spring Boot 4、Spring Cloud、Nacos、OpenFeign |
 | `backend/common/` | 业务逻辑、持久化、安全与第三方服务接入 |
 | `backend/order-server/` | 订单、预约与短信通知队列 |
 | `backend/admin-server/` | 认证、宠物目录、门店及管理接口 |
@@ -72,6 +72,7 @@ python3 scripts/init-compose-env.py
 | `PAW_OSS_ENABLED`、`PAW_OSS_BUCKET`、`PAW_OSS_ENDPOINT`、`OSS_ACCESS_KEY_*` | 可选私有 OSS 存储 |
 | `PAW_WECHAT_APP_ID`、`PAW_WECHAT_APP_SECRET`、`PAW_WECHAT_OAUTH_REDIRECT` | 可选微信授权；未完整配置时隐藏入口 |
 | `PAW_WECHAT_WEB_APP_ID`、`PAW_WECHAT_WEB_APP_SECRET`、`PAW_WECHAT_WEB_REDIRECT` | 微信开放平台网站扫码登录；首次扫码直接建号，无需手机号。配置见 [网站微信扫码登录](docs/WECHAT_WEB_LOGIN.md) |
+| `PAW_WECHAT_MINI_APP_ID`、`PAW_WECHAT_MINI_APP_SECRET`、`PAW_WECHAT_MINI_ENV_VERSION` | 灵宠小珠登录与网站扫码中转；默认打开正式版，小程序凭据仅在 Java 使用。见 [小程序扫码中转](docs/MINI_WECHAT_QR_LOGIN.md) |
 
 `.env` 只保存在本机，不提交或分享；图形认证 appKey 不得放入 `VITE_` 变量。
 图形认证未配置时登录会明确失败，不回退旧图片验证码。配置与真实验收见 [登录人机验证](docs/GRAPH_CAPTCHA.md)。
@@ -122,7 +123,7 @@ MySQL、Redis、上传文件、AI 数据与模型缓存、Nacos 使用持久卷�
 ## 登录与数据库升级
 
 点击“获取短信验证码”时弹出图形认证，通过服务端二次校验后才发送短信；短信登录提交时不重复弹窗。
-买家密码登录与管理员登录的按钮、Enter 共用提交流程，先完成图形认证再校验账号密码。
+买家密码登录的按钮、Enter 共用提交流程，先完成图形认证再校验账号密码；管理员直接校验密码，失败锁定与来源限流继续生效。
 取消弹窗不提交业务请求；验证失败后需重新验证。
 
 买家可设置用户名与密码；密码设置／修改／重置共用滚动 7 天限制，用户名修改为滚动 3 天限制。
@@ -141,7 +142,7 @@ MySQL、Redis、上传文件、AI 数据与模型缓存、Nacos 使用持久卷�
 
 ## 宿主机开发
 
-需要 JDK 21、Maven、Node.js 22.12+、Python 3.11、uv 和 Docker。
+需要 JDK 25、Maven、Node.js 22.12+、Python 3.11、uv 和 Docker。
 先准备独立 MySQL、Redis 及数据库结构；Java 连接和图形认证配置放在 `backend/.env`，
 AI 配置参照 `ai-service/.env.example` 写入 `ai-service/.env`。不要覆盖已有配置。
 数据库和 IDEA 配置见 [后端说明](backend/README.md)。
@@ -201,6 +202,10 @@ mvn -f backend/pom.xml package
 # 前端测试；build 包含类型检查和双端生产构建。
 npm --prefix frontend test
 npm --prefix frontend run build
+# 原生小程序回归与实际 WXML/WXSS 编译。
+npm --prefix mini-program test
+npm --prefix mini-program run check
+python3 -m unittest discover -s scripts -p 'test_*.py'
 # Python 测试须在 ai-service 目录运行。
 (cd ai-service && .venv/bin/python -m pytest -q)
 docker compose config --quiet

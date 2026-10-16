@@ -27,7 +27,8 @@ const changePassword=()=>run(async()=>{
 <label>原密码<input v-model="oldPassword" type="password" required autocomplete="current-password"></label>
 <label>新密码<input v-model="newPassword" type="password" required minlength="12" maxlength="128" pattern="(?=.*[a-zA-Z])(?=.*[0-9]).{12,128}" autocomplete="new-password"></label><p class="small muted">12至128位，包含字母和数字。</p>
 <label>确认新密码<input v-model="confirm" type="password" required minlength="12" maxlength="128" autocomplete="new-password"></label><button class="btn secondary" :disabled="loading">修改密码</button></form>
-<RouterLink to="/password-reset">{{user?.hasPassword?'忘记密码？通过手机号重置':'首次设置密码（验证手机号）'}}</RouterLink>
+<RouterLink v-if="user?.phoneMasked" to="/password-reset">{{user?.hasPassword?'忘记密码？通过手机号重置':'首次设置密码（验证手机号）'}}</RouterLink>
+<p v-else-if="user" class="small muted">当前账号使用微信登录，请继续使用同一微信扫码。预约联系电话不绑定或合并登录账号。</p>
 <p v-if="message" role="status">{{message}}</p><p v-if="error" class="error-text" role="alert">{{error}}</p>
 <RouterLink to="/community?scope=mine" class="profile-link">我的社区帖子 →</RouterLink><RouterLink to="/community?scope=favorites" class="profile-link">我的收藏 →</RouterLink><RouterLink to="/community?type=review&amp;scope=mine" class="profile-link">我的店铺评价 →</RouterLink><RouterLink to="/community/notices" class="profile-link">社区消息 →</RouterLink>
 <RouterLink to="/orders" class="profile-link">我的预约 →</RouterLink><RouterLink to="/ai" class="profile-link">AI 养宠助手 →</RouterLink><RouterLink to="/shop" class="profile-link">联系店主 →</RouterLink><button class="text-link" :disabled="loading" @click="logout">退出登录</button>

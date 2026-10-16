@@ -9,6 +9,7 @@ import com.warmpaw.service.AuthService;
 import com.warmpaw.service.GraphCaptchaService;
 import com.warmpaw.service.GuestService;
 import com.warmpaw.service.WechatLoginService;
+import com.warmpaw.service.WechatMiniQrService;
 import jakarta.servlet.http.*;
 import java.time.*;
 import java.util.*;
@@ -23,12 +24,14 @@ public class AuthController {
   private final AuthService auth;
   private final WechatLoginService wechatLogin;
   private final GraphCaptchaService graphCaptcha;
+  private final WechatMiniQrService miniQr;
 
-  public AuthController(GuestService guests, AuthService auth, WechatLoginService wechatLogin, GraphCaptchaService graphCaptcha) {
+  public AuthController(GuestService guests, AuthService auth, WechatLoginService wechatLogin, GraphCaptchaService graphCaptcha, WechatMiniQrService miniQr) {
     this.guests = guests;
     this.auth = auth;
     this.wechatLogin = wechatLogin;
     this.graphCaptcha = graphCaptcha;
+    this.miniQr = miniQr;
   }
 
   /** 只发布图形认证的公开 ID，真正放行由各业务接口内的二次验证决定。 */
@@ -81,7 +84,7 @@ public class AuthController {
   /** 登录页只展示当前可用入口；配置存在不代表第三方已验收。 */
   @GetMapping("/auth/capabilities")
   public ResponseEntity<Object> capabilities() {
-    return ok(200, map("wechatLogin", wechatLogin.configured(), "wechatQrLogin", wechatLogin.qrConfigured()));
+    return ok(200, map("wechatLogin", wechatLogin.configured(), "wechatQrLogin", wechatLogin.qrConfigured(), "wechatMiniQrLogin", miniQr.configured()));
   }
 
   @PostMapping("/auth/sms-codes")

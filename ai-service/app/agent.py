@@ -28,6 +28,11 @@ class PetAgent:
     def __init__(self, settings, business, knowledge, model=None):
         self.settings, self.business, self.knowledge = settings, business, knowledge
         self.model = model
+        # 启动时初始化并复用连接池，避免每条消息的生成时限被客户端冷启动占用。
+        if self.model is None and settings.api_key:
+            self.model = ChatDeepSeek(model=settings.model, api_key=settings.api_key,
+                                     api_base=settings.api_base, temperature=0.2, max_tokens=1024,
+                                     timeout=settings.generation_timeout, max_retries=0)
 
     def ready(self):
         if not self.model and not self.settings.api_key:
@@ -107,9 +112,7 @@ class PetAgent:
                                        "vaccineStatus", "dewormStatus", "status", "purchaseAllowed")}
 
     async def stream(self, identity, session, history, body, evidence):
-        model = self.model or ChatDeepSeek(model=self.settings.model, api_key=self.settings.api_key,
-                                           api_base=self.settings.api_base, temperature=0.2, max_tokens=1024,
-                                           timeout=self.settings.generation_timeout, max_retries=0)
+        model = self.model
         evidence.update(sources=[], productCards=[], orderCards=[], actions=[])
         # 每轮重新读取宠物详情；旧聊天中的库存、预约入口不可当作当前数据使用。
         if session.get("productId"):

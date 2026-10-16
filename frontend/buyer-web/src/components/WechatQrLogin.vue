@@ -1,18 +1,20 @@
 <script setup lang="ts">
 import {ref,onMounted,onUnmounted,watch,nextTick} from 'vue'
-import {buyer,isDemo} from '../../../shared/api'
+import {buyer,isDemo,randomId} from '../../../shared/api'
 import {useGraphCaptcha} from '../../../shared/useGraphCaptcha'
 import {loadWechatQr,wechatQrOptions} from '../../../shared/wechatQr'
+import MiniWechatQr from './MiniWechatQr.vue'
 const props=defineProps<{accepted:boolean;returnPath:string;disabled:boolean}>()
 const busy=defineModel<boolean>('busy',{default:false})
 const enabled=ref(false),checking=ref(true),error=ref(''),active=ref(false),remaining=ref(0)
-const graph=useGraphCaptcha(),id='wechat-qr-'+crypto.randomUUID()
+const miniEnabled=ref(false)
+const graph=useGraphCaptcha(),id='wechat-qr-'+randomId()
 let disposed=false,version=0,expiresAt=0,timer:ReturnType<typeof setInterval>,widgetTimer:ReturnType<typeof setTimeout>,cleanup:(()=>void)|undefined
 function clear(){version++;active.value=false;remaining.value=0;clearTimeout(widgetTimer);cleanup?.();cleanup=undefined;document.getElementById(id)?.replaceChildren()}
 watch(()=>props.accepted,value=>{if(!value)clear()})
 async function checkCapability(){
  checking.value=true;error.value=''
- try{const result=await buyer<{wechatQrLogin?:boolean}>('GET','/auth/capabilities');if(!disposed)enabled.value=!isDemo&&result.wechatQrLogin===true}
+ try{const result=await buyer<{wechatQrLogin?:boolean;wechatMiniQrLogin?:boolean}>('GET','/auth/capabilities');if(!disposed){enabled.value=!isDemo&&result.wechatQrLogin===true;miniEnabled.value=!isDemo&&result.wechatMiniQrLogin===true}}
  catch{if(!disposed){enabled.value=false;error.value='暂时无法连接登录服务，请重试'}}
  finally{if(!disposed)checking.value=false}
 }
@@ -46,7 +48,8 @@ onMounted(()=>{void checkCapability();timer=setInterval(()=>{if(!active.value)re
 onUnmounted(()=>{disposed=true;clear();clearInterval(timer)})
 </script>
 <template>
- <aside class="wechat-panel" aria-label="微信扫码登录">
+ <MiniWechatQr v-if="miniEnabled" v-model:busy="busy" :accepted="accepted" :return-path="returnPath" :disabled="disabled"/>
+ <aside v-else class="wechat-panel" aria-label="微信扫码登录">
   <h2><svg class="wechat-mark" viewBox="0 0 32 28" aria-hidden="true"><path fill="currentColor" d="M13 2C6.4 2 1 6.2 1 11.4c0 3 1.8 5.7 4.5 7.4l-1.1 3.4 4-2.1c1.4.4 3 .6 4.6.6h.8a8.7 8.7 0 0 1-1.2-4.4c0-5 4.7-9 10.5-9h.7C22 4.2 17.8 2 13 2Z"/><path fill="currentColor" d="M23 9c-4.9 0-9 3.3-9 7.3s4.1 7.3 9 7.3c1.2 0 2.4-.2 3.5-.5l3 1.7-.8-2.7c2-1.3 3.3-3.4 3.3-5.8C32 12.3 28 9 23 9Z"/><g fill="white"><circle cx="9" cy="9" r="1.2"/><circle cx="17" cy="9" r="1.2"/><circle cx="20" cy="15" r="1"/><circle cx="26" cy="15" r="1"/></g></svg>微信扫码登录</h2>
   <div v-show="active" :id="id" class="wechat-widget" />
   <div v-if="!active" class="wechat-placeholder">

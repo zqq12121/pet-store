@@ -6,7 +6,7 @@ Page({
     // 微信保留 URL 编码；解码后仅允许项目内目的页。
     let target = '/pages/my/index'
     try { target = decodeURIComponent(q.redirect || target) } catch (_) { /* 损坏参数使用默认目的页。 */ }
-    this.target = /^\/pages\/(detail|favorites|my)\/index(?:\?|$)/.test(target) ? target : '/pages/my/index'
+    this.target = /^\/pages\/(detail|favorites|my|web-login)\/index(?:\?|$)/.test(target) ? target : '/pages/my/index'
   },
   onUnload() { this.disposed = true },
   accept(e) { this.setData({ accepted: e.detail.value.includes('yes') }) },

@@ -5,7 +5,8 @@
     "pages/favorites/index",
     "pages/my/index",
     "pages/detail/index",
-    "pages/login/index"
+    "pages/login/index",
+    "pages/web-login/index"
   ],
   "window": {
     "navigationBarTitleText": "灵宠小珠",

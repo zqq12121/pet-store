@@ -35,7 +35,7 @@ node scripts/demo-browser.cjs --interactive
 
 ## 从备份重新创建干净副本
 
-先保证主项目正常运行，并有 JDK 21、Maven、Python 3、Docker Compose、构建好的本机应用镜像和已缓存的 Maven 依赖。生成模拟附件时还需要模拟资料说明中的 Python/PDF 依赖。
+先保证主项目正常运行，并有 JDK 25、Maven、Python 3、Docker Compose、构建好的本机应用镜像和已缓存的 Maven 依赖。生成模拟附件时还需要模拟资料说明中的 Python/PDF 依赖。
 
 ```sh
 python3 scripts/backup-compose.py

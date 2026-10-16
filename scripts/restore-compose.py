@@ -28,7 +28,13 @@ def main():
     volumes = subprocess.run(["docker", "volume", "ls", "--format", "{{.Name}}"], capture_output=True, text=True, check=True).stdout.split()
     if any(name.startswith(args.project + "_") for name in volumes):
         raise SystemExit("目标已有数据卷，未覆盖；请选择全新恢复项目名")
-    compose = ["docker", "compose", "--project-directory", str(ROOT), "-p", args.project]
+    # 恢复副本不能抢占主项目的本机 MySQL 端口；配置文件保留在副本目录供复核。
+    isolated = ROOT / "output" / args.project
+    isolated.mkdir(parents=True, exist_ok=True)
+    override = isolated / "restore.yaml"
+    override.write_text("services:\n  mysql:\n    ports: !reset []\n")
+    compose = ["docker", "compose", "--project-directory", str(ROOT), "-p", args.project,
+               "-f", str(ROOT / "compose.yaml"), "-f", str(override)]
     subprocess.run([*compose, "up", "-d", "--wait", "--wait-timeout", "180", "mysql", "redis"], check=True)
     with (folder / "mysql.sql").open("rb") as source:
         subprocess.run([*compose, "exec", "-T", "mysql", "sh", "-c",

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref,onMounted,onUnmounted,nextTick} from 'vue';import {useRoute} from 'vue-router';import {buyer,headers,auth,isDemo,safeUrl} from '../../../shared/api';import {readSse} from '../../../shared/sse';import type {AiMessage,Source,Pet} from '../../../shared/types';import PetCard from '../components/PetCard.vue'
+import {ref,onMounted,onUnmounted,nextTick} from 'vue';import {useRoute} from 'vue-router';import {buyer,headers,auth,isDemo,safeUrl,randomId} from '../../../shared/api';import {readSse} from '../../../shared/sse';import type {AiMessage,Source,Pet} from '../../../shared/types';import PetCard from '../components/PetCard.vue'
 const route=useRoute(),messages=ref<AiMessage[]>([]),input=ref(''),sending=ref(false),error=ref(''),sessionId=ref(''),guest=ref(''),scroller=ref<HTMLElement>(),sessions=ref<{id:string;title?:string}[]>([]);let controller:AbortController|undefined,disposed=false
 let pending:{clientMessageId:string;content:string}|null=null
 // 游客凭证仅保存在当前标签页，刷新后仍可查看本人的会话历史。
@@ -9,7 +9,7 @@ async function openSession(){sessionId.value='';messages.value=[];pending=null;e
 async function history(){error.value='';try{const all:AiMessage[]=[];let page=1,total=0;do{const result=await ai<{items:AiMessage[];total:number}>(`/ai/sessions/${sessionId.value}/messages?page=${page++}&pageSize=100`);all.push(...result.items);total=result.total}while(all.length<total);messages.value=all;pending=null}catch(e){error.value=String(e)}}
 async function bottom(){await nextTick();scroller.value?.scrollTo({top:scroller.value.scrollHeight,behavior:'auto'})}
 async function recover(message:AiMessage){for(let i=0;i<15&&!disposed;i++){const saved=await ai<AiMessage>(`/ai/sessions/${sessionId.value}/messages/${message.id}`);Object.assign(message,saved);if(!['generating','streaming','pending'].includes(saved.status))return;await new Promise(resolve=>setTimeout(resolve,2000))}throw new Error('回复仍在处理中，请稍后查看会话历史。')}
-async function send(question?:string,retry=false){if(sending.value||!sessionId.value)return;const content=(question??input.value).trim();if(!retry&&!content)return;error.value='';sending.value=true;if(!retry){pending={content,clientMessageId:crypto.randomUUID()};messages.value.push({id:pending.clientMessageId,role:'user',content,status:'completed'});input.value=''}
+async function send(question?:string,retry=false){if(sending.value||!sessionId.value)return;const content=(question??input.value).trim();if(!retry&&!content)return;error.value='';sending.value=true;if(!retry){pending={content,clientMessageId:randomId()};messages.value.push({id:pending.clientMessageId,role:'user',content,status:'completed'});input.value=''}
 // 重试复用逻辑消息，移除失败的占位回复，避免重复消息键。
 if(retry&&messages.value.at(-1)?.role==='assistant')messages.value.pop();
 const current=pending!;const answer=ref<AiMessage>({id:'pending-'+current.clientMessageId,role:'assistant',content:'',status:'generating'});messages.value.push(answer.value);let terminal=false,meta=false;controller=new AbortController();await bottom()

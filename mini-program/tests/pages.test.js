@@ -21,6 +21,42 @@ function page(name) {
 const api = require('../utils/api')
 const fixture = { id: 'p', name: '猫咪', breed: '田园猫', priceAmount: 10000, coverUrl: '/images/cat.jpg', gender: 'female', ageMonths: 4 }
 const settle = () => new Promise(resolve => setImmediate(resolve))
+test('扫码后只展示核对码，微信登录返回确认页，勾选并点击才批准网页登录', async () => {
+  config.demo = false; store.clear(); requests = []; navigations = []
+  const scene = 'a'.repeat(32)
+  try {
+    wx.request = o => { requests.push(o); o.success({ statusCode: 200, data: { code: 'OK', data: o.method === 'GET' ? { status: 'pending', verificationCode: '123456' } : { status: 'confirmed' } } }) }
+    const p = page('web-login'); p.onLoad({ scene }); await p.load()
+    assert.equal(p.data.code, '123456'); assert.equal(requests.length, 1); assert.equal(requests[0].method, 'GET')
+    p.login(); assert.ok(navigations[0].url.includes(encodeURIComponent('/pages/web-login/index?scene=' + scene)))
+    const login = page('login'); login.onLoad({ redirect: encodeURIComponent('/pages/web-login/index?scene=' + scene) })
+    assert.equal(login.target, '/pages/web-login/index?scene=' + scene)
+    api.saveAuth({ accessToken: 'test', expiresIn: 60, user: { id: 'u' } })
+    await p.load(); await p.decide({ currentTarget: { dataset: { approved: 'true' } } })
+    assert.equal(requests.filter(o => o.method === 'POST').length, 0)
+    p.accept({ detail: { value: ['yes'] } }); await p.decide({ currentTarget: { dataset: { approved: 'true' } } })
+    assert.deepEqual(requests.at(-1).data, { approved: true }); assert.equal(p.data.status, 'confirmed')
+    await p.decide({ currentTarget: { dataset: { approved: 'true' } } }); assert.equal(requests.filter(o => o.method === 'POST').length, 1)
+  } finally { config.demo = true; store.clear() }
+})
+test('扫码确认支持取消，过期和无效场景不能批准，页面离开不更新状态', async () => {
+  config.demo = false; store.clear(); requests = []
+  try {
+    api.saveAuth({ accessToken: 'test', expiresIn: 60, user: { id: 'u' } })
+    wx.request = o => { requests.push(o); o.success({ statusCode: 200, data: { code: 'OK', data: o.method === 'GET' ? { status: 'pending', verificationCode: '123456' } : { status: 'rejected' } } }) }
+    const p = page('web-login'); p.onLoad({ scene: 'b'.repeat(32) }); await p.load()
+    await p.decide({ currentTarget: { dataset: { approved: 'false' } } })
+    assert.equal(p.data.status, 'rejected'); assert.deepEqual(requests.at(-1).data, { approved: false })
+    const invalid = page('web-login'); invalid.onLoad({ scene: '%ZZ' }); const before = requests.length
+    await invalid.load(); assert.ok(invalid.data.error); assert.equal(requests.length, before)
+    wx.request = o => o.success({ statusCode: 410, data: { code: 'QR_EXPIRED', message: '二维码已过期' } })
+    await p.load(); assert.equal(p.data.error, '二维码已过期')
+    let finish; wx.request = o => { finish = o.success }
+    const late = page('web-login'); late.onLoad({ scene: 'c'.repeat(32) }); const pending = late.load(); late.onUnload()
+    finish({ statusCode: 200, data: { code: 'OK', data: { status: 'pending', verificationCode: '654321' } } }); await pending
+    assert.equal(late.data.code, '')
+  } finally { config.demo = true; store.clear() }
+})
 test('登录解码微信导航返回地址，保留收藏动物并拒绝外部或损坏的地址', () => {
   const target = '/pages/detail/index?id=DEMO-PET-001'
   // 微信 onLoad 保留 encodeURIComponent 编码；模拟器复现过登录误跳“我的”。

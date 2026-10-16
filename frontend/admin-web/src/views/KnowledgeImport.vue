@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {ref,onUnmounted} from 'vue'
-import {admin,headers,clearAuth,date} from '../../../shared/api'
+import {admin,headers,clearAuth,date,randomId} from '../../../shared/api'
 import type {ImportJob,ImportError} from '../../../shared/adminTypes'
 import type {Page} from '../../../shared/types'
 import {useLoad} from '../../../shared/useLoad'
@@ -12,7 +12,7 @@ let timer:ReturnType<typeof setTimeout>|undefined,disposed=false
 async function transfer(path:string,options:RequestInit={}){const response=await fetch('/api/v1/admin/knowledge/'+path,{...options,headers:{...headers('admin'),...options.headers}});if(!response.ok){if(response.status===401){clearAuth('admin');window.dispatchEvent(new CustomEvent('auth:expired',{detail:'admin'}))}const body=await response.json().catch(()=>({}));throw new Error(body.message||'文件请求失败，请重试')}return response}
 const download=(format:'csv'|'xlsx')=>run(async()=>{const response=await transfer('import-template?format='+format);const url=URL.createObjectURL(await response.blob());const link=document.createElement('a');link.href=url;link.download=`knowledge-import-template.${format}`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000)})
 function close(){clearTimeout(timer)}
-function choose(event:Event){file.value=(event.target as HTMLInputElement).files?.[0];key.value=crypto.randomUUID()}
+function choose(event:Event){file.value=(event.target as HTMLInputElement).files?.[0];key.value=randomId()}
 async function refresh(){clearTimeout(timer);const result=await admin<ImportJob[]>('GET','/admin/knowledge/jobs');if(disposed||!visible.value)return;jobs.value=result;if(result.some(job=>['queued','running'].includes(job.status)))timer=setTimeout(()=>{void refresh().catch(e=>{error.value=e instanceof Error?e.message:'任务状态查询失败'})},2000);else emit('imported')}
 const open=()=>{visible.value=true;void run(refresh)}
 const submit=()=>run(async()=>{if(!file.value)throw new Error('请先选择文件');const format=file.value.name.split('.').pop()?.toLowerCase();if(format!=='csv'&&format!=='xlsx')throw new Error('只支持 .csv 和 .xlsx 文件');if(file.value.size>10*1024*1024)throw new Error('文件不能超过 10 MB');const response=await transfer('import-jobs?format='+format,{method:'POST',body:file.value,headers:{'Idempotency-Key':key.value,'Content-Type':format==='csv'?'text/csv':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}});const job=(await response.json()).data as ImportJob;selected.value=job;errors.value=undefined;await refresh()})

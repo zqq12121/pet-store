@@ -1,5 +1,5 @@
 import {onUnmounted} from 'vue'
-import {buyer} from './api'
+import {buyer,randomId} from './api'
 
 export type GraphProof={lot_number:string;captcha_output:string;pass_token:string;gen_time:string}
 type Captcha={
@@ -44,7 +44,7 @@ export function useGraphCaptcha() {
   if(disposed)return null
   return new Promise((resolve,reject)=>{
    const host=document.createElement('div')
-   host.id=`graph-captcha-${crypto.randomUUID()}`;document.body.appendChild(host)
+   host.id=`graph-captcha-${randomId()}`;document.body.appendChild(host)
    let instance:Captcha|undefined,finished=false
    // 只限制初始化耗时；用户操作图形验证时不计入这个超时。
    const timer=setTimeout(()=>finish(undefined,new Error('图形验证加载超时，请重试')),15000)

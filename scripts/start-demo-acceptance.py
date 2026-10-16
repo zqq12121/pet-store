@@ -38,6 +38,8 @@ def main():
                 **{key: '' for key in ('OSS_ACCESS_KEY_ID', 'OSS_ACCESS_KEY_SECRET',
                                       'PAW_SMS_ACCESS_KEY_ID', 'PAW_SMS_ACCESS_KEY_SECRET',
                                       'PAW_CAPTCHA_APP_ID', 'PAW_CAPTCHA_APP_KEY',
+                                      'PAW_WECHAT_MINI_APP_ID', 'PAW_WECHAT_MINI_APP_SECRET',
+                                      'PAW_WECHAT_WEB_APP_ID', 'PAW_WECHAT_WEB_APP_SECRET', 'PAW_WECHAT_WEB_REDIRECT',
                                       'PAW_WECHAT_APP_ID', 'PAW_WECHAT_APP_SECRET',
                                       'PAW_WECHAT_OAUTH_REDIRECT')}}
     services = {name: {'image': 'warmpaw-' + name + ':latest'}
@@ -50,8 +52,10 @@ def main():
                     'org.springframework.boot.loader.launch.PropertiesLauncher'],
         volumes=[str(jar) + ':/app/demo-support.jar:ro'])
     services['ai-service']['environment'] = {'DEEPSEEK_API_KEY': ''}
-    override = folder / 'compose.json'
-    override.write_text(json.dumps({'services': services}, indent=2))
+    override = folder / 'compose.yaml'
+    # YAML 的 reset 标签真正移除基础文件的宿主端口；JSON 格式无法表达此标签。
+    override.write_text('services:\n  mysql:\n    ports: !reset []\n' + ''.join(
+        '  ' + name + ': ' + json.dumps(value) + '\n' for name, value in services.items()))
     compose = ['docker', 'compose', '--project-directory', str(ROOT), '-p', project,
                '-f', str(ROOT / 'compose.yaml'), '-f', str(override)]
     subprocess.run([*compose, 'up', '-d', '--no-build', '--wait', '--wait-timeout', '600'],

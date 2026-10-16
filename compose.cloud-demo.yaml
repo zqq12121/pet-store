@@ -1,5 +1,5 @@
 # 2 GiB + 至少 4 GiB SWAP 的低并发公网演示覆盖配置；不代表生产容量保证。
-# 启动：docker compose -f compose.yaml -f compose.cloud-demo.yaml up -d --no-build --wait --wait-timeout 900
+# 启动：sh scripts/start-cloud-demo.sh（逐项等待健康后启动下一项）
 services:
   mysql:
     mem_limit: 512m
@@ -39,7 +39,8 @@ services:
     build:
       network: host
     mem_limit: 384m
-    memswap_limit: 768m
+    # 网关保持原内存上限并禁止交换，避免有空闲内存时仍反复换页拖垮所有 API。
+    memswap_limit: 384m
     environment:
       JAVA_TOOL_OPTIONS: -Xms64m -Xmx160m -XX:+UseSerialGC -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=48m -XX:MaxDirectMemorySize=32m -Xss512k -Djava.awt.headless=true
   ai-service:

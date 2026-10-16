@@ -48,6 +48,19 @@ public class TemporaryStore {
     return value;
   }
 
+  /** 原子推进扫码状态并保留原到期时间，防止并发确认或轮询重复签发登录。 */
+  public synchronized boolean replace(String key, String expected, String value) {
+    if (enabled) {
+      Long changed = redis.execute(new org.springframework.data.redis.core.script.DefaultRedisScript<>(
+          "if redis.call('GET',KEYS[1])==ARGV[1] then redis.call('SET',KEYS[1],ARGV[2],'KEEPTTL'); return 1 end; return 0",
+          Long.class), java.util.List.of("paw:" + key), expected, value);
+      return Long.valueOf(1).equals(changed);
+    }
+    if (!expected.equals(get(key))) return false;
+    local.put(key, new Entry(value, local.get(key).expires()));
+    return true;
+  }
+
   public synchronized void checkFailures(String key, int max) {
     String value = get("fail:" + key);
     require(value == null || Long.parseLong(value) < max, 429, "RATE_LIMITED", "连续验证失败，请稍后重试");

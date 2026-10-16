@@ -21,13 +21,18 @@ def configuration_errors(env, mini_program=False):
     for key in ("MYSQL_ROOT_PASSWORD", "PAW_DB_PASSWORD", "PAW_REDIS_PASSWORD", "PAW_ADMIN_PASSWORD"):
         if len(env.get(key, "")) < 12:
             errors.append(key + " 至少需要 12 位；既有数据库和管理员密码须单独验证")
-    # 六页小程序只依赖浏览、微信登录和收藏，不要求短信、支付或 AI 配置。
+    # 小程序只依赖浏览、微信登录和收藏，不要求短信、支付或 AI 配置。
     if mini_program:
         if not re.fullmatch(r"wx[0-9a-fA-F]{16}", env.get("PAW_WECHAT_MINI_APP_ID", "")):
             errors.append("PAW_WECHAT_MINI_APP_ID 未配置有效小程序 AppID")
         if not env.get("PAW_WECHAT_MINI_APP_SECRET", "").strip():
             errors.append("PAW_WECHAT_MINI_APP_SECRET 未配置；只能保存在服务端")
+        if env.get("PAW_WECHAT_MINI_ENV_VERSION", "release") != "release":
+            errors.append("PAW_WECHAT_MINI_ENV_VERSION 正式上线须为 release")
         return errors
+    for key in ("PAW_CAPTCHA_APP_ID", "PAW_CAPTCHA_APP_KEY"):
+        if not env.get(key, "").strip():
+            errors.append(key + " 未配置；买家登录必须通过图形认证")
     for key in ("DEEPSEEK_API_KEY", "PAW_SMS_SIGN_NAME"):
         if not env.get(key, "").strip():
             errors.append(key + " 未配置")
@@ -48,6 +53,18 @@ def configuration_errors(env, mini_program=False):
         callback = urlsplit(wechat[2])
         if not all(wechat) or callback.scheme != "https" or callback.netloc != domain or callback.path != "/login" or callback.query or callback.fragment:
             errors.append("微信配置不完整，回调须为本站 https://域名/login")
+    # 可选网站应用与小程序接入也要检查完整性，不能用另一类应用凭据代替。
+    web = [env.get(k, "").strip() for k in ("PAW_WECHAT_WEB_APP_ID", "PAW_WECHAT_WEB_APP_SECRET", "PAW_WECHAT_WEB_REDIRECT")]
+    if any(web):
+        callback = urlsplit(web[2])
+        if not all(web) or callback.scheme != "https" or callback.netloc != domain or callback.path != "/login" or callback.query or callback.fragment:
+            errors.append("网站应用微信配置不完整，回调须为本站 https://域名/login")
+    mini = [env.get(k, "").strip() for k in ("PAW_WECHAT_MINI_APP_ID", "PAW_WECHAT_MINI_APP_SECRET")]
+    if any(mini):
+        if not all(mini) or not re.fullmatch(r"wx[0-9a-fA-F]{16}", mini[0]):
+            errors.append("小程序扫码登录凭据不完整或 AppID 无效")
+        if env.get("PAW_WECHAT_MINI_ENV_VERSION", "release") != "release":
+            errors.append("PAW_WECHAT_MINI_ENV_VERSION 正式上线须为 release")
     return errors
 
 
@@ -60,7 +77,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config-only", action="store_true")
     parser.add_argument("--public", action="store_true", help="通过真实公网 HTTPS 入口验收")
-    parser.add_argument("--mini-program", action="store_true", help="仅检查六页小程序所需配置及公开接口")
+    parser.add_argument("--mini-program", action="store_true", help="仅检查小程序所需配置及公开接口")
     args = parser.parse_args()
     errors = configuration_errors(os.environ, args.mini_program)
     for error in errors:

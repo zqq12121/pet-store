@@ -30,8 +30,16 @@ export function client(role:Role) {
   }
 }
 export const buyer=client('buyer'), admin=client('admin')
+// 公网 IP 的 HTTP 演示页没有 crypto.randomUUID，但仍支持安全随机字节；兼容域名配置前的访问。
+export function randomId():string {
+  if(typeof crypto.randomUUID==='function')return crypto.randomUUID()
+  const bytes=crypto.getRandomValues(new Uint8Array(16))
+  bytes[6]=(bytes[6]&15)|64;bytes[8]=(bytes[8]&63)|128
+  const hex=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('')
+  return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`
+}
 // 同一逻辑提交在超时后保留原幂等键；内容变化才生成新键。
-export function mutationKey() { let fingerprint='',key=''; return (path:string,body:unknown) => {const next=path+JSON.stringify(body);if(next!==fingerprint){fingerprint=next;key=crypto.randomUUID()}return key} }
+export function mutationKey() { let fingerprint='',key=''; return (path:string,body:unknown) => {const next=path+JSON.stringify(body);if(next!==fingerprint){fingerprint=next;key=randomId()}return key} }
 export const money=(amount:number) => new Intl.NumberFormat('zh-CN',{style:'currency',currency:'CNY',maximumFractionDigits:2}).format(amount/100)
 export const date=(value:string|null|undefined) => value?new Date(value).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false,month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'—'
 export function safeUrl(value:string) { try { const url=new URL(value,location.origin);return ['http:','https:'].includes(url.protocol)?url.href:'#' } catch { return '#' } }

@@ -1,5 +1,5 @@
 # 构建阶段不读取宿主机 target 或私有 .env。
-FROM maven:3.9.11-eclipse-temurin-21 AS build
+FROM maven:3.9.11-eclipse-temurin-25 AS build
 WORKDIR /src
 COPY pom.xml ./
 COPY common ./common
@@ -9,7 +9,7 @@ COPY gateway-server ./gateway-server
 COPY integration-tests/pom.xml ./integration-tests/pom.xml
 RUN --mount=type=cache,target=/root/.m2 mvn -B -DskipTests package
 
-FROM eclipse-temurin:21-jre-jammy
+FROM eclipse-temurin:25-jre-jammy
 # ffprobe 用于实际校验宠物视频，字体用于图片验证码。
 RUN apt-get update && apt-get install -y --no-install-recommends curl ffmpeg fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/* \

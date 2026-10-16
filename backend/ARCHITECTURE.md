@@ -1,6 +1,6 @@
 # 微服务结构与阅读指南
 
-项目使用 Java 21、Spring Boot 4.0.7、Spring Cloud 2025.1.3、Spring Cloud Alibaba 2025.1.0.0。后台交易通过 OpenFeign 调用订单服务，服务地址由 Nacos 发现；前端 API 路径和响应格式保持原样。
+项目使用 Java 25、Spring Boot 4.0.7、Spring Cloud 2025.1.3、Spring Cloud Alibaba 2025.1.0.0。后台交易通过 OpenFeign 调用订单服务，服务地址由 Nacos 发现；前端 API 路径和响应格式保持原样。
 
 ## 模块与运行位置
 

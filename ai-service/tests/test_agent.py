@@ -172,6 +172,30 @@ async def test_real_langchain_graph_guest_query_does_not_call_order_api(env):
     assert not any("/orders" in str(r.url) for r in calls)
 
 
+async def test_model_initialization_finishes_before_serving_messages(env, monkeypatch):
+    _, _, _, business, _, settings = env
+    settings.api_key = "isolated-test-key"
+    model = Model(replies=[AIMessage(content="", tool_calls=[
+        {"id": "t1", "name": "query_my_orders", "args": {}}]) for _ in range(2)])
+    serving, constructions = False, []
+
+    def build_model(**kwargs):
+        # 初始化可能很慢，不能占用每条消息的生成预算，也不能随消息重复创建连接池。
+        assert not serving, "model client initialized during message generation"
+        constructions.append(True)
+        return model
+
+    monkeypatch.setattr("app.agent.ChatDeepSeek", build_model)
+    agent = PetAgent(settings, business, None)
+    serving = True
+    agent.ready()
+    for _ in range(2):
+        output = [text async for text in agent.stream(
+            Identity("guest:g", "guest", {}), {}, [], question(), {})]
+        assert "登录" in "".join(output)
+    assert len(constructions) == 1
+
+
 async def test_real_langchain_graph_recommendation_constructs_appointment_action(env):
     _, _, _, business, _, settings = env
     model = Model(replies=[AIMessage(content="", tool_calls=[{"id": "t1", "name": "recommend_pets", "args": {"category": "cat"}}]),
