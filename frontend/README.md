@@ -39,10 +39,12 @@ npm run dev
 复制 `.env.example` 为 `.env.local`，按实际端口修改：
 
 ```dotenv
-VITE_API_TARGET=http://127.0.0.1:8080
+VITE_API_TARGET=http://127.0.0.1:8090
 VITE_DEMO_MODE=false
 VITE_ADMIN_BASE=/
 ```
+
+上面的 `8090` 对应根目录 Docker Compose 的统一入口。只有按 `backend/README.md` 在宿主机单独启动 Java 网关时，才改用 `8080`；容器内的网关 `8080` 不直接发布到宿主机。
 
 分别启动两个前端，无需演示服务：
 

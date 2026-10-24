@@ -12,7 +12,30 @@ import java.time.*;
 import java.util.*;
 import org.springframework.stereotype.Service;
 
-/** 统计用例：访问事件去重、字段校验与后台经营汇总。 */
+/**
+ * 埋点上报用例：接收前端批量上报的访问事件。
+ *
+ * <p><b>这是一个"不可信输入"接口</b>：数据来自浏览器，任何字段都可能是伪造或污染的。
+ * 因此校验做得比常规接口更严，且全部是"拒绝"而非"修正"：
+ *
+ * <ul>
+ *   <li>每批 1~20 条，整包 UTF-8 不超过 32KB（限制体积，防大包拖慢写库）；
+ *   <li>{@code eventId} 必须是 36 位 UUID——它同时是幂等键，格式不合法就无法去重；
+ *   <li>{@code pagePath} 不能带 {@code ?}、{@code #}，也不能包含 {@code "orders"}
+ *       ——订单路径里含订单号与手机号等隐私，绝不能进埋点表；
+ *   <li>{@code occurredAt} 与服务器时间偏差不得超过 24 小时，防止伪造历史时间污染统计；
+ *   <li>{@code properties} 按事件类型使用三套不同白名单，不允许自由扩展字段。
+ * </ul>
+ *
+ * <p><b>去重键是 {@code userId:eventId}</b>：同一用户重复上报同一条事件只算一次（计入
+ * {@code duplicateCount} 但不报错）。因此客户端重试是安全的。
+ *
+ * <p><b>返回 202 而不是 200</b>：语义是"已接受"，前端不需要等待处理结果，
+ * 也不该因为一次失败而阻塞页面交互。
+ *
+ * <p>上报 {@code pet_detail_view} 时会调 {@code catalog.publicPet(petId)} 校验宠物真实存在，
+ * 避免伪造浏览量为不存在的商品刷榜。
+ */
 @Service
 @org.springframework.transaction.annotation.Transactional(
     propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
@@ -25,6 +48,20 @@ public class AnalyticsApplicationService {
     this.catalog = catalog;
   }
 
+  /**
+   * 批量写入访问事件。
+   *
+   * <p>三条事件类型与各自允许的 {@code properties}：
+   *
+   * <ul>
+   *   <li>{@code page_view} —— {@code page}（home/list/detail/other）+ {@code pathDepth}；
+   *   <li>{@code pet_detail_view} —— {@code pathDepth}，且 {@code petId} 必须存在；
+   *   <li>{@code search} —— 仅 {@code keyword}（1~50 字），不记录结果集，避免泄露商品供给情况。
+   * </ul>
+   *
+   * <p>逐条处理而非整批失败：遇到重复事件跳过并计数，其它非法事件仍然抛错（因为白名单
+   * 校验失败说明客户端实现有 bug，静默丢弃会让数据缺口无从发现）。
+   */
   public OperationResult recordEvents(Map<String, Object> b, AuthService.Actor a) {
     Input in = new Input(b, "events");
     require(
@@ -50,6 +87,7 @@ public class AnalyticsApplicationService {
       String type = ei.choice("eventType", "page_view,pet_detail_view,search"),
           path = ei.str("pagePath", 1, 200);
       com.warmpaw.common.ProviderSupport.safePath(path);
+      // 查询串与订单路径可能带手机号/订单号，一律拒收，从源头杜绝隐私进埋点表。
       require(
           !path.contains("?") && !path.contains("#") && !path.contains("orders"),
           400,

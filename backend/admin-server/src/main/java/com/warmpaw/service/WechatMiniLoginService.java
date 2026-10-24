@@ -13,7 +13,23 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** 小程序 code 只在服务端换取身份；不要求手机号，不向客户端返回微信会话密钥。 */
+/**
+ * 小程序 code 只在服务端换取身份；不要求手机号，不向客户端返回微信会话密钥。
+ *
+ * <p><b>为什么 code 不能当用户标识</b>：{@code wx.login} 拿到的 code 一次性、几分钟就失效，
+ * 真正稳定的是 {@code openid}。所以必须由服务端调 {@code jscode2session} 换出 openid，
+ * 客户端既看不到也伪造不了。
+ *
+ * <p><b>session_key 怎么处理</b>：只在响应里校验"存在且非空"，<b>不落库、不返回</b>。
+ * 本服务不解密敏感数据（手机号走短信绑定），保留 key 没有用途；不保存也就没有
+ * "密钥泄露后可解密历史数据"的风险。
+ *
+ * <p><b>账号归属</b>：身份键是 {@code appId:openid}。同一微信在不同小程序/公众号下 openid 不同，
+ * 所以这里不认"同一个人"，也不使用 unionid 做跨应用合并。
+ *
+ * <p>与 {@link WechatLoginService} 的差异：小程序没有浏览器 Cookie 可以绑定，也不需要 state；
+ * 取而代之的是 IP 限流与微信侧一次性 code 本身。
+ */
 @Service
 public class WechatMiniLoginService {
   private final BusinessRepository store;
@@ -27,6 +43,29 @@ public class WechatMiniLoginService {
     this.auth = auth;
   }
 
+  /**
+   * 小程序登录（静默）：code → openid → 复用或新建买家账号 → 签发会话。
+   *
+   * <p>四段结构：
+   *
+   * <ol>
+   *   <li>先限流（同 IP 每分钟 30 次）再判配置，配置不全返回 503——明确告知"没开通"，
+   *       而不是让用户对着"登录失败"反复重试；
+   *   <li>调 {@code jscode2session}，把上游错误码翻译成本地语义（见下）；
+   *   <li>加全局锁后按 {@code appId:openid} 查身份，找不到才建号；建号与两张绑定表在
+   *       同一事务内完成，不会留下"有账号没绑定"的中间态；
+   *   <li>签发会话并附 {@code isNewUser}，前端据此决定要不要引导完善资料。
+   * </ol>
+   *
+   * <p><b>错误码映射</b>（微信业务错误同样返回 HTTP 200，必须解析 body）：
+   * {@code 40029/40163} code 无效或已用 → 401，前端重新 {@code wx.login}；
+   * {@code 40226} 被风控 → 401 但换一个错误码，提示"稍后再试"而非"重新登录"；
+   * {@code 45011} 频率限制 → 429；{@code 40013/40125} appId/secret 配错 → 503（运维问题，
+   * 让用户重试没有意义）；其余 → 502。
+   *
+   * <p>所有异常都不透传上游 URL 与响应体：URL 里带着 secret 和 code，把异常信息写进日志
+   * 或响应等于主动泄露。
+   */
   @Transactional
   public Map<String, Object> login(Map<String, Object> body, String ip) {
     String code = new Input(body, "code").str("code", 1, 512);
@@ -89,6 +128,7 @@ public class WechatMiniLoginService {
     return login;
   }
 
+  /** URL 编码 code 与凭据；code 可能含 {@code + / =}，不编码会在上游被截断成无效凭证。 */
   private String enc(String value) {
     return URLEncoder.encode(value, StandardCharsets.UTF_8);
   }

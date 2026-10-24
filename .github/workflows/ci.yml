@@ -1,0 +1,121 @@
+# 持续集成：只跑单元与集成测试，不启动 Docker 全栈。
+#
+# 三个技术栈各自独立作业，任一失败不影响其他作业继续跑完，
+# 这样一次流水线能同时暴露 Java、前端、AI 三处的问题。
+#
+# 所有作业都不依赖 MySQL / Redis / Nacos：
+#   - Java 测试使用 H2 内存库（见 README 与 backend/ARCHITECTURE.md）
+#   - AI 测试不加载向量模型，不调用 DeepSeek
+#   - 前端测试是纯函数单测（vitest）
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# 同一分支的新提交取消上一轮未完成的运行，避免排队浪费额度。
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Java 25 / Maven
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 JDK 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: temurin
+          cache: maven
+
+      # -B 批处理模式（日志更易读），-ntp 关掉下载进度条。
+      # 不加 -o：CI 是干净环境，必须联网下载依赖。
+      - name: 构建并运行测试
+        run: mvn -B -ntp -f backend/pom.xml package
+
+      - name: 上传测试报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: java-surefire-reports
+          path: '**/target/surefire-reports/**'
+          retention-days: 7
+
+  frontend:
+    name: Node 22 / TypeScript
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # 必须用 npm ci：锁文件是 package-lock.json，Dockerfile 也用 npm ci。
+      # 不要改成 pnpm，否则会生成第二套锁文件导致版本漂移（见 README）。
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 类型检查
+        run: npm run typecheck
+
+      - name: 单元测试
+        run: npm test
+        env:
+          CI: 'true'
+
+  ai-service:
+    name: Python 3.12 / pytest
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ai-service
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: ai-service/uv.lock
+
+      - name: 安装 Python 与依赖
+        run: uv sync --frozen
+
+      # pytest 已配置 asyncio_mode=auto 与 pythonpath=.（见 pyproject.toml）。
+      - name: 运行测试
+        run: uv run pytest -q
+
+  mini-program:
+    name: 小程序校验
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mini-program
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # 小程序目录没有第三方依赖，scripts 全部使用 Node 内置模块与 node:test。
+      - name: 页面注册与配置校验
+        run: npm run check
+
+      - name: 单元测试
+        run: npm test

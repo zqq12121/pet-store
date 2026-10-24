@@ -15,6 +15,9 @@ coverage/
 .vscode/
 .DS_Store
 
+# 本地工作记录（含个人路径，不入库）
+.workbuddy/
+
 # 临时上传
 server/uploads/
 

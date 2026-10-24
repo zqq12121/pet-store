@@ -10,7 +10,37 @@ import java.time.*;
 import java.util.*;
 import org.springframework.stereotype.Service;
 
-/** 售后与财务退款分开记录；退回宠物保持下架，不能因退款自动重新出售。 */
+/**
+ * 售后服务：申请、审核、退回验收、换宠与退款编排。
+ *
+ * <p><b>售后单与退款单是两张表</b>。售后单记录"人和店之间的协商过程"（谁申请、什么理由、诊断材料、
+ * 审核结论、退回记录、时间线），退款单（{@code refund}）只记资金动作，由 {@link PaymentService} 创建并异步执行。
+ * 分开的原因是：一次售后可能不产生退款（驳回、换宠），一次退款也可能来自非售后场景（超时关单）。
+ * 把资金状态硬塞进售后单会让两边都变脏。
+ *
+ * <p><b>状态机</b>：
+ *
+ * <pre>
+ *   pending_review ──reject──▶ rejected
+ *        │
+ *        └─approve─┬─ 未交付 + 全额退款 ──▶ refunding（已发起退款）
+ *                  └─ 已交付 ──┬─ 全额退款 ──▶ awaiting_return ──验收──▶ refunding
+ *                              └─ 换宠     ──▶ awaiting_return ──验收──▶ awaiting_exchange
+ *                                                                          ├─ deliverExchange ──▶ resolved
+ *                                                                          └─ exchangeRefund  ──▶ refunding
+ * </pre>
+ *
+ * <p><b>关键约束</b>：
+ *
+ * <ul>
+ *   <li>退回的宠物一律置 {@code off}，绝不因退款自动恢复可售——健康问题退回的宠物不能再次出售；
+ *   <li>审核方案必须与买家申请的方案一致，店长只能在金额上收紧，不能单方面改类型；
+ *   <li>换宠只支持"未退款 + 同价"，避免出现找零和差价结算。
+ * </ul>
+ *
+ * <p>与其他服务的关系：订单状态由 {@link OrderService} 维护，本类只读取；
+ * 资金动作全部委托 {@link PaymentService}。
+ */
 @Service
 public class AfterSaleService {
   private final BusinessRepository store;
@@ -29,6 +59,7 @@ public class AfterSaleService {
     this.payments = payments;
   }
 
+  /** 取出售后单并校验归属；店长可读全部，买家只能读自己提交的。越权统一按 404 处理。 */
   public Map<String, Object> owned(String id, AuthService.Actor a) {
     Map<String, Object> s = store.get("after_sale", id);
     require(
@@ -39,6 +70,10 @@ public class AfterSaleService {
     return s;
   }
 
+  /**
+   * 售后详情。买家视角不含订单全量；店长视角内联完整订单（{@code admin=true}），
+   * 便于在一屏内判断该不该批——否则店长要在两个接口之间来回切。
+   */
   public Map<String, Object> detail(Map<String, Object> s, boolean admin) {
     Map<String, Object> r =
         CatalogReader.select(
@@ -55,6 +90,14 @@ public class AfterSaleService {
     return r;
   }
 
+  /**
+   * 追加一条时间线事件。
+   *
+   * <p>时间线是追加式的（取出旧列表再 add 新元素后整体写回），不做原地修改，
+   * 这样每一步都有不可变的 {@code occurredAt} 和操作方类型（buyer/admin），可直接展示给用户。
+   *
+   * <p>注意：本方法只改内存对象，调用方需自行 {@code store.save(s)}。
+   */
   public void timeline(
       Map<String, Object> s, String event, String label, String note, String actor) {
     List<Map<String, Object>> t = new ArrayList<>(objects(s, "timeline"));
@@ -73,6 +116,24 @@ public class AfterSaleService {
     s.put("timeline", t);
   }
 
+  /**
+   * 买家提交售后申请。
+   *
+   * <p>资格不是在这里现算的，而是直接复用 {@link OrderService#eligibility}——保证"前端看到的按钮"
+   * 和"服务端允许的类型"来自同一份规则，不会出现界面能点、接口报错。
+   *
+   * <p>两类申请的差异：
+   *
+   * <ul>
+   *   <li>{@code refund_before_pickup}（未交付）：只能全额退款，不允许带诊断信息，也不允许指定金额；
+   *   <li>{@code health_issue}（已交付）：必须提供诊断时间与 1~5 张诊断材料。诊断时间要落在
+   *       {@code [pickedUpAt, min(now, healthGuaranteeExpiresAt)]} 区间内——既不能早于提宠，
+   *       也不能晚于保障期，还不能是未来时间。
+   * </ul>
+   *
+   * <p>图片不做"仅登记 id"，而是逐张调 {@code catalog.asset} 校验归属与用途，
+   * 防止有人拿别人订单的图片来凑证据。
+   */
   public Map<String, Object> create(
       Map<String, Object> o, Map<String, Object> body, AuthService.Actor actor) {
     Input in =
@@ -115,6 +176,7 @@ public class AfterSaleService {
           "待自提仅支持全额退款");
     for (String id : diagnosis) catalog.asset(id, "diagnosis", actor.id(), orderId);
     for (String id : evidence) catalog.asset(id, "after_sale_evidence", actor.id(), orderId);
+    // 只有"承担治疗费"才由买家提出金额，其余方案金额由服务端算，避免买家自己定价。
     Long amount =
         resolution.equals("treatment_share")
             ? in.integer("requestedAmount", 1, number(o, "amount") - number(o, "refundedAmount"))
@@ -173,6 +235,24 @@ public class AfterSaleService {
     return s;
   }
 
+  /**
+   * 店长审核：通过或驳回。
+   *
+   * <p>通过时必须指定 {@code resolution}，且必须与买家申请的一致——这一条刻意写死，
+   * 因为"申请全额退款、店长批成换宠"这类单方面变更会直接引发投诉。
+   * 店长能做的是在 {@code treatment_share} 场景下把金额往下压（不超过申请额、不超过可退余额）。
+   *
+   * <p>通过后的分流：
+   *
+   * <ul>
+   *   <li>{@code treatment_share}：立即发起部分退款，不走退回流程（宠物通常还在买家手里继续治疗）；
+   *   <li>全额退款 / 换宠：已提宠的进入 {@code awaiting_return} 等门店验收退回；
+   *       未提宠的直接发起全额退款。
+   * </ul>
+   *
+   * <p>驳回时禁止携带 {@code resolution} 与 {@code approvedAmount}，防止前端把默认值一起提交，
+   * 造成"驳回但批准了方案"的脏数据。
+   */
   public Map<String, Object> review(
       Map<String, Object> s, Map<String, Object> body, AuthService.Actor actor) {
     Input in = new Input(body, "version,decision,reason,resolution,approvedAmount");
@@ -199,6 +279,7 @@ public class AfterSaleService {
       if (resolution.equals("exchange")) exchangeEnabled();
       s.put("approvedResolution", resolution);
       if (resolution.equals("treatment_share")) {
+        // 上限取三者最小：买家申请额、订单可退余额，避免超退。
         long amount =
             in.integer(
                 "approvedAmount",
@@ -223,6 +304,16 @@ public class AfterSaleService {
     return s;
   }
 
+  /**
+   * 门店验收买家退回的宠物。
+   *
+   * <p>必须先有 {@code awaiting_return} 状态才能验收（换宠和全额退款都走这一步）。
+   * 验收后宠物一律置 {@code off} 并解除占用——这是全类最重要的一条约束：
+   * <b>因为健康问题退回的宠物不能再卖</b>，是否重新上架必须由店长人工判断，不能由系统自动恢复。
+   *
+   * <p>验收完按已批方案分流：换宠进入 {@code awaiting_exchange}，退款立即发起。
+   * {@code conditionNotes} 必填，记录退回时的实际状态，是后续纠纷的证据。
+   */
   public Map<String, Object> returned(
       Map<String, Object> s, Map<String, Object> body, AuthService.Actor actor) {
     Input in = new Input(body, "version,received,conditionNotes,evidenceFileIds");
@@ -257,6 +348,10 @@ public class AfterSaleService {
     return s;
   }
 
+  /**
+   * 换宠开关。门店级配置项（{@code shop.exchangeEnabled}），关闭时所有换宠入口统一返回
+   * 422 {@code EXCHANGE_UNAVAILABLE}，而不是各自判断。
+   */
   public void exchangeEnabled() {
     require(
         Boolean.TRUE.equals(catalog.shop().get("exchangeEnabled")),
@@ -265,6 +360,16 @@ public class AfterSaleService {
         "门店暂未开通换宠");
   }
 
+  /**
+   * 为换宠选择替换宠物并占用库存。
+   *
+   * <p>约束：不能换原宠；必须同价（换宠不做差价结算）；订单必须未退过款；
+   * 替换宠必须处于可售状态。
+   *
+   * <p>幂等处理：如果本次选的还是上次那只、且仍处于 {@code reserved}，直接返回原记录，
+   * 不重复占用。否则先 {@link #releaseReplacement} 释放上一只，再占用新的——
+   * 顺序不能反，否则会出现两只宠物同时被本单锁住。
+   */
   public Map<String, Object> exchange(
       Map<String, Object> s, Map<String, Object> body, AuthService.Actor actor) {
     exchangeEnabled();
@@ -314,6 +419,12 @@ public class AfterSaleService {
     return e;
   }
 
+  /**
+   * 计算换宠确认的 {@code scope} 并顺带校验前置条件。
+   *
+   * <p>{@code scope} 形如 {@code 售后单id:换宠id:替换宠id}，会被写进确认记录并参与短信验证码校验。
+   * 这样"买家确认的是 A 宠物"这件事被绑定到具体对象上，事后换宠不会复用旧确认。
+   */
   public String exchangeScope(Map<String, Object> s) {
     Map<String, Object> e = object(s, "exchange");
     exchangeEnabled();
@@ -322,6 +433,10 @@ public class AfterSaleService {
     return text(s, "id") + ":" + text(e, "id") + ":" + text(e, "replacementPetId");
   }
 
+  /**
+   * 买家现场确认替换宠（短信验证）。复用 {@link OrderService#confirmation}，
+   * 但 purpose 用 {@code exchange_confirm}、scope 带换宠三元组，与自提确认互不通用。
+   */
   public Map<String, Object> confirmExchange(
       Map<String, Object> s, Map<String, Object> body, AuthService.Actor actor) {
     String scope = exchangeScope(s);
@@ -340,6 +455,15 @@ public class AfterSaleService {
     return CatalogReader.select(e, "confirmationId,confirmedAt,validUntil");
   }
 
+  /**
+   * 交付替换宠，完成换宠。
+   *
+   * <p>与自提流程同构：校验确认未过期、库存归属、检疫证明有效，然后把替换宠置 {@code sold}、
+   * 售后单置 {@code resolved}。
+   *
+   * <p>注意这里复用订单 id 作为库存占用方（{@code store.release(petId, orderId)}）——
+   * 换宠不新建订单，原订单始终是这次交易的唯一凭证。
+   */
   public Map<String, Object> deliverExchange(
       Map<String, Object> s, Map<String, Object> body, AuthService.Actor actor) {
     exchangeScope(s);
@@ -378,6 +502,14 @@ public class AfterSaleService {
     return s;
   }
 
+  /**
+   * 释放当前换宠方案占用的替换宠库存，并把换宠记录标记为 {@code cancelled}。
+   *
+   * <p>用 {@code release(...) > 0} 做条件释放：只有占用方确实是本订单时才回写宠物，
+   * 防止误清掉别的订单的锁。同时清掉确认 id 与确认时间，使旧的买家确认立即失效。
+   *
+   * <p>调用场景：改选另一只替换宠、协商改为退款。本方法只改内存对象，不落库。
+   */
   private void releaseReplacement(Map<String, Object> s) {
     Map<String, Object> x = object(s, "exchange");
     if (!"reserved".equals(text(x, "status"))) return;
@@ -393,6 +525,16 @@ public class AfterSaleService {
     x.put("confirmedAt", null);
   }
 
+  /**
+   * 换宠协商破裂，转为全额退款。
+   *
+   * <p>适用场景：已验收原宠退回、但双方对替换宠谈不拢。因为钱一直没退，这里直接发起全额退款，
+   * 并强制要求买家书面同意（{@code buyerConsentFileIds} 必填 1~5 份）——
+   * 从"换"改成"退"是重大变更，必须有可追溯的同意材料。
+   *
+   * <p>先把 {@code approvedResolution} 改成 {@code full_refund} 再发起退款，
+   * 保证退款单与售后单的口径一致。
+   */
   public Map<String, Object> exchangeRefund(
       Map<String, Object> s, Map<String, Object> body, AuthService.Actor actor) {
     Input in = new Input(body, "version,reason,buyerConsentFileIds");

@@ -7,7 +7,18 @@ import java.util.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-/** 宠物搜索、价格/年龄筛选和分页由数据库完成，避免加载整张宠物表。 */
+/**
+ * 宠物搜索、价格/年龄筛选和分页由数据库完成，避免加载整张宠物表。
+ *
+ * <p>与 {@code CatalogReader.pets} 的分工：那边只做<b>参数校验与出口投影</b>，
+ * 真正的 WHERE/ORDER/LIMIT 在这里。所以"买家能看到哪些状态"这件安全相关的事，
+ * 在两处各有一份——见 {@link #page} 里对 {@code admin} 的处理。
+ *
+ * <p>本类返回的是<b>实体</b>（含 {@code ownerId} 等内部字段），调用方必须再用
+ * {@code CatalogReader.card/adminPet} 投影后才能下发，不能直接透传。
+ *
+ * <p>所有动态拼进 SQL 的只有白名单里的列名；值一律 {@code ?} 绑定。
+ */
 @Repository
 public class PetQueries {
   private final JdbcTemplate jdbc;
@@ -18,6 +29,38 @@ public class PetQueries {
     this.repository = repository;
   }
 
+  /**
+   * 分页查询宠物：COUNT 求总数 + 取一页 id + 逐条装配。
+   *
+   * <p><b>状态过滤是双重保险</b>：非后台请求无条件追加 {@code status IN ('on_sale','reserved')}，
+   * 与用户自选的 {@code status} 再 AND。所以买家即使传 {@code status=off}，
+   * 结果也只是空集（上层还会先以 400 拒绝）。把"不可见状态"写进 SQL 而不是只依赖上层校验，
+   * 是为了让任何绕过 controller 的调用路径也拿不到下架商品。
+   *
+   * <p><b>价格与月龄条件总是出现在 WHERE 里</b>（用默认值 {@code 0..1e8} / {@code 0..360} 兜住），
+   * 好处是 SQL 结构稳定、便于命中同一份预编译计划；代价是永远多两个无用条件。
+   *
+   * <p><b>月龄取 COALESCE</b>：优先用 {@code birth_date} 现算（{@code TIMESTAMPDIFF}），
+   * 只有没填生日时才退回落库的 {@code age_months}。这与 {@code CatalogReader.card}
+   * 展示层"有生日就用生日"的规则一致，保证"筛出来的"和"看到的"是同一个数。
+   * 但要注意这里用的是数据库的 {@code CURRENT_DATE}，其时区取服务器/连接配置，
+   * 而展示层固定用 {@code Asia/Shanghai}——跨时区部署时边界日的月龄可能差 1。
+   *
+   * <p><b>关键词是四路 LIKE 的子查询</b>：名称、品种、毛色，加上性格标签表里的
+   * {@code EXISTS}。同一个关键词绑定 4 次。标签走子查询而不是 JOIN，是为了避免
+   * 一只宠物多个命中标签时结果行重复（那样分页 total 也会虚高）。
+   *
+   * <p><b>后台忽略 {@code sort}</b>：固定按创建时间倒序——后台是"找最新录入的那只"，
+   * 不需要按价格或推荐排序。
+   *
+   * <p><b>两条 SQL 而非窗口函数</b>：先 COUNT 再取 id，是为了让分页的 total 与 items
+   * 在同一份 WHERE 下自洽。两次查询之间若有写入，total 与当页内容可能轻微不一致，
+   * 这是可接受的最终一致性。
+   *
+   * <p><b>按 id 逐条回表</b>：拿到 id 列表后用 {@code repository.find} 逐条 hydrate，
+   * 因此每页会触发 1+2N 次查询（N 还要乘上子表数）。选它是为了复用模型层的解码逻辑，
+   * 代价是页大小直接决定查询数——这也是 {@code pageSize} 被限制在 100 的原因之一。
+   */
   public Map<String, Object> page(Map<String, Object> q, boolean admin) {
     List<String> where = new ArrayList<>();
     List<Object> args = new ArrayList<>();
