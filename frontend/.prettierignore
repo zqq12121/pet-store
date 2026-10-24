@@ -1,0 +1,30 @@
+# 依赖与构建产物
+node_modules/
+dist/
+dist-*/
+coverage/
+.vite/
+
+# 锁文件由 npm 自己维护
+package-lock.json
+
+# 静态资源与二进制
+**/*.png
+**/*.jpg
+**/*.jpeg
+**/*.gif
+**/*.svg
+**/*.ico
+**/*.woff
+**/*.woff2
+**/*.ttf
+
+# 本地环境与服务端运行数据
+.env
+.env.*
+server/uploads/
+server/data/
+
+# 第三方或生成文件
+**/*.min.js
+**/*.min.css

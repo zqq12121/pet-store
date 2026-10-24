@@ -70,13 +70,23 @@ jobs:
       - name: 安装依赖
         run: npm ci
 
-      - name: 类型检查
-        run: npm run typecheck
+      # 格式必须先过：代码曾被压成单行几千字符，Prettier 是唯一的防线。
+      # 配置见 frontend/.prettierrc.json，注意 semi 必须为 true —— Vue 模板里
+      # 的内联多语句处理器（@click="a=true;b=false"）在 semi:false 下会被拆行
+      # 并去掉分号，导致模板表达式语法错误，vue-tsc 查不出来，只有构建才报。
+      - name: 格式检查
+        run: npm run format:check
 
       - name: 单元测试
         run: npm test
         env:
           CI: 'true'
+
+      # build 脚本本身是 typecheck && vite build && vite build，故不再单列类型检查。
+      # vue-tsc 只做类型检查、不编译模板，只有真正构建才能捕获模板表达式错误，
+      # 所以这一步不能省。
+      - name: 类型检查与生产构建
+        run: npm run build
 
   ai-service:
     name: Python 3.12 / pytest
