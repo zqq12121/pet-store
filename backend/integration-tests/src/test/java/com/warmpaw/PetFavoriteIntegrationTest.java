@@ -120,8 +120,12 @@ class PetFavoriteIntegrationTest {
     int users = store.list("user").size(), pets = store.list("pet").size();
     var jdbc = context.getBean(org.springframework.jdbc.core.JdbcTemplate.class);
     // 执行交付的增量文件两次，检查迁移标记和已有账号、动物、收藏均保留。
+    // 路径从 backend/deploy/ 改到 common 的 Flyway 目录（2026-10-24）：迁移改由 Flyway 管理，
+    // 但本用例验证的是"脚本自身可重复执行"，与 Flyway 的版本记录无关，所以仍直接读文件。
     try (var connection = jdbc.getDataSource().getConnection()) {
-      var script = new org.springframework.core.io.FileSystemResource("../deploy/pet-favorites-migration.sql");
+      var script =
+          new org.springframework.core.io.FileSystemResource(
+              "../common/src/main/resources/db/migration/V6__pet_favorites.sql");
       for (int i = 0; i < 2; i++)
         org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(connection, script);
     }

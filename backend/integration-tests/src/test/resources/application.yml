@@ -1,6 +1,11 @@
 spring:
   config:
     import: classpath:application-common.yml
+  # 测试用 H2 + spring.sql.init.mode=always 建表，不走 Flyway：
+  # db/migration 下是 MySQL 方言的 DDL（COMMENT、ALTER TABLE 等），H2 无法执行。
+  # 本文件的属性优先级高于 import 进来的 application-common.yml，故此处覆盖生效。
+  flyway:
+    enabled: false
   cloud:
     nacos:
       discovery:
