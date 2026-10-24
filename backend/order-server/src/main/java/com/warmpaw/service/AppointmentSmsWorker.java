@@ -29,15 +29,28 @@ import org.springframework.stereotype.Component;
 @Component
 public class AppointmentSmsWorker {
   private static final Logger log = LoggerFactory.getLogger(AppointmentSmsWorker.class);
+
+  /** 调度锁任务名；多实例必须一致。 */
+  private static final String TASK_RETRY = "order:sms-retry";
+
+  /** 锁存活 25 秒：略小于 30 秒的调度间隔。 */
+  private static final java.time.Duration LOCK_TTL = java.time.Duration.ofSeconds(25);
+
   private final AuthService auth;
   private final SmsGateway gateway;
   private final AppointmentSmsOutbox outbox;
+  /** 跨实例互斥：避免同一笔预约短信被两个实例各发一次。 */
+  private final SchedulerLock schedulerLock;
 
   public AppointmentSmsWorker(
-      AuthService auth, SmsGateway gateway, AppointmentSmsOutbox outbox) {
+      AuthService auth,
+      SmsGateway gateway,
+      AppointmentSmsOutbox outbox,
+      SchedulerLock schedulerLock) {
     this.auth = auth;
     this.gateway = gateway;
     this.outbox = outbox;
+    this.schedulerLock = schedulerLock;
   }
 
   /**
@@ -96,9 +109,18 @@ public class AppointmentSmsWorker {
    *
    * <p>{@code initialDelay} 同样 30 秒，避免应用刚启动、数据库连接池还没热就批量发送。
    * 单轮最多处理 {@link AppointmentSmsOutbox#due} 返回的 20 条，防止积压时占满线程。
+   *
+   * <p>外面套一层 {@link SchedulerLock}：{@code outbox.due} 本身用条件更新做了认领，
+   * 多实例并发也不会真的重复发同一条；加锁的意义是避免多个实例同时扫表做无用功，
+   * 也避免同一批积压被 N 个实例分摊时反复争抢。
    */
   @Scheduled(fixedDelay = 30000, initialDelay = 30000)
   public void retryDue() {
-    for (String key : outbox.due(Instant.now())) dispatch(key);
+    if (!schedulerLock.tryAcquire(TASK_RETRY, LOCK_TTL)) return;
+    try {
+      for (String key : outbox.due(Instant.now())) dispatch(key);
+    } finally {
+      schedulerLock.release(TASK_RETRY);
+    }
   }
 }

@@ -35,25 +35,36 @@ import org.springframework.transaction.support.TransactionTemplate;
  */
 @Component
 public class PaymentWorker {
+  /** 调度锁的任务名；多实例必须一致，命名带服务前缀防止与其他服务撞键。 */
+  private static final String TASK_RECONCILE = "order:reconcile";
+
+  /** 锁存活 55 秒：略小于 60 秒的调度间隔，保证下一轮开始前锁已释放或自动过期。 */
+  private static final Duration LOCK_TTL = Duration.ofSeconds(55);
+
   private final BusinessRepository store;
   private final PaymentService payments;
   private final WechatGateway gateway;
   private final AuthService auth;
   private final TransactionTemplate tx;
   private final AppointmentService appointments;
+  /** 跨实例互斥：多实例部署时只让一个实例跑对账，见 {@link SchedulerLock}。 */
+  private final SchedulerLock schedulerLock;
 
   public PaymentWorker(
       BusinessRepository store,
       PaymentService payments,
       WechatGateway gateway,
       AuthService auth,
-      PlatformTransactionManager manager, AppointmentService appointments) {
+      PlatformTransactionManager manager,
+      AppointmentService appointments,
+      SchedulerLock schedulerLock) {
     this.appointments = appointments;
     this.store = store;
     this.payments = payments;
     this.gateway = gateway;
     this.auth = auth;
     this.tx = new TransactionTemplate(manager);
+    this.schedulerLock = schedulerLock;
   }
 
   /**
@@ -270,6 +281,18 @@ public class PaymentWorker {
    */
   @Scheduled(fixedDelay = 60000, initialDelay = 60000)
   public void reconcile() {
+    // 多实例部署时只让一个实例执行；拿不到锁说明别的实例正在跑，本轮直接跳过。
+    // 单实例（或 Redis 未启用）时 tryAcquire 恒为 true，行为与改造前一致。
+    if (!schedulerLock.tryAcquire(TASK_RECONCILE, LOCK_TTL)) return;
+    try {
+      reconcileOnce();
+    } finally {
+      schedulerLock.release(TASK_RECONCILE);
+    }
+  }
+
+  /** 实际对账逻辑；锁的获取与释放收口在 {@link #reconcile()}，本方法可安全重入调用。 */
+  private void reconcileOnce() {
     locked(
         () -> {
           appointments.expire(Instant.now());

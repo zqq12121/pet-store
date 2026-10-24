@@ -9,7 +9,8 @@ import java.util.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * 每日只清理未被业务引用的临时文件；历史订单、退回证据和快照优先保留。
@@ -32,14 +33,54 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class MaintenanceService {
+  /** 调度锁任务名；多实例必须一致。 */
+  private static final String TASK_CLEAN = "admin:file-clean";
+
+  /** 锁存活 1 小时：清理要扫全表，给足时间；仍远小于 24 小时的调度间隔。 */
+  private static final Duration LOCK_TTL = Duration.ofHours(1);
+
   private final BusinessRepository store;
   private final Path root;
   private final OssStorage oss;
+  /** 跨实例互斥：避免两个 admin 实例同时删同一批文件（第二个会因文件不存在而报错）。 */
+  private final SchedulerLock schedulerLock;
+  /**
+   * 编程式事务：{@code @Transactional} 在本类自调用时不会生效（代理不拦截 this 调用），
+   * 而加锁必须发生在事务之外——否则 Redis 抖动会连带回滚业务事务。
+   */
+  private final TransactionTemplate tx;
 
-  public MaintenanceService(BusinessRepository store, OssStorage oss, @Value("${app.storage}") String storage) {
+  public MaintenanceService(
+      BusinessRepository store,
+      OssStorage oss,
+      @Value("${app.storage}") String storage,
+      SchedulerLock schedulerLock,
+      PlatformTransactionManager manager) {
     this.store = store;
     this.root = Path.of(storage).toAbsolutePath().normalize();
     this.oss = oss;
+    this.schedulerLock = schedulerLock;
+    this.tx = new TransactionTemplate(manager);
+  }
+
+  /**
+   * 每日调度入口：先抢分布式锁，再在独立事务里执行清理。
+   *
+   * <p>锁放在事务之外，是为了让「Redis 抖动」和「业务事务回滚」互相独立——
+   * 否则锁操作失败会连带把清理事务标记为回滚。
+   *
+   * <p>{@code initialDelay} 与 {@code fixedDelay} 相同，意味着<b>启动时并不跑</b>，
+   * 第一次要等一天。刚启动时业务数据可能还没就绪，立刻扫容易把"马上要被引用"的文件判成孤儿。
+   */
+  @Scheduled(fixedDelay = 86400000, initialDelay = 86400000)
+  public void cleanTemporaryFiles() {
+    // 拿不到锁说明别的实例正在清理，本轮直接跳过（单实例时恒为 true）。
+    if (!schedulerLock.tryAcquire(TASK_CLEAN, LOCK_TTL)) return;
+    try {
+      tx.executeWithoutResult(status -> cleanOnce());
+    } finally {
+      schedulerLock.release(TASK_CLEAN);
+    }
   }
 
   /**
@@ -55,9 +96,7 @@ public class MaintenanceService {
    * <p>路径先 {@code normalize} 再校验父目录，防止 id 里藏 {@code ..} 越出存储根。
    * 任一步抛异常都不改状态、交给明天重试——绝不能"删失败了还标成已删"。
    */
-  @Scheduled(fixedDelay = 86400000, initialDelay = 86400000)
-  @Transactional
-  public void cleanTemporaryFiles() {
+  private void cleanOnce() {
     store.lock();
     Instant cutoff = Instant.now().minusSeconds(86400);
     Set<String> references = new HashSet<>();

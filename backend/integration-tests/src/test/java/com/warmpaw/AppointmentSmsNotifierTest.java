@@ -124,7 +124,8 @@ class AppointmentSmsNotifierTest {
     AuthService auth = mock(AuthService.class);
     SmsGateway gateway = mock(SmsGateway.class);
     AppointmentSmsOutbox outbox = mock(AppointmentSmsOutbox.class);
-    var worker = new AppointmentSmsWorker(auth, gateway, outbox);
+    // enabled=false：单元测试不连 Redis，tryAcquire 恒为 true，等价于单实例行为。
+    var worker = new AppointmentSmsWorker(auth, gateway, outbox, new SchedulerLock(null, false));
     var notice =
         new AppointmentSmsOutbox.Notice(
             "order_sms_test-cancelled",
@@ -158,7 +159,8 @@ class AppointmentSmsNotifierTest {
     AuthService auth = mock(AuthService.class);
     SmsGateway gateway = mock(SmsGateway.class);
     AppointmentSmsOutbox outbox = mock(AppointmentSmsOutbox.class);
-    var worker = new AppointmentSmsWorker(auth, gateway, outbox);
+    // enabled=false：单元测试不连 Redis，tryAcquire 恒为 true，等价于单实例行为。
+    var worker = new AppointmentSmsWorker(auth, gateway, outbox, new SchedulerLock(null, false));
     var notice =
         new AppointmentSmsOutbox.Notice(
             "order_sms_test-completed",
