@@ -36,5 +36,24 @@
       <artifactId>jackson-databind</artifactId>
       <version>2.21.4</version>
     </dependency>
+    <!-- Prometheus 指标导出：版本由 Spring Boot BOM 管理。
+         放在 common 里是因为 order-server 与 admin-server 都依赖本模块，
+         避免两处重复声明；gateway 不依赖 common，需单独声明（见其 pom）。 -->
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-registry-prometheus</artifactId>
+    </dependency>
+    <!-- 数据库版本迁移：版本由 Spring Boot BOM 管理。
+         flyway-core 是引擎，flyway-mysql 提供 MySQL 方言——Flyway 10 起拆成独立模块，
+         只加 core 会在启动时报 "Unsupported Database: MySQL"。
+         放在 common 里让 order-server 与 admin-server 共用同一套迁移历史。 -->
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-mysql</artifactId>
+    </dependency>
   </dependencies>
 </project>

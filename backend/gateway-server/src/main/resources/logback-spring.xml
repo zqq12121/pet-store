@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  网关的日志配置。gateway-server 不依赖 common 模块，因此无法复用
+  common/src/main/resources/logback-spring.xml，只能单独保留一份。
+
+  与业务服务的差别：
+  - 网关是 WebFlux，一条请求会在多个 reactor 线程间迁移，MDC 不成立，
+    所以这里的 %X{traceId} 通常为空，traceId 由 TraceIdGatewayFilter 作为参数直接打印。
+  - reactor 的 DEBUG 日志极多，必须压到 WARN，否则访问日志会被淹没。
+-->
+<configuration>
+
+  <property name="LOG_PATTERN"
+            value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [%X{traceId:-}] %logger{40} - %msg%n"/>
+
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>${LOG_PATTERN}</pattern>
+      <charset>UTF-8</charset>
+    </encoder>
+  </appender>
+
+  <logger name="com.warmpaw" level="INFO"/>
+  <logger name="org.springframework" level="WARN"/>
+  <logger name="org.springframework.cloud.gateway" level="INFO"/>
+  <logger name="com.alibaba.nacos" level="WARN"/>
+  <logger name="reactor.netty" level="WARN"/>
+  <logger name="io.netty" level="WARN"/>
+
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+  </root>
+
+</configuration>

@@ -42,4 +42,5 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        # 与业务服务保持一致；网关的 prometheus 端点额外能反映路由转发与连接池情况。
+        include: health,info,prometheus

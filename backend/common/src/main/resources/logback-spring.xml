@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  统一日志格式，放在 common 模块的 classpath 根下，order-server 与 admin-server 共用。
+
+  为什么只输出到 stdout 不外写文件：
+  生产环境跑在 Docker 里，日志由容器运行时收集（docker logs / 日志驱动）。
+  应用自己写文件会导致「容器重启后日志留在旧容器层里」以及「多实例写同一文件」两类问题。
+
+  为什么 traceId 放在线程名之后：
+  一条日志从左到右是「何时 → 多严重 → 哪个线程 → 哪个请求 → 谁打的 → 说了什么」，
+  traceId 紧跟线程名，便于肉眼把同一请求的多行日志归组，也便于 grep '\[abc123\]'。
+  %X{traceId:-} 的 :- 表示 MDC 里没有该键时输出空串而不是 "traceId_IS_UNDEFINED"。
+-->
+<configuration>
+
+  <property name="LOG_PATTERN"
+            value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [%X{traceId:-}] %logger{40} - %msg%n"/>
+
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>${LOG_PATTERN}</pattern>
+      <charset>UTF-8</charset>
+    </encoder>
+  </appender>
+
+  <!-- 业务代码默认 INFO：状态变更（预约确认、交付、退款）都打 INFO，调试细节用 DEBUG 临时打开。 -->
+  <logger name="com.warmpaw" level="INFO"/>
+
+  <!-- 框架噪音降级：启动期 Spring 的 DEBUG/INFO 太多，会把业务日志淹掉。
+       MyBatis 的 SQL 日志在排查 N+1 时才需要，默认关掉；要看得见就把下面这行改成 DEBUG。 -->
+  <logger name="org.springframework" level="WARN"/>
+  <logger name="org.mybatis" level="WARN"/>
+  <logger name="com.alibaba.nacos" level="WARN"/>
+  <logger name="com.zaxxer.hikari" level="WARN"/>
+
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+  </root>
+
+</configuration>
