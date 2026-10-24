@@ -156,6 +156,175 @@ public class RelationalRepository {
   }
 
   /**
+   * 带条件、关键词与分页的列表查询：过滤与分页全部下推到 SQL。
+   *
+   * <p><b>本方法存在的理由</b>：无参的 {@link #list(String)} 会把整张表读进内存，
+   * 调用方再 {@code filter}/{@code skip}/{@code limit}。数据量上千后，
+   * 一次列表请求就是"全表扫描 + N×M 次子表查询"，且 {@code total} 用的是过滤后的内存集合大小，
+   * 分页越深浪费越大。把条件下推后，一次只取一页（默认 20 行）并让数据库用索引。
+   *
+   * <p><b>排序固定</b>为 {@code created_at DESC, id DESC}：与无参版本保持一致，
+   * 保证"翻页顺序"和旧接口可比；{@code id} 兜底避免同一秒创建的行在翻页时抖动。
+   *
+   * <p><b>分页语义</b>：{@code limit <= 0} 表示不分页（返回全部匹配行），
+   * {@code offset} 为负数时按 0 处理。调用方传 {@code limit=20} 即得到标准分页。
+   *
+   * <p><b>仍然存在的 N+1</b>：{@link #hydrate} 对每条记录的每个子表各查一次。
+   * 下推分页把 N 从"全表行数"降到"一页行数"（20），但不消除它。
+   * 彻底解决需要按子表批量 {@code IN} 查询，属于下一步优化。
+   *
+   * @param filters 条件列表，之间是 AND；空列表表示不过滤
+   * @param keyword 关键词，为 {@code null}/空白 时不参与过滤
+   * @param keywordFields 关键词要匹配的字段，之间是 OR；仅在 {@code keyword} 非空时生效
+   */
+  public List<Map<String, Object>> list(
+      String kind,
+      List<Filter> filters,
+      String keyword,
+      List<String> keywordFields,
+      int offset,
+      int limit) {
+    var m = model(kind);
+    var sql = new StringBuilder("SELECT * FROM ").append(m.get("table"));
+    List<Object> args = new ArrayList<>();
+    appendWhere(m, sql, args, filters, keyword, keywordFields);
+    sql.append(" ORDER BY created_at DESC,id DESC");
+    if (limit > 0) {
+      sql.append(" LIMIT ? OFFSET ?");
+      args.add(limit);
+      args.add(Math.max(0, offset));
+    }
+    return jdbc.queryForList(sql.toString(), args.toArray()).stream()
+        .map(row -> hydrate(m, row, text(row, "id")))
+        .toList();
+  }
+
+  /**
+   * 与 {@link #list(String, List, String, List, int, int)} 同条件的计数，用于分页的 {@code total}。
+   *
+   * <p>不装配子表，所以比列表查询便宜得多——这正是把 {@code total} 从
+   * "内存集合的 size" 换成 {@code COUNT(*)} 的收益所在。
+   */
+  public long count(
+      String kind, List<Filter> filters, String keyword, List<String> keywordFields) {
+    var m = model(kind);
+    var sql = new StringBuilder("SELECT COUNT(*) FROM ").append(m.get("table"));
+    List<Object> args = new ArrayList<>();
+    appendWhere(m, sql, args, filters, keyword, keywordFields);
+    Long total = jdbc.queryForObject(sql.toString(), Long.class, args.toArray());
+    return total == null ? 0 : total;
+  }
+
+  /**
+   * 字段名 → 列名，同时是<b>白名单校验</b>：模型里没有的字段直接抛异常。
+   *
+   * <p>与 {@link #validate} 的立场一致——写错字段名属于编码错误，应当 500 暴露，
+   * 而不是静默返回空结果（那样会被误读成"没有数据"）。
+   */
+  private String columnOf(Map<String, Object> m, String field) {
+    return objects(m, "fields").stream()
+        .filter(f -> field.equals(text(f, "field")))
+        .map(f -> text(f, "column"))
+        .findFirst()
+        .orElseThrow(
+            () ->
+                new IllegalArgumentException(
+                    "Unknown field: " + m.get("table") + "." + field));
+  }
+
+  /**
+   * 按条件拼 WHERE 子句。
+   *
+   * <p>SQL 里出现的标识符只有 {@link #columnOf} 返回的列名（来自模型白名单），
+   * 业务值一律放进 {@code args} 走占位符。操作符来自枚举，不接受字符串。
+   *
+   * <p>关键词用 {@code (a LIKE ? OR b LIKE ?)} 包一层括号：
+   * 不加括号时 {@code OR} 会与前面 {@code AND} 出来的条件错误结合，把过滤条件"或"掉。
+   */
+  private void appendWhere(
+      Map<String, Object> m,
+      StringBuilder sql,
+      List<Object> args,
+      List<Filter> filters,
+      String keyword,
+      List<String> keywordFields) {
+    List<String> clauses = new ArrayList<>();
+    for (Filter filter : filters == null ? List.<Filter>of() : filters) {
+      String column = columnOf(m, filter.field());
+      switch (filter.op()) {
+        case EQ -> {
+          clauses.add(column + "=?");
+          args.add(filter.value());
+        }
+        case NE -> {
+          clauses.add(column + "<>?");
+          args.add(filter.value());
+        }
+        case GT -> {
+          clauses.add(column + ">?");
+          args.add(filter.value());
+        }
+        case GE -> {
+          clauses.add(column + ">=?");
+          args.add(filter.value());
+        }
+        case LT -> {
+          clauses.add(column + "<?");
+          args.add(filter.value());
+        }
+        case LE -> {
+          clauses.add(column + "<=?");
+          args.add(filter.value());
+        }
+        case LIKE -> {
+          clauses.add(column + " LIKE ?");
+          args.add(filter.value());
+        }
+        case NOT_NULL -> clauses.add(column + " IS NOT NULL");
+        case IN -> {
+          var values = (Collection<?>) filter.value();
+          if (values.isEmpty()) {
+            // 空集合语义是"没有匹配"，不是"不过滤"；用 1=0 而不是跳过条件。
+            clauses.add("1=0");
+          } else {
+            clauses.add(
+                column + " IN (" + String.join(",", Collections.nCopies(values.size(), "?")) + ")");
+            args.addAll(values);
+          }
+        }
+      }
+    }
+    if (keyword != null
+        && !keyword.isBlank()
+        && keywordFields != null
+        && !keywordFields.isEmpty()) {
+      // 两个细节决定了行为是否与"内存里 contains"等价：
+      //
+      // 1) 用 LOWER 显式转小写，不依赖数据库排序规则。MySQL 默认 collation 大小写不敏感，
+      //    H2 默认敏感——同一段代码在两个环境会给出不同结果。
+      // 2) 转义 % 和 _，否则用户搜"100%"会匹配到"100 元"这类无关内容。
+      //    转义符特意选 '!' 而不是反斜杠：反斜杠在 MySQL 的字符串字面量里本身是转义符，
+      //    写法要在 Java、SQL、驱动三层各转义一次，极易出错；'!' 在两边都是普通字符。
+      List<String> likes = new ArrayList<>();
+      for (String field : keywordFields)
+        likes.add("LOWER(" + columnOf(m, field) + ") LIKE ? ESCAPE '!'");
+      clauses.add("(" + String.join(" OR ", likes) + ")");
+      String pattern = "%" + escapeLike(keyword.toLowerCase(Locale.ROOT)) + "%";
+      for (int i = 0; i < keywordFields.size(); i++) args.add(pattern);
+    }
+    if (!clauses.isEmpty()) sql.append(" WHERE ").append(String.join(" AND ", clauses));
+  }
+
+  /**
+   * 转义 LIKE 的通配符，把"用户输入的关键词"还原成字面子串匹配。
+   *
+   * <p>顺序很重要：必须先把转义符自身翻倍，否则后续替换产生的 {@code !} 会被二次转义。
+   */
+  private String escapeLike(String value) {
+    return value.replace("!", "!!").replace("%", "!%").replace("_", "!_");
+  }
+
+  /**
    * 写库前把业务值转成 JDBC 能接受的形态。
    *
    * <p>只有三种特例：

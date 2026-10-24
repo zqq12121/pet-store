@@ -5,6 +5,7 @@ import static com.warmpaw.common.Json.*;
 
 import com.warmpaw.common.Input;
 import com.warmpaw.repository.BusinessRepository;
+import com.warmpaw.repository.Filter;
 import java.text.Normalizer;
 import java.util.*;
 import org.springframework.stereotype.Service;
@@ -234,7 +235,14 @@ public class CommunityService {
    * </ul>
    *
    * <p>搜索是大小写不敏感的 {@code contains}，只在标题+正文里找，不搜作者名。
-   * 分页在内存里做（{@code skip/limit}），与仓库层"整表读入"的实现保持一致。
+   *
+   * <p><b>过滤与分页全部下推到 SQL</b>：改造前这里是"整表读入 + 7 层 filter + skip/limit 内存分页"，
+   * 社区内容上千条后，每次翻页都要全表加载并递归装配每条内容的图片子表。
+   * 现在只取当页的 20 行，{@code total} 用 {@code COUNT(*)} 单独算。
+   *
+   * <p>原来的 OR 条件 {@code published || (mine && hidden)} 在 {@code scope=mine} 的前提下，
+   * 配合紧随其后的 {@code mine} 断言，等价于 {@code status IN ('published','hidden')}——
+   * 所以能用 AND 条件表达，不需要引入 OR。
    */
   public Map<String, Object> list(String type, String category, String query, String scope, int page,
       AuthService.Actor actor) {
@@ -246,21 +254,46 @@ public class CommunityService {
     require(query == null || query.codePointCount(0, query.length()) <= 80,
         400, "VALIDATION_ERROR", "搜索词最多80个字符");
     if (!"all".equals(scope)) AuthService.role(actor, "buyer");
+
+    // 收藏集合同样下推：owner/type/status 都是普通列，不必把整张 reaction 表读进内存。
     Set<String> favorites = new HashSet<>();
-    if ("favorites".equals(scope)) store.list("community_reaction").stream()
-        .filter(r -> mine(r, actor) && "favorite".equals(text(r, "type")) && "active".equals(text(r, "status")))
-        .forEach(r -> favorites.add(text(r, "contentId")));
+    if ("favorites".equals(scope))
+      store
+          .list(
+              "community_reaction",
+              List.of(
+                  Filter.eq("ownerId", actor.id()),
+                  Filter.eq("type", "favorite"),
+                  Filter.eq("status", "active")),
+              null,
+              null,
+              0,
+              0)
+          .forEach(r -> favorites.add(text(r, "contentId")));
+
     String keyword = Objects.toString(query, "").strip().toLowerCase(Locale.ROOT);
-    var items = store.list("community_content").stream()
-        .filter(c -> type.equals(text(c, "type")))
-        .filter(c -> published(c) || "mine".equals(scope) && mine(c, actor) && "hidden".equals(text(c, "status")))
-        .filter(c -> !"mine".equals(scope) || mine(c, actor))
-        .filter(c -> !"favorites".equals(scope) || favorites.contains(text(c, "id")))
-        .filter(c -> category == null || category.equals(text(c, "category")))
-        .filter(c -> keyword.isEmpty() || (Objects.toString(c.get("title"), "") + "\n" + text(c, "body"))
-            .toLowerCase(Locale.ROOT).contains(keyword)).toList();
-    return map("items", items.stream().skip((page - 1L) * 20).limit(20).map(c -> dto(c, actor)).toList(),
-        "total", items.size(), "page", page, "pageSize", 20);
+
+    List<Filter> filters = new ArrayList<>();
+    filters.add(Filter.eq("type", type));
+    if ("mine".equals(scope)) {
+      filters.add(Filter.in("status", List.of("published", "hidden")));
+      filters.add(Filter.eq("ownerId", actor.id()));
+    } else {
+      filters.add(Filter.eq("status", "published"));
+    }
+    // 收藏为空时 Filter.in 会生成 "1=0"，与原逻辑"收藏集合不含任何 id"的结果一致（空列表）。
+    if ("favorites".equals(scope)) filters.add(Filter.in("id", favorites));
+    if (category != null) filters.add(Filter.eq("category", category));
+
+    int offset = (int) ((page - 1L) * 20);
+    List<Map<String, Object>> items =
+        store
+            .list("community_content", filters, keyword, List.of("title", "body"), offset, 20)
+            .stream()
+            .map(c -> dto(c, actor))
+            .toList();
+    long total = store.count("community_content", filters, keyword, List.of("title", "body"));
+    return map("items", items, "total", total, "page", page, "pageSize", 20);
   }
 
   /** 详情与列表共用 {@link #dto}，但走 {@code publicOnly=false}，所以作者与店长读 {@code hidden} 不会被挡。 */

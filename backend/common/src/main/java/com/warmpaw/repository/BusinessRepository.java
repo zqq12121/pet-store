@@ -6,6 +6,8 @@ import static com.warmpaw.common.Json.*;
 import com.warmpaw.mapper.ResourceMapper;
 import java.time.Instant;
 import java.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -33,6 +35,12 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public class BusinessRepository {
+  /**
+   * 状态变更日志。与审计表配合使用：表负责持久化与事后追查，日志负责"问题现场直接可见"。
+   * 用静态字段而不是每次调用 {@code LoggerFactory.getLogger}，避免高频写路径上的重复查找。
+   */
+  private static final Logger log = LoggerFactory.getLogger(BusinessRepository.class);
+
   private final ResourceMapper mapper;
 
   private final RelationalRepository repository;
@@ -134,6 +142,28 @@ public class BusinessRepository {
   }
 
   /**
+   * 条件 + 关键词 + 分页的列表查询，过滤与分页下推到 SQL。
+   *
+   * <p>门面只做转发：安全边界（字段白名单、参数绑定）在 {@link RelationalRepository} 里，
+   * 这里不重复实现，也不允许调用方绕过。
+   */
+  public List<Map<String, Object>> list(
+      String kind,
+      List<Filter> filters,
+      String keyword,
+      List<String> keywordFields,
+      int offset,
+      int limit) {
+    return repository.list(kind, filters, keyword, keywordFields, offset, limit);
+  }
+
+  /** 同条件计数，供分页的 {@code total} 使用。 */
+  public long count(
+      String kind, List<Filter> filters, String keyword, List<String> keywordFields) {
+    return repository.count(kind, filters, keyword, keywordFields);
+  }
+
+  /**
    * 创建实体，并补齐五个通用字段。
    *
    * <p>用 {@code putIfAbsent} 而不是直接覆盖，是为了允许调用方预置值
@@ -172,9 +202,23 @@ public class BusinessRepository {
     repository.update(m);
   }
 
-  /** 写审计日志。所有敏感写操作（改价、上下架、退款审批、查看他人订单）都应调用。 */
+  /**
+   * 写审计日志。所有敏感写操作（改价、上下架、退款审批、查看他人订单）都应调用。
+   *
+   * <p><b>这里同时打一行 INFO 日志，是全项目状态变更日志的唯一出口。</b>
+   * 不把日志散落到各个 service 方法的理由：{@code audit} 的调用点已经覆盖了所有需要留痕的写操作
+   * （预约创建/取消/确认、订单交付、售后审核、上下架、员工变更、社区处置等 20 余处），
+   * 在汇聚点打一次等于全部覆盖，既不会漏也不会重复。
+   *
+   * <p>日志只打 {@code action} / {@code actor} / {@code resource} 三个标识，
+   * <b>不打用户名、手机号、金额</b>——日志的留存周期和访问范围都比数据库宽，
+   * 敏感字段留在库里更可控，需要时按 id 回查即可。
+   *
+   * <p>放在 {@code mapper.audit} 之后而不是之前：写库失败会抛异常，此时不该留下"操作已发生"的日志行。
+   */
   public void audit(String actor, String action, String resource) {
     mapper.audit(id("audit"), actor, action, resource, Instant.now().toString());
+    log.info("audit action={} actor={} resource={}", action, actor, resource);
   }
 
   /** 乐观锁断言：实体当前版本必须等于客户端提交的期望版本，否则 409。 */

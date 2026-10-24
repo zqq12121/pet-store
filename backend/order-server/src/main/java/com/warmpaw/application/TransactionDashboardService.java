@@ -1,6 +1,7 @@
 package com.warmpaw.application;
 import static com.warmpaw.common.Json.*;
 import com.warmpaw.repository.BusinessRepository;
+import com.warmpaw.repository.Filter;
 import com.warmpaw.service.AppointmentSmsOutbox;
 import java.time.*;
 import java.util.*;
@@ -46,28 +47,61 @@ public class TransactionDashboardService {
    * 这类单"结果未知"，需要人工核对，是最容易被忽略的风险项。
    */
   public Map<String, Object> dashboard() {
-    LocalDate today = LocalDate.now(ZoneId.of("Asia/Shanghai"));
+    ZoneId zone = ZoneId.of("Asia/Shanghai");
+    LocalDate today = LocalDate.now(zone);
+
+    // 时间范围两端各放宽 1 秒做粗筛。原因：created_at / paid_at 存的是 ISO-8601 字符串，
+    // 秒级与毫秒级精度会混存（"…:36Z" 与 "…:36.629Z"），字符串字典序在整秒边界上与真实时间序相反。
+    // 放宽后必然覆盖真实边界，再用 day() 精确剔除多出来的记录，统计口径与改造前一致。
+    String from = today.atStartOfDay(zone).toInstant().minusSeconds(1).toString();
+    String to = today.plusDays(1).atStartOfDay(zone).toInstant().plusSeconds(1).toString();
+    List<Filter> createdToday = List.of(Filter.ge("createdAt", from), Filter.lt("createdAt", to));
+    List<Filter> paidToday = List.of(Filter.ge("paidAt", from), Filter.lt("paidAt", to));
+
     // 线下收款按店长实际登记时间统计，不伪造微信支付流水。
-    var offline = store.list("order").stream()
-        .filter(o -> "offline_received".equals(text(object(o, "payment"), "status")) && day(o, "paidAt", today)).toList();
-    long
-        gross =
-            store.list("payment_fact").stream()
-                .filter(p -> day(p, "paidAt", today))
-                .mapToLong(p -> number(p, "amount"))
-                .sum() + offline.stream().mapToLong(o -> number(o, "amount")).sum(),
-        refund =
-            store.list("refund").stream()
-                .filter(r -> "succeeded".equals(text(r, "status")) && day(r, "succeededAt", today))
-                .mapToLong(r -> number(r, "amount"))
-                .sum();
+    // payment.status 在子表 order_payment_state 里，进不了主表 WHERE，所以先用 paidAt
+    // 把范围缩到"今天付过款的订单"（通常只有几十单），再在内存里区分线上/线下。
+    var offline =
+        store.list("order", paidToday, null, null, 0, 0).stream()
+            .filter(
+                o ->
+                    "offline_received".equals(text(object(o, "payment"), "status"))
+                        && day(o, "paidAt", today))
+            .toList();
+
+    // 两处金额求和仍需取出实体（仓储层不提供聚合查询），但已下推到"当天"范围；
+    // 其余六项纯计数改用 COUNT(*)，不再把整表读进内存。
+    var todayPayments =
+        store.list("payment_fact", paidToday, null, null, 0, 0).stream()
+            .filter(p -> day(p, "paidAt", today))
+            .toList();
+    var todayRefunds =
+        store
+            .list(
+                "refund",
+                List.of(
+                    Filter.eq("status", "succeeded"),
+                    Filter.ge("succeededAt", from),
+                    Filter.lt("succeededAt", to)),
+                null,
+                null,
+                0,
+                0)
+            .stream()
+            .filter(r -> day(r, "succeededAt", today))
+            .toList();
+
+    long gross =
+        todayPayments.stream().mapToLong(p -> number(p, "amount")).sum()
+            + offline.stream().mapToLong(o -> number(o, "amount")).sum();
+    long refund = todayRefunds.stream().mapToLong(r -> number(r, "amount")).sum();
     return map(
         "date",
         today.toString(),
         "createdOrderCount",
-        store.list("order").stream().filter(o -> day(o, "createdAt", today)).count(),
+        store.count("order", createdToday, null, null),
         "paidOrderCount",
-        store.list("payment_fact").stream().filter(p -> day(p, "paidAt", today)).count() + offline.size(),
+        (long) todayPayments.size() + offline.size(),
         "grossSalesAmount",
         gross,
         "refundAmount",
@@ -75,23 +109,21 @@ public class TransactionDashboardService {
         "netCashAmount",
         gross - refund,
         "onSalePetCount",
-        store.list("pet").stream().filter(p -> "on_sale".equals(text(p, "status"))).count(),
+        store.count("pet", List.of(Filter.eq("status", "on_sale")), null, null),
         "aiSessionCount",
         0,
         "pendingTasks",
         map(
             "appointmentCount",
-            store.list("order").stream().filter(o -> "pending_confirmation".equals(text(o, "status"))).count(),
+            store.count("order", List.of(Filter.eq("status", "pending_confirmation")), null, null),
             "arrivalCount",
-            store.list("order").stream().filter(o -> "reservation_confirmed".equals(text(o, "status"))).count(),
+            store.count("order", List.of(Filter.eq("status", "reservation_confirmed")), null, null),
             "pickupCount",
-            store.list("order").stream().filter(o -> "paid".equals(text(o, "status"))).count(),
+            store.count("order", List.of(Filter.eq("status", "paid")), null, null),
             "afterSaleReviewCount",
-            store.list("after_sale").stream()
-                .filter(s -> "pending_review".equals(text(s, "status")))
-                .count(),
+            store.count("after_sale", List.of(Filter.eq("status", "pending_review")), null, null),
             "failedRefundCount",
-            store.list("refund").stream().filter(r -> "failed".equals(text(r, "status"))).count(),
+            store.count("refund", List.of(Filter.eq("status", "failed")), null, null),
             "smsNotificationPendingCount",
             appointmentSms.pendingCount(),
             "smsNotificationFailedCount",
@@ -99,7 +131,7 @@ public class TransactionDashboardService {
             "knowledgeFailedJobCount",
             0,
             "paymentExceptionCount",
-            store.list("payment").stream().filter(p -> p.get("lastProviderError") != null).count()),
+            store.count("payment", List.of(Filter.notNull("lastProviderError")), null, null)),
         "updatedAt",
         Instant.now().toString());
   }
