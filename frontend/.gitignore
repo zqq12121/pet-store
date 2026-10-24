@@ -4,3 +4,8 @@ dist/
 .env.*.local
 server/uploads/
 .DS_Store
+
+# Playwright 运行产物
+test-results/
+playwright-report/
+blob-report/

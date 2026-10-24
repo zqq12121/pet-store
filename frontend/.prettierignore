@@ -28,3 +28,8 @@ server/data/
 # 第三方或生成文件
 **/*.min.js
 **/*.min.css
+
+# 测试运行产物
+test-results/
+playwright-report/
+blob-report/
