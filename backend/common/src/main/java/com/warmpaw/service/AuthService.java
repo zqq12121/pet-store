@@ -13,8 +13,6 @@ import java.security.*;
 import java.time.*;
 import java.util.*;
 import java.util.List;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
 import javax.imageio.ImageIO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -56,6 +54,8 @@ public class AuthService {
   private final boolean mock;
   private final SmsGateway smsGateway;
   private final GraphCaptchaService graphCaptcha;
+  /** 密码哈希与校验已拆到独立职责，见 {@link PasswordService} 的类注释。 */
+  private final PasswordService passwords;
   private final SecureRandom random = new SecureRandom();
 
   public AuthService(
@@ -63,12 +63,14 @@ public class AuthService {
       TemporaryStore temp,
       SmsGateway smsGateway,
       GraphCaptchaService graphCaptcha,
+      PasswordService passwords,
       @Value("${app.mock-providers}") boolean mock) {
     this.store = store;
     this.temp = temp;
     this.mock = mock;
     this.smsGateway = smsGateway;
     this.graphCaptcha = graphCaptcha;
+    this.passwords = passwords;
   }
 
   /**
@@ -454,49 +456,24 @@ public class AuthService {
   }
 
   /**
-   * 生成密码哈希：格式 {@code base64(salt):base64(derivedKey)}。
+   * 生成密码哈希。
    *
-   * <p>PBKDF2-HMAC-SHA256，210000 轮，256 位输出。轮数按当前硬件取"约 100ms"量级——
-   * 太低成本挡不住离线爆破，太高会让登录接口成为 DoS 面。
-   *
-   * <p>每个密码独立随机盐（16 字节），相同密码产生不同哈希，防彩虹表。
+   * <p>实现已移到 {@link PasswordService}（PBKDF2-HMAC-SHA256，210000 轮，独立随机盐）。
+   * 这里保留同名方法是为了不动调用点——{@code Bootstrap}、{@code EmployeeService}
+   * 与多个测试都用 {@code auth.passwordHash(...)}。
    */
   public String passwordHash(String password) {
-    byte[] salt = new byte[16];
-    random.nextBytes(salt);
-    return Base64.getEncoder().encodeToString(salt) + ":" + derive(password, salt);
-  }
-
-  /** 用给定盐派生密钥。抽出来是为了让"生成哈希"和"校验哈希"用完全相同的参数。 */
-  private String derive(String password, byte[] salt) {
-    try {
-      return Base64.getEncoder()
-          .encodeToString(
-              SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
-                  .generateSecret(new PBEKeySpec(password.toCharArray(), salt, 210000, 256))
-                  .getEncoded());
-    } catch (Exception e) {
-      throw new IllegalStateException(e);
-    }
+    return passwords.hash(password);
   }
 
   /**
    * 恒定时间比对密码哈希。
    *
-   * <p>用 {@link MessageDigest#isEqual} 而不是 {@code String.equals}：
-   * 后者在首个不同字节处返回，攻击者可以通过响应时间差逐字节猜测哈希。
-   * 这里比对的是派生结果（本身是哈希），但保持恒定时间仍是好习惯。
-   *
-   * <p>格式不合法（无冒号、盐无法解码）一律返回 false，不抛异常——
-   * 数据库里出现脏数据时应表现为"密码不正确"，而不是 500。
+   * <p>同样委托给 {@link PasswordService}；保留这个私有方法是因为本类内
+   * 有四处校验（管理员登录、密码登录、改密、重置密码），用一个转发比改四行更清楚。
    */
   private boolean passwordMatches(String password, String encoded) {
-    if (encoded == null || !encoded.contains(":")) return false;
-    String[] parts = encoded.split(":");
-    return MessageDigest.isEqual(
-        derive(password, Base64.getDecoder().decode(parts[0]))
-            .getBytes(java.nio.charset.StandardCharsets.UTF_8),
-        parts[1].getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    return passwords.matches(password, encoded);
   }
 
   /**

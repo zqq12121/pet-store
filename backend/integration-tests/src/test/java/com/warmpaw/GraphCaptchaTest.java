@@ -119,7 +119,7 @@ class GraphCaptchaTest {
     var store = mock(BusinessRepository.class);
     var sms = mock(SmsGateway.class);
     var graph = mock(GraphCaptchaService.class);
-    var auth = new AuthService(store, new TemporaryStore(null, false), sms, graph, false);
+    var auth = new AuthService(store, new TemporaryStore(null, false), sms, graph, new PasswordService(), false);
     doThrow(new ApiException(400, "CAPTCHA_INVALID", "图形验证失败")).when(graph).verify(anyMap());
     for (String purpose : List.of("login", "wechat_bind", "password_reset")) {
       assertThrows(ApiException.class, () -> auth.sendLoginSms(map("phone", "13900000000", "purpose", purpose), "test"));

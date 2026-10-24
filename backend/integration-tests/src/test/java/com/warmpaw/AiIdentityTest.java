@@ -18,7 +18,7 @@ class AiIdentityTest {
   void validatesGuestAndBuyerWithoutExposingCredentials() {
     BusinessRepository store = mock(BusinessRepository.class);
     TemporaryStore temporary = new TemporaryStore(null, false);
-    AuthService auth = new AuthService(store, temporary, mock(SmsGateway.class), mock(GraphCaptchaService.class), true);
+    AuthService auth = new AuthService(store, temporary, mock(SmsGateway.class), mock(GraphCaptchaService.class), new PasswordService(), true);
     GuestService guests = new GuestService(temporary, auth);
     AuthController controller = new AuthController(guests, auth, mock(WechatLoginService.class), mock(GraphCaptchaService.class), mock(WechatMiniQrService.class));
     MockHttpServletRequest request = new MockHttpServletRequest();
