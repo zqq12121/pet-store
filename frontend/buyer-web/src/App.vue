@@ -4,7 +4,8 @@ import CommunityNoticeLink from './components/CommunityNoticeLink.vue';
 </script>
 <template>
   <a class="skip-link" href="#main">跳到正文</a>
-  <header class="site-header">
+  <!-- 首页自带全屏顶部和页脚，其他页面使用统一导航。 -->
+  <header v-if="$route.path !== '/'" class="site-header">
     <div class="container nav">
       <RouterLink to="/" class="brand">暖爪 <span>paw & home</span></RouterLink>
       <nav aria-label="主导航">
@@ -38,7 +39,7 @@ import CommunityNoticeLink from './components/CommunityNoticeLink.vue';
       </Transition>
     </RouterView>
   </main>
-  <footer class="site-footer container">
+  <footer v-if="$route.path !== '/'" class="site-footer container">
     <RouterLink to="/" class="brand">暖爪 <span>paw & home</span></RouterLink>
     <p>以陪伴为开始，以责任为约定。</p>
     <RouterLink to="/shop">联系店主 ↗</RouterLink>
