@@ -4,6 +4,7 @@ import { buyer } from '../../../shared/api';
 import type { Shop } from '../../../shared/types';
 import { useLoad } from '../../../shared/useLoad';
 import LoadState from '../components/LoadState.vue';
+import { vWipe } from '../reveal';
 const shop = ref<Shop>(),
   copied = ref(false),
   { loading, error, run } = useLoad();
@@ -28,7 +29,7 @@ const copy = () =>
     <p class="lead">我们相信，真实的相处比照片更能帮你作出决定。</p>
     <LoadState :loading="loading" :error="error" @retry="load" />
     <div v-if="shop" class="shop-layout">
-      <img src="/images/golden.jpg" alt="期待与你见面的小伙伴" />
+      <img v-wipe src="/images/golden.jpg" alt="店里的金毛" />
       <section class="panel stack">
         <h2>{{ shop.name }}</h2>
         <p>{{ shop.address }}</p>

@@ -5,6 +5,7 @@ import { buyer, headers, auth, isDemo, safeUrl, randomId } from '../../../shared
 import { readSse } from '../../../shared/sse';
 import type { AiMessage, Source, Pet } from '../../../shared/types';
 import PetCard from '../components/PetCard.vue';
+import { vWipe } from '../reveal';
 const route = useRoute(),
   messages = ref<AiMessage[]>([]),
   input = ref(''),
@@ -218,7 +219,7 @@ onUnmounted(() => {
       <p class="eyebrow">问问怎么养</p>
       <h1>养宠问题，<br />先问这里。</h1>
       <p class="lead">猫狗饲养、健康护理、品种特点，<br />随时聊聊你的疑问。</p>
-      <img src="/images/cat.jpg" alt="陪伴在身边的猫咪" />
+      <img v-wipe src="/images/cat.jpg" alt="店里的猫" />
       <p class="small muted">AI 生成，仅供参考。<br />出现持续不适，请及时就医。</p>
     </aside>
     <section class="chat-panel">

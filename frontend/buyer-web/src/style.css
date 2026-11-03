@@ -182,9 +182,17 @@ button:disabled {
   font-weight: 400;
   font-size: 24px;
 }
+/* 顶部导航吸顶：往下滚时收起，往上滚时出现（App.vue 切换 .hidden） */
 .site-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
   background: var(--brand);
   color: var(--surface);
+  transition: transform 0.45s var(--motion-ease, ease);
+}
+.site-header.hidden {
+  transform: translateY(-100%);
 }
 .site-header .brand {
   color: var(--tag);
@@ -454,26 +462,86 @@ button:disabled {
 .shop-card .actions {
   margin-top: 22px;
 }
+/* 页脚：深色底，纸色弧形压在上边缘，底部超大店名（与首页一致） */
 .site-footer {
+  --curve: clamp(28px, 6vw, 96px);
+  position: relative;
+  overflow: hidden;
+  margin-top: 64px;
+  margin-bottom: -28px;
+  padding-top: calc(var(--curve) + 64px);
+  padding-bottom: 28px;
+  background: #0f1d18;
+  color: var(--surface);
+}
+.site-footer:before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -1px;
+  height: var(--curve);
+  background: var(--bg);
+  border-radius: 0 0 50% 50% / 0 0 100% 100%;
+}
+.footer-row {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: 20px;
-  padding-block: 40px 54px;
-  margin-top: 40px;
-  border-top: 2px solid var(--ink);
+  align-items: flex-end;
+  gap: 32px;
 }
-.site-footer p,
-.site-footer > a:last-child {
+.footer-eyebrow {
+  margin: 0 0 12px;
   font-size: 13px;
-  color: var(--muted);
+  letter-spacing: 0.2em;
+  color: #fffdf8b3;
+}
+.footer-title {
   margin: 0;
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: clamp(36px, 5vw, 72px);
+  line-height: 1.1;
 }
-.site-footer .brand {
-  font-size: 22px;
+.footer-row nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  font-size: 14px;
 }
-.site-footer .brand span {
-  font-size: 21px;
+.footer-row nav a:hover,
+.footer-bar button:hover {
+  color: var(--tag);
+}
+.footer-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px 24px;
+  margin-top: 48px;
+  padding-top: 18px;
+  border-top: 1px solid #fffdf82e;
+  font-size: 13px;
+  color: #fffdf8a6;
+}
+.footer-bar button {
+  background: none;
+  color: inherit;
+  padding: 0;
+  font-size: 13px;
+}
+.footer-giant {
+  margin-top: 32px;
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: min(23vw, 300px);
+  line-height: 0.8;
+  color: var(--tag);
+  text-align: center;
+  white-space: nowrap;
+  transform: translateY(0.14em);
+  user-select: none;
 }
 .demo-note {
   position: fixed;
@@ -1278,17 +1346,14 @@ button:disabled {
   .shop-card p {
     font-size: 12px;
   }
+  /* 手机底部有固定导航栏，页脚多留出空间并盖住 body 的底部留白 */
   .site-footer {
+    margin-bottom: -100px;
+    padding-bottom: 100px;
+  }
+  .footer-row {
     flex-direction: column;
     align-items: flex-start;
-    padding-block: 34px 20px;
-    gap: 16px;
-  }
-  .site-footer .brand {
-    font-size: 22px;
-  }
-  .site-footer .brand span {
-    font-size: 19px;
   }
   .page {
     padding: 24px 0 40px;
@@ -1529,6 +1594,19 @@ button:disabled {
 /* 页面仅做淡入，不移动包裹层，避免影响弹窗的 fixed 定位与浏览器滚动恢复。 */
 #main {
   min-height: 65vh;
+}
+.page h1:not(.auth-title) {
+  animation: title-rise 0.9s var(--motion-ease, ease) backwards;
+}
+@keyframes title-rise {
+  from {
+    clip-path: inset(0 0 100% 0);
+    transform: translateY(45%);
+  }
+  to {
+    clip-path: inset(0 0 -20% 0);
+    transform: none;
+  }
 }
 .page-enter-active {
   transition: opacity 0.24s ease-out;

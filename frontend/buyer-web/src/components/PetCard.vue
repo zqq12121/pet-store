@@ -1,12 +1,29 @@
 <script setup lang="ts">
+import { computed, onUnmounted, ref } from 'vue';
 import type { Pet } from '../../../shared/types';
 import { money } from '../../../shared/api';
-import { vReveal } from '../reveal';
-defineProps<{ pet: Pet }>();
+import { scrambleDigits } from '../motion';
+import { vReveal, vWipe } from '../reveal';
+const props = defineProps<{ pet: Pet }>();
+const price = computed(() => money(props.pet.priceAmount).replace(/\.00$/, ''));
+// 悬停时价签数字乱跳一下再停在真实价格。
+const shown = ref('');
+let stop = () => {};
+function onEnter() {
+  stop();
+  stop = scrambleDigits(price.value, (text) => (shown.value = text === price.value ? '' : text));
+}
+onUnmounted(() => stop());
 </script>
 <template>
-  <RouterLink v-reveal :to="`/pets/${pet.id}`" class="pet-card">
-    <div class="pet-cover">
+  <RouterLink
+    v-reveal
+    :to="`/pets/${pet.id}`"
+    class="pet-card"
+    data-cursor="看看"
+    @mouseenter="onEnter"
+  >
+    <div v-wipe class="pet-cover">
       <img
         :src="pet.coverUrl"
         :alt="`${pet.name}，${pet.breed}`"
@@ -15,7 +32,7 @@ defineProps<{ pet: Pet }>();
         height="504"
       /><span class="pet-tag"
         ><span>{{ pet.breed }} {{ pet.gender === 'male' ? '弟弟' : '妹妹' }}</span
-        ><b>{{ money(pet.priceAmount).replace(/\.00$/, '') }}</b></span
+        ><b>{{ shown || price }}</b></span
       ><span v-if="pet.status !== 'on_sale'" class="pet-availability">已预订</span>
     </div>
     <div class="pet-card-body">

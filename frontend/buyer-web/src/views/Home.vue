@@ -4,6 +4,7 @@ import { buyer, money } from '../../../shared/api';
 import { useLoad } from '../../../shared/useLoad';
 import type { Banner, HomeData, Pet } from '../../../shared/types';
 import LoadState from '../components/LoadState.vue';
+import { scrambleDigits, smoothScrollTo, stopSmoothScroll } from '../motion';
 
 /*
  * 首页：全屏大图 + 滚动动效（参考 onform.studio 的节奏），只用原生 JS 和 CSS 实现，不引入第三方动效库。
@@ -182,8 +183,7 @@ const scrolled = ref(false),
   stripHeight = ref(''),
   menuOpen = ref(false),
   peekSrc = ref(''),
-  peekOn = ref(false),
-  bubbleOn = ref(false);
+  peekOn = ref(false);
 const scrambled = reactive<Record<string, string>>({});
 
 const heroEl = ref<HTMLElement>(),
@@ -196,7 +196,6 @@ const heroEl = ref<HTMLElement>(),
   firstShot = ref<HTMLElement>(),
   stripEl = ref<HTMLElement>(),
   trackEl = ref<HTMLElement>(),
-  bubbleEl = ref<HTMLElement>(),
   peekEl = ref<HTMLElement>(),
   closeBtn = ref<HTMLButtonElement>(),
   menuBtn = ref<HTMLButtonElement>();
@@ -204,38 +203,9 @@ const heroEl = ref<HTMLElement>(),
 const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const ease = (t: number) => t * t * (3 - 2 * t);
 
-/* 平滑滚动：鼠标滚轮的位移按惯性逐帧追上；键盘、滚动条、触控板拖动等原生滚动保持不变。 */
-let target = 0,
-  current = 0,
-  smoothing = false;
-const smoothEnabled = () => finePointer && !reduce.matches;
-const maxScroll = () => document.documentElement.scrollHeight - window.innerHeight;
-function onWheel(e: WheelEvent) {
-  // 横向滑动（触控板左右拖、横向卡片列表）交给浏览器原生处理。
-  if (!smoothEnabled() || e.ctrlKey || menuOpen.value || Math.abs(e.deltaX) > Math.abs(e.deltaY))
-    return;
-  e.preventDefault();
-  const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? window.innerHeight : 1;
-  if (!smoothing) current = target = window.scrollY;
-  target = clamp(target + e.deltaY * unit, 0, maxScroll());
-  smoothing = true;
-}
-function onNativeScroll() {
-  if (!smoothing) current = target = window.scrollY;
-}
-function scrollToY(y: number) {
-  if (smoothEnabled()) {
-    current = window.scrollY;
-    target = clamp(y, 0, maxScroll());
-    smoothing = true;
-  } else window.scrollTo({ top: y, behavior: reduce.matches ? 'auto' : 'smooth' });
-}
-
 /* 每帧根据滚动位置更新各区块；只在数值变化时写 DOM。 */
 let mx = 0,
   my = 0,
-  bx = 0,
-  by = 0,
   px = 0,
   py = 0,
   raf = 0,
@@ -250,20 +220,10 @@ function measureStrip() {
 }
 function frame() {
   raf = requestAnimationFrame(frame);
-  if (smoothing) {
-    current += (target - current) * 0.11;
-    if (Math.abs(target - current) < 0.5) {
-      current = target;
-      smoothing = false;
-    }
-    window.scrollTo(0, current);
-  }
+  // 品种行悬停时的照片跟随鼠标（“看看”提示由全站 CursorBubble 负责）。
   if (finePointer) {
-    bx += (mx - bx) * 0.22;
-    by += (my - by) * 0.22;
     px += (mx - px) * 0.12;
     py += (my - py) * 0.12;
-    if (bubbleEl.value) bubbleEl.value.style.transform = `translate3d(${bx}px, ${by}px, 0)`;
     if (peekEl.value) peekEl.value.style.transform = `translate3d(${px + 40}px, ${py - 150}px, 0)`;
   }
   const y = window.scrollY;
@@ -335,23 +295,15 @@ function onModeChange() {
 }
 
 /* 价格数字乱跳几下后停在真实价格。 */
-const timers = new Map<string, ReturnType<typeof setInterval>>();
+const stops = new Map<string, () => void>();
 function scramble(key: string, final: string) {
-  if (reduce.matches) return;
-  clearInterval(timers.get(key));
-  let f = 0;
-  timers.set(
+  stops.get(key)?.();
+  stops.set(
     key,
-    setInterval(() => {
-      f++;
-      scrambled[key] = final.replace(/\d/g, (d, i: number) =>
-        f > 10 || f > 4 + i / 2 ? d : String(Math.floor(Math.random() * 10))
-      );
-      if (f > 10) {
-        clearInterval(timers.get(key));
-        delete scrambled[key];
-      }
-    }, 40)
+    scrambleDigits(final, (text) => {
+      if (text === final) delete scrambled[key];
+      else scrambled[key] = text;
+    })
   );
 }
 function enterRow(b: { breed: string; price: string; cover: string }) {
@@ -365,7 +317,7 @@ const menuPreview = ref('');
 function setMenu(open: boolean) {
   menuOpen.value = open;
   document.documentElement.style.overflow = open ? 'hidden' : '';
-  smoothing = false;
+  stopSmoothScroll();
   if (open) {
     menuPreview.value = photo(0);
     nextTick(() => closeBtn.value?.focus());
@@ -373,7 +325,7 @@ function setMenu(open: boolean) {
 }
 function menuScrollTop() {
   setMenu(false);
-  setTimeout(() => scrollToY(0), 300);
+  setTimeout(() => smoothScrollTo(0), 300);
 }
 
 /* 首屏轮播：每 5 秒切换；鼠标悬停在首屏时暂停。 */
@@ -394,9 +346,6 @@ let curtainTimer: ReturnType<typeof setTimeout>;
 onMounted(() => {
   void load();
   startSlides();
-  current = target = window.scrollY;
-  window.addEventListener('wheel', onWheel, { passive: false });
-  window.addEventListener('scroll', onNativeScroll, { passive: true });
   window.addEventListener('resize', onResize);
   window.addEventListener('load', onResize);
   if (finePointer) window.addEventListener('mousemove', onMove, { passive: true });
@@ -410,9 +359,7 @@ onUnmounted(() => {
   cancelAnimationFrame(raf);
   clearInterval(slideTimer);
   clearTimeout(curtainTimer);
-  timers.forEach((t) => clearInterval(t));
-  window.removeEventListener('wheel', onWheel);
-  window.removeEventListener('scroll', onNativeScroll);
+  stops.forEach((stop) => stop());
   window.removeEventListener('resize', onResize);
   window.removeEventListener('load', onResize);
   window.removeEventListener('mousemove', onMove);
@@ -597,8 +544,7 @@ onUnmounted(() => {
               :key="p.id"
               class="hm-pet"
               :to="`/pets/${p.id}`"
-              @mouseenter="bubbleOn = true"
-              @mouseleave="bubbleOn = false"
+              data-cursor="看看"
             >
               <div class="hm-pic">
                 <img
@@ -703,7 +649,7 @@ onUnmounted(() => {
               <RouterLink to="/community">宠友社区</RouterLink>
               <RouterLink to="/terms">用户协议</RouterLink>
               <RouterLink to="/privacy">隐私政策</RouterLink>
-              <button type="button" @click="scrollToY(0)">回到顶部 ↑</button>
+              <button type="button" @click="smoothScrollTo(0)">回到顶部 ↑</button>
             </nav>
           </div>
         </div>
@@ -784,16 +730,6 @@ onUnmounted(() => {
           ><span>营业时间 {{ data?.shop.businessHours }}</span>
         </div>
       </div>
-    </div>
-
-    <div
-      v-if="finePointer"
-      ref="bubbleEl"
-      class="hm-bubble"
-      :class="{ on: bubbleOn }"
-      aria-hidden="true"
-    >
-      <span>看看</span>
     </div>
   </div>
 </template>
@@ -1795,32 +1731,6 @@ onUnmounted(() => {
   gap: 12px;
   font-size: 14px;
   color: rgba(255, 253, 248, 0.75);
-}
-
-/* 宠物卡片上的“看看”圆形提示 */
-.hm-bubble {
-  position: fixed;
-  left: -42px;
-  top: -42px;
-  z-index: 90;
-  pointer-events: none;
-}
-.hm-bubble span {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 84px;
-  height: 84px;
-  border-radius: 50%;
-  background: var(--y);
-  color: var(--ink);
-  font-weight: 700;
-  font-size: 15px;
-  scale: 0;
-  transition: scale 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-.hm-bubble.on span {
-  scale: 1;
 }
 
 /* 手机底部有固定导航栏（style.css 中 .mobile-tabs），首屏文字和页脚为它留出空间 */

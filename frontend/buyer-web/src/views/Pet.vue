@@ -6,6 +6,7 @@ import { useLoad } from '../../../shared/useLoad';
 import type { Pet } from '../../../shared/types';
 import LoadState from '../components/LoadState.vue';
 import ShopCard from '../components/ShopCard.vue';
+import { vWipe } from '../reveal';
 const route = useRoute(),
   pet = ref<Pet>(),
   photo = ref(0),
@@ -27,7 +28,7 @@ onMounted(load);
     <LoadState :loading="loading" :error="error" @retry="load" /><template v-if="pet"
       ><div class="detail-grid">
         <div>
-          <button class="image-button" aria-label="放大宠物照片" @click="lightbox = true">
+          <button v-wipe class="image-button" aria-label="放大宠物照片" @click="lightbox = true">
             <img
               class="detail-photo"
               :src="pet.images[photo]?.url || pet.coverUrl"

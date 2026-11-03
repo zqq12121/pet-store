@@ -1,11 +1,32 @@
 <script setup lang="ts">
+import { onMounted, onUnmounted, ref } from 'vue';
 import { isDemo, isJavaLocal } from '../../shared/api';
 import CommunityNoticeLink from './components/CommunityNoticeLink.vue';
+import CursorBubble from './components/CursorBubble.vue';
+import { smoothScrollTo } from './motion';
+import { vReveal } from './reveal';
+
+// 往下滚时收起顶部导航，往上滚时立即出现，给内容让出空间。
+const headerHidden = ref(false);
+let lastY = 0;
+function onScroll() {
+  const y = window.scrollY;
+  if (Math.abs(y - lastY) < 6) return;
+  headerHidden.value = y > lastY && y > 160;
+  lastY = y;
+}
+onMounted(() => window.addEventListener('scroll', onScroll, { passive: true }));
+onUnmounted(() => window.removeEventListener('scroll', onScroll));
 </script>
 <template>
   <a class="skip-link" href="#main">跳到正文</a>
   <!-- 首页自带全屏顶部和页脚，其他页面使用统一导航。 -->
-  <header v-if="$route.path !== '/'" class="site-header">
+  <header
+    v-if="$route.path !== '/'"
+    class="site-header"
+    :class="{ hidden: headerHidden }"
+    @focusin="headerHidden = false"
+  >
     <div class="container nav">
       <RouterLink to="/" class="brand">茸茸星球</RouterLink>
       <nav aria-label="主导航">
@@ -39,10 +60,27 @@ import CommunityNoticeLink from './components/CommunityNoticeLink.vue';
       </Transition>
     </RouterView>
   </main>
-  <footer v-if="$route.path !== '/'" class="site-footer container">
-    <RouterLink to="/" class="brand">茸茸星球</RouterLink>
-    <p>线上只占位不扣款，到店看过再付款。</p>
-    <RouterLink to="/shop">联系店主 ↗</RouterLink>
+  <!-- 页脚：深色、弧形上边缘、超大店名，与首页一致 -->
+  <footer v-if="$route.path !== '/'" class="site-footer">
+    <div class="container footer-row">
+      <div>
+        <p class="footer-eyebrow">有想看的？</p>
+        <p class="footer-title">先来店里坐一坐。</p>
+      </div>
+      <nav aria-label="页脚">
+        <RouterLink to="/pets">找猫狗</RouterLink>
+        <RouterLink to="/ai">问问怎么养</RouterLink>
+        <RouterLink to="/community">宠友社区</RouterLink>
+        <RouterLink to="/shop">到店指南</RouterLink>
+        <RouterLink to="/terms">用户协议</RouterLink>
+        <RouterLink to="/privacy">隐私政策</RouterLink>
+      </nav>
+    </div>
+    <div class="container footer-bar">
+      <span>线上只占位不扣款，到店看过再付款。</span>
+      <button type="button" @click="smoothScrollTo(0)">回到顶部 ↑</button>
+    </div>
+    <div v-reveal class="footer-giant" aria-hidden="true">茸茸星球</div>
   </footer>
   <nav class="mobile-tabs" aria-label="手机导航">
     <RouterLink to="/">首页</RouterLink>
@@ -51,6 +89,7 @@ import CommunityNoticeLink from './components/CommunityNoticeLink.vue';
     <RouterLink to="/community">社区</RouterLink>
     <RouterLink to="/profile">我的</RouterLink>
   </nav>
+  <CursorBubble />
   <div v-if="isDemo" class="demo-note" role="note">
     {{
       isJavaLocal
