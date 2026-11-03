@@ -65,8 +65,8 @@ onMounted(load);
 </script>
 <template>
   <div class="container page">
-    <p class="eyebrow">ONE STEP CLOSER</p>
-    <h1>预约这一次相遇</h1>
+    <p class="eyebrow">占位预约</p>
+    <h1>约个时间来看它</h1>
     <p class="lead">提交预约 — 店长确认 — 到店付款并接宠</p>
     <LoadState v-if="!preview" :loading="loading" :error="error" @retry="load" />
     <form v-if="preview" class="checkout-grid" @submit.prevent="submit">

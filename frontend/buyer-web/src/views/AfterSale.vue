@@ -74,8 +74,8 @@ onMounted(load);
 </script>
 <template>
   <div class="container page narrow">
-    <p class="eyebrow">WE ARE HERE FOR YOU</p>
-    <h1>{{ sale ? '让每一步，都有回应。' : '让问题被认真对待。' }}</h1>
+    <p class="eyebrow">售后</p>
+    <h1>{{ sale ? '售后进度' : '申请售后' }}</h1>
     <LoadState v-if="!order && !sale" :loading="loading" :error="error" @retry="load" />
     <section v-if="sale" class="panel stack">
       <span class="status orange">{{ labels[sale.status] || sale.status }}</span>

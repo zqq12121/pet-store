@@ -23,8 +23,8 @@ const copy = () =>
 </script>
 <template>
   <div class="container page">
-    <p class="eyebrow">COME SAY HELLO</p>
-    <h1>来店里，见一面。</h1>
+    <p class="eyebrow">到店指南</p>
+    <h1>店在哪，怎么来</h1>
     <p class="lead">我们相信，真实的相处比照片更能帮你作出决定。</p>
     <LoadState :loading="loading" :error="error" @retry="load" />
     <div v-if="shop" class="shop-layout">

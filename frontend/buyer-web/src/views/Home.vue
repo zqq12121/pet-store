@@ -799,13 +799,7 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* 首页专用字体：Noto Sans CJK SC Black 子集，许可见 assets/fonts/OFL.txt */
-@font-face {
-  font-family: 'HomeDisplay';
-  src: url('../assets/fonts/home-display.woff') format('woff');
-  font-weight: 900;
-  font-display: swap;
-}
+/* 标题字体 HomeDisplay 在 style.css 中全局声明 */
 .hm {
   --g: #1e4a3b;
   --g-deep: #143328;

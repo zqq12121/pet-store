@@ -10,8 +10,8 @@ import CommunityNoticeLink from './components/CommunityNoticeLink.vue';
       <RouterLink to="/" class="brand">茸茸星球</RouterLink>
       <nav aria-label="主导航">
         <RouterLink to="/">首页</RouterLink>
-        <RouterLink to="/pets">发现宠物</RouterLink>
-        <RouterLink to="/ai">AI 养宠助手</RouterLink>
+        <RouterLink to="/pets">找猫狗</RouterLink>
+        <RouterLink to="/ai">问问怎么养</RouterLink>
         <RouterLink to="/community">宠友社区</RouterLink>
         <RouterLink to="/shop">到店指南</RouterLink>
       </nav>
@@ -27,7 +27,7 @@ import CommunityNoticeLink from './components/CommunityNoticeLink.vue';
     class="floating-ai"
     to="/ai"
     aria-label="咨询 AI 养宠助手"
-    >AI 养宠助手 ↗</RouterLink
+    >问问 AI ↗</RouterLink
   >
   <!-- 只按路径切换，筛选参数变化时保留当前页面与输入状态；不等待旧页退出。 -->
   <main id="main">
@@ -41,13 +41,13 @@ import CommunityNoticeLink from './components/CommunityNoticeLink.vue';
   </main>
   <footer v-if="$route.path !== '/'" class="site-footer container">
     <RouterLink to="/" class="brand">茸茸星球</RouterLink>
-    <p>以陪伴为开始，以责任为约定。</p>
+    <p>线上只占位不扣款，到店看过再付款。</p>
     <RouterLink to="/shop">联系店主 ↗</RouterLink>
   </footer>
   <nav class="mobile-tabs" aria-label="手机导航">
     <RouterLink to="/">首页</RouterLink>
-    <RouterLink to="/pets">找宠物</RouterLink>
-    <RouterLink to="/ai">AI 助手</RouterLink>
+    <RouterLink to="/pets">找猫狗</RouterLink>
+    <RouterLink to="/ai">问 AI</RouterLink>
     <RouterLink to="/community">社区</RouterLink>
     <RouterLink to="/profile">我的</RouterLink>
   </nav>

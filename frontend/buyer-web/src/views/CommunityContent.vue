@@ -184,12 +184,12 @@ const report = () =>
   width: 100%;
   aspect-ratio: 1;
   object-fit: cover;
-  border-radius: 12px;
+  border-radius: 4px;
 }
 .community-report-dialog {
   width: min(540px, calc(100% - 32px));
   border: 1px solid var(--line);
-  border-radius: 20px;
+  border-radius: 4px;
   padding: 24px;
   background: var(--surface);
   color: inherit;

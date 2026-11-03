@@ -49,14 +49,14 @@
   align-items: center;
   gap: 0;
   min-height: 48px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
   background: var(--surface);
   overflow: hidden;
 }
 .auth-form :deep(.auth-field:focus-within) {
   border-color: var(--brand);
-  outline: 2px solid var(--peach);
+  outline: 2px solid var(--sage);
   outline-offset: 2px;
 }
 .auth-form :deep(.auth-field input) {

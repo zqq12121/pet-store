@@ -71,7 +71,7 @@ onUnmounted(() => clearInterval(timer));
 <template>
   <div class="container page narrow">
     <div class="section-heading">
-      <h1>期待与你见面。</h1>
+      <h1>到店接它</h1>
       <button class="btn secondary" :disabled="loading" @click="load">刷新状态</button>
     </div>
     <LoadState v-if="!order" :loading="loading" :error="error" @retry="load" /><template

@@ -197,7 +197,7 @@ onUnmounted(() => {
 .wechat-panel {
   border: 1px solid var(--line);
   background: var(--sand);
-  border-radius: 20px;
+  border-radius: 4px;
   padding: 24px 16px 20px;
   text-align: center;
   min-height: 302px;
@@ -221,7 +221,7 @@ h2 {
   width: 174px;
   min-height: 174px;
   background: var(--surface);
-  border-radius: 12px;
+  border-radius: 4px;
   margin: 0 auto 18px;
   display: flex;
   flex-direction: column;

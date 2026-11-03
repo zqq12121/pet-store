@@ -1,19 +1,34 @@
 /* 设计变量对应“街边宠物店”色板（门头绿、纸色、价签黄）；布局使用流式网格，避免依赖画布坐标。 */
 :root {
   font-family: 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
-  color: #2b2724;
-  background: #fbf8f3;
+  color: #1d1d1b;
+  background: #f4f0e6;
   font-synthesis: none;
-  --bg: #fbf8f3;
-  --surface: #fff;
-  --brand: #b9512b;
-  --hover: #923c1f;
-  --muted: #746b63;
-  --line: #e4dbd0;
-  --sand: #f2ece2;
-  --peach: #f7e4d3;
-  --sage: #e9f0e8;
-  --green: #456759;
+  --bg: #f4f0e6; /* 纸色底 */
+  --surface: #fffdf8; /* 卡片白 */
+  --ink: #1d1d1b;
+  --brand: #1e4a3b; /* 门头绿：导航、主按钮、链接 */
+  --hover: #143328;
+  --muted: #5e5a52;
+  --line: #d8d0bf;
+  --line-strong: #bdb4a2;
+  --sand: #ebe4d6;
+  --peach: #fbefc0; /* 淡黄：提醒、选中 */
+  --sage: #dce8df;
+  --green: #1e4a3b;
+  --tag: #f3d046; /* 价签黄 */
+  --stamp: #b5362a; /* 印章红：已预订、错误 */
+  --rose: #f6dcd6;
+  --display: 'HomeDisplay', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --hand: 'Kaiti SC', 'STKaiti', 'KaiTi', serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+/* 标题字体：Noto Sans CJK SC Black 子集（常用汉字 + 页面固定文字），许可见 assets/fonts/OFL.txt */
+@font-face {
+  font-family: 'HomeDisplay';
+  src: url('./assets/fonts/home-display.woff') format('woff');
+  font-weight: 900;
+  font-display: swap;
 }
 * {
   box-sizing: border-box;
@@ -51,7 +66,7 @@ a:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 3px solid #b9512b66;
+  outline: 3px solid #1e4a3b80;
   outline-offset: 3px;
 }
 img {
@@ -72,12 +87,13 @@ h3 {
   line-height: 1.4;
 }
 h1 {
-  font-size: 36px;
-  letter-spacing: -1px;
+  font-family: var(--display);
+  font-size: 38px;
+  font-weight: 900;
+  line-height: 1.25;
 }
 h2 {
-  font-size: 27px;
-  letter-spacing: -0.5px;
+  font-size: 26px;
 }
 h3 {
   font-size: 19px;
@@ -97,9 +113,9 @@ input,
 select,
 textarea {
   width: 100%;
-  border: 1px solid var(--line);
-  background: white;
-  border-radius: 12px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  border-radius: 4px;
   padding: 13px 15px;
   color: inherit;
   min-height: 48px;
@@ -148,29 +164,45 @@ button:disabled {
   margin-bottom: 30px;
 }
 .eyebrow {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 1.6px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
   color: var(--brand);
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 .brand {
-  font-size: 26px;
-  font-weight: 650;
+  font-family: var(--display);
+  font-size: 28px;
+  font-weight: 900;
   color: var(--brand);
   white-space: nowrap;
-  letter-spacing: -0.8px;
+  line-height: 1;
 }
 .brand span {
   font-weight: 400;
   font-size: 24px;
 }
 .site-header {
-  background: var(--bg);
-  border-bottom: 1px solid transparent;
+  background: var(--brand);
+  color: var(--surface);
+}
+.site-header .brand {
+  color: var(--tag);
+}
+.site-header .text-link {
+  color: var(--surface);
+}
+.site-header .btn.nav-order {
+  background: var(--tag);
+  border-color: var(--tag);
+  color: var(--ink);
+  font-weight: 700;
+}
+.site-header .btn.nav-order:hover {
+  background: #e8c22f;
 }
 .nav {
-  height: 88px;
+  height: 80px;
   display: flex;
   gap: 36px;
   align-items: center;
@@ -180,14 +212,15 @@ button:disabled {
   align-items: center;
   gap: 32px;
   margin-left: auto;
-  font-size: 14px;
-  color: var(--muted);
+  font-size: 15px;
+  color: #fffdf8d9;
 }
 .nav nav a {
   padding: 12px 0;
 }
+.nav nav a:hover,
 .nav nav .router-link-exact-active {
-  color: var(--brand);
+  color: var(--surface);
 }
 .nav-order {
   min-width: 125px;
@@ -198,7 +231,7 @@ button:disabled {
 }
 .btn {
   border: 1px solid transparent;
-  border-radius: 12px;
+  border-radius: 4px;
   background: var(--brand);
   color: white;
   display: inline-flex;
@@ -207,8 +240,8 @@ button:disabled {
   gap: 8px;
   min-height: 48px;
   padding: 13px 25px;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 700;
   line-height: 1.4;
   text-align: center;
   transition:
@@ -218,15 +251,14 @@ button:disabled {
 }
 .btn:hover {
   background: var(--hover);
-  transform: translateY(-1px);
 }
 .btn.secondary {
   background: var(--surface);
   color: var(--brand);
-  border-color: var(--line);
+  border-color: var(--brand);
 }
 .btn.secondary:hover {
-  background: var(--peach);
+  background: var(--sage);
 }
 .btn.full {
   width: 100%;
@@ -273,8 +305,9 @@ button:disabled {
 }
 .panel {
   padding: 32px;
-  background: white;
-  border-radius: 24px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
 }
 .panel > h2:last-child {
   margin: 0;
@@ -284,22 +317,24 @@ button:disabled {
   align-items: center;
   background: var(--sage);
   color: var(--green);
-  border-radius: 8px;
-  font-size: 12px;
-  padding: 8px 12px;
+  border-radius: 2px;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 4px 9px;
   line-height: 1.5;
   width: max-content;
   max-width: 100%;
 }
 .status.orange {
-  background: var(--peach);
-  color: var(--brand);
+  background: var(--rose);
+  color: #8e2a20;
 }
 .price {
   font-size: 26px;
-  color: var(--brand);
-  font-weight: 600;
+  color: var(--ink);
+  font-weight: 900;
   display: block;
+  font-variant-numeric: tabular-nums;
 }
 .price.large {
   font-size: 38px;
@@ -309,115 +344,23 @@ button:disabled {
   gap: 12px;
   flex-wrap: wrap;
 }
-.hero {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-items: center;
-  gap: 72px;
-  padding: 36px 0 70px;
-}
-.hero-copy {
-  min-width: 0;
-}
-.hero h1 {
-  font-family: 'Songti SC', 'Noto Serif SC', serif;
-  font-size: 48px;
-  font-weight: 500;
-  letter-spacing: -1.8px;
-  line-height: 1.6;
-  margin-bottom: 26px;
-  white-space: nowrap;
-}
-.hero .lead {
-  font-size: 17px;
-  margin-bottom: 34px;
-}
-.hero-trust {
-  font-size: 12px;
-  color: var(--muted);
-  margin: 30px 0 0;
-}
-.hero-media {
-  background: var(--peach);
-  border-radius: 32px;
-  overflow: hidden;
-  min-width: 0;
-}
-.hero-media > img {
-  width: 100%;
-  height: auto;
-  aspect-ratio: 580/510;
-  object-fit: cover;
-  border-radius: 32px;
-}
-.hero-caption {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 22px;
-}
-.hero-caption strong {
-  font-size: 14px;
-  font-weight: 500;
-}
-.hero-caption .btn {
-  min-height: 42px;
-  padding: 10px 22px;
-}
-.carousel-controls {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  padding: 0 22px 16px;
-}
-.carousel-controls > button:not(.carousel-pause) {
-  padding: 0;
-  width: 24px;
-  height: 8px;
-  background: #d2b8a4;
-  border-radius: 8px;
-  position: relative;
-}
-.carousel-controls > button:not(.carousel-pause):after {
-  content: '';
-  position: absolute;
-  inset: -15px 0;
-}
-.carousel-controls > button.active {
-  background: var(--brand);
-}
-.carousel-pause {
-  background: transparent;
-  color: var(--muted);
-  font-size: 11px;
-  margin-left: auto;
-  padding: 8px;
-}
-.home-pets {
-  padding: 18px 0 68px;
-}
 .pet-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 24px;
 }
 .pet-card {
-  border-radius: 20px;
-  background: white;
-  overflow: hidden;
   display: block;
-  transition:
-    box-shadow 0.2s,
-    transform 0.2s;
+  color: var(--ink);
 }
-.pet-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 16px 35px #4a301713;
+.pet-card:hover h3 {
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 .pet-cover {
   position: relative;
   overflow: hidden;
+  background: var(--sand);
 }
 .pet-cover img {
   width: 100%;
@@ -430,7 +373,41 @@ button:disabled {
   transform: scale(1.035);
 }
 .pet-card-body {
-  padding: 20px;
+  padding: 14px 2px 0;
+}
+/* 手写价签：贴在照片左上角，略微倾斜 */
+.pet-tag {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  background: var(--tag);
+  color: var(--ink);
+  font-family: var(--hand);
+  padding: 7px 12px 5px 22px;
+  transform: rotate(-4deg);
+  box-shadow: 0 1px 0 #0000002e;
+  line-height: 1.1;
+}
+.pet-tag:before {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin-top: -4px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid #0000004d;
+}
+.pet-tag span {
+  display: block;
+  font-size: 15px;
+}
+.pet-tag b {
+  display: block;
+  font-size: 26px;
+  font-weight: 700;
 }
 .pet-card h3 {
   font-size: 18px;
@@ -444,30 +421,30 @@ button:disabled {
   color: var(--muted);
   margin-bottom: 12px;
 }
-.pet-card strong {
-  font-size: 26px;
-  color: var(--brand);
-  font-weight: 550;
-}
 .pet-card small {
   display: block;
-  font-size: 11px;
-  margin-top: 18px;
+  font-size: 12px;
   color: var(--green);
 }
+/* 已预订：红色印章盖在照片右上角 */
 .pet-availability {
   position: absolute;
-  right: 12px;
-  top: 12px;
-  background: #fffdf4ed;
-  border-radius: 8px;
-  font-size: 12px;
-  padding: 6px 10px;
+  right: 14px;
+  top: 16px;
+  border: 3px solid var(--stamp);
+  color: var(--stamp);
+  background: #fffdf8eb;
+  font-weight: 900;
+  font-size: 17px;
+  letter-spacing: 3px;
+  padding: 2px 8px;
+  transform: rotate(-10deg);
 }
 .shop-card {
-  background: var(--sand);
+  background: var(--surface);
+  border: 1px solid var(--line);
   padding: 30px;
-  border-radius: 24px;
+  border-radius: 4px;
 }
 .shop-card p {
   font-size: 14px;
@@ -482,7 +459,9 @@ button:disabled {
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  padding-block: 54px;
+  padding-block: 40px 54px;
+  margin-top: 40px;
+  border-top: 2px solid var(--ink);
 }
 .site-footer p,
 .site-footer > a:last-child {
@@ -503,8 +482,8 @@ button:disabled {
   right: 0;
   z-index: 35;
   text-align: center;
-  background: #2b2724;
-  color: #f7e4d3;
+  background: var(--ink);
+  color: var(--bg);
   font-size: 10px;
   line-height: 22px;
   padding: 2px 12px;
@@ -536,16 +515,16 @@ button:disabled {
 .tabs button {
   padding: 13px 22px;
   min-height: 46px;
-  background: white;
-  color: var(--muted);
-  border-radius: 10px;
-  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 4px;
+  border: 1px solid var(--line-strong);
   font-size: 14px;
 }
 .tabs button.active {
-  color: white;
-  border-color: var(--brand);
-  background: var(--brand);
+  color: var(--surface);
+  border-color: var(--ink);
+  background: var(--ink);
 }
 .pagination {
   display: flex;
@@ -560,7 +539,7 @@ button:disabled {
   color: var(--muted);
 }
 .empty h2 {
-  color: #2b2724;
+  color: var(--ink);
 }
 .loading {
   min-height: 160px;
@@ -580,12 +559,12 @@ button:disabled {
 }
 .error-panel {
   padding: 30px;
-  background: var(--peach);
-  border-radius: 20px;
+  background: var(--rose);
+  border-radius: 4px;
   margin: 20px 0;
 }
 .error-text {
-  color: #a03227;
+  color: #8e2a20;
   font-size: 14px;
   line-height: 1.7;
 }
@@ -593,7 +572,7 @@ button:disabled {
   background: var(--sand);
   color: var(--muted);
   padding: 15px 18px;
-  border-radius: 12px;
+  border-radius: 4px;
   font-size: 13px;
   line-height: 1.7;
 }
@@ -605,7 +584,7 @@ button:disabled {
 .modal-layer {
   position: fixed;
   inset: 0;
-  background: #2b27245c;
+  background: #1d1d1b66;
   z-index: 60;
   display: flex;
   align-items: center;
@@ -617,7 +596,7 @@ button:disabled {
   position: relative;
   background: var(--bg);
   padding: 36px;
-  border-radius: 24px;
+  border-radius: 6px;
   max-height: 90dvh;
   overflow: auto;
   width: min(720px, 100%);
@@ -657,7 +636,7 @@ button:disabled {
 .lightbox {
   width: 100%;
   height: auto;
-  border-radius: 16px;
+  border-radius: 2px;
 }
 .agreement-text {
   white-space: pre-wrap;
@@ -687,9 +666,8 @@ button:disabled {
 }
 .detail-photo {
   width: 100%;
-  aspect-ratio: 570/590;
+  aspect-ratio: 4/3;
   object-fit: cover;
-  border-radius: 24px;
 }
 .detail-info {
   display: flex;
@@ -698,9 +676,7 @@ button:disabled {
   gap: 20px;
 }
 .detail-info h1 {
-  font-family: 'Songti SC', serif;
-  font-weight: 500;
-  font-size: 37px;
+  font-size: 44px;
   margin: 0;
 }
 .detail-info p {
@@ -714,9 +690,40 @@ button:disabled {
   flex-direction: column;
   gap: 12px;
 }
-.health p {
-  font-size: 13px;
+/* 详情页价签不贴在照片上，作为价格单独展示 */
+.pet-tag.static {
+  position: relative;
+  left: auto;
+  top: auto;
+  display: inline-block;
+}
+.pet-tag.static b {
+  font-size: 40px;
+}
+/* 档案表：左侧项目名、右侧内容，像纸质档案本 */
+.record {
+  margin: 0;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 14px;
+}
+.record > div {
+  display: flex;
+  border-bottom: 1px solid var(--line);
+}
+.record > div:last-child {
+  border-bottom: 0;
+}
+.record dt {
+  flex: 0 0 96px;
+  padding: 10px 12px;
+  background: #efe9dc;
   color: var(--muted);
+}
+.record dd {
+  margin: 0;
+  padding: 10px 12px;
+  line-height: 1.6;
 }
 .health h3 {
   margin: 0;
@@ -727,26 +734,24 @@ button:disabled {
   margin-top: 18px;
 }
 .thumbnails button {
-  padding: 3px;
-  border: 1px solid transparent;
-  border-radius: 12px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 0;
   background: none;
   width: 82px;
   height: 82px;
 }
 .thumbnails button.selected {
-  border-color: var(--brand);
+  border-color: var(--ink);
 }
 .thumbnails img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 8px;
 }
 .detail-video {
   width: 100%;
   margin-top: 24px;
-  border-radius: 16px;
 }
 .feeding {
   padding-block: 48px;
@@ -765,7 +770,6 @@ button:disabled {
   width: 100%;
   height: 650px;
   object-fit: cover;
-  border-radius: 32px;
 }
 .login-form {
   display: flex;
@@ -777,9 +781,7 @@ button:disabled {
   margin: 0;
 }
 .login-form h1 {
-  font-family: 'Songti SC', serif;
   font-size: 34px;
-  font-weight: 500;
 }
 .captcha-row {
   display: flex;
@@ -800,7 +802,7 @@ button:disabled {
   height: 48px;
   padding: 0;
   background: var(--sand);
-  border-radius: 10px;
+  border-radius: 4px;
   overflow: hidden;
 }
 .captcha img {
@@ -814,9 +816,10 @@ button:disabled {
   gap: 48px;
 }
 .order-summary {
-  background: white;
+  background: var(--surface);
+  border: 1px solid var(--line);
   padding: 20px;
-  border-radius: 20px;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   gap: 20px;
@@ -825,7 +828,6 @@ button:disabled {
   width: 96px;
   height: 112px;
   object-fit: cover;
-  border-radius: 12px;
   flex-shrink: 0;
 }
 .order-summary h3 {
@@ -884,9 +886,10 @@ button:disabled {
   margin: 0 auto 20px;
 }
 .pickup-code > strong {
+  font-family: var(--mono);
   font-size: 48px;
-  letter-spacing: 5px;
-  color: var(--brand);
+  letter-spacing: 10px;
+  color: var(--ink);
   display: block;
   margin: 20px 0;
 }
@@ -895,8 +898,8 @@ button:disabled {
 }
 .upload-box {
   padding: 24px;
-  border: 1px dashed var(--line);
-  border-radius: 16px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 4px;
 }
 .upload-box input {
   border: 0;
@@ -941,7 +944,6 @@ button:disabled {
   width: 100%;
   aspect-ratio: 1/1;
   object-fit: cover;
-  border-radius: 24px;
 }
 .shop-layout .panel p {
   margin: 0;
@@ -952,20 +954,18 @@ button:disabled {
   gap: 64px;
 }
 .chat-intro h1 {
-  font-family: 'Songti SC', serif;
-  font-weight: 500;
   font-size: 40px;
 }
 .chat-intro img {
   width: 100%;
   height: 260px;
   object-fit: cover;
-  border-radius: 24px;
   margin: 30px 0;
 }
 .chat-panel {
-  background: white;
-  border-radius: 24px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
   padding: 28px;
   display: flex;
   flex-direction: column;
@@ -997,14 +997,14 @@ button:disabled {
 .welcome-message > p {
   background: var(--sand);
   padding: 24px;
-  border-radius: 20px;
+  border-radius: 4px;
 }
 .suggestion {
   display: block;
   width: 100%;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: white;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: var(--surface);
   text-align: left;
   font-size: 13px;
   padding: 14px 18px;
@@ -1014,13 +1014,13 @@ button:disabled {
 .chat-message {
   background: var(--sand);
   padding: 20px;
-  border-radius: 18px;
+  border-radius: 4px;
   margin: 12px 0;
   max-width: 94%;
   overflow-wrap: anywhere;
 }
 .chat-message.user {
-  background: var(--peach);
+  background: var(--sage);
   margin-left: auto;
 }
 .chat-message > small {
@@ -1073,7 +1073,7 @@ button:disabled {
   position: fixed;
   left: 20px;
   top: -80px;
-  background: white;
+  background: var(--surface);
   padding: 16px;
   z-index: 100;
 }
@@ -1114,13 +1114,6 @@ button:disabled {
   .container {
     width: 1280px;
   }
-  .hero {
-    gap: 80px;
-    grid-template-columns: 600px 600px;
-  }
-  .hero h1 {
-    font-size: 49px;
-  }
 }
 @media (max-width: 1100px) {
   .nav {
@@ -1134,12 +1127,6 @@ button:disabled {
   }
   .brand span {
     font-size: 19px;
-  }
-  .hero {
-    gap: 36px;
-  }
-  .hero h1 {
-    font-size: 38px;
   }
   .pet-grid {
     gap: 16px;
@@ -1192,12 +1179,12 @@ button:disabled {
   }
   .mobile-ai {
     display: block;
-    padding: 11px 20px;
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    color: var(--brand);
+    padding: 9px 18px;
+    border-radius: 4px;
+    color: var(--ink);
     font-size: 14px;
-    background: white;
+    font-weight: 700;
+    background: var(--tag);
   }
   .mobile-tabs {
     display: flex;
@@ -1207,7 +1194,7 @@ button:disabled {
     right: 0;
     height: 66px;
     padding: 8px 12px;
-    background: #fffdfaf5;
+    background: #fffdf8f5;
     backdrop-filter: blur(12px);
     z-index: 30;
     border-top: 1px solid var(--line);
@@ -1220,74 +1207,12 @@ button:disabled {
     justify-content: center;
     font-size: 13px;
     color: var(--muted);
-    border-radius: 10px;
+    border-radius: 4px;
   }
   .mobile-tabs .router-link-exact-active {
-    background: var(--peach);
+    background: var(--sage);
     color: var(--brand);
-  }
-  .hero {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    padding: 20px 0 40px;
-    align-items: stretch;
-  }
-  .hero-copy {
-    display: contents;
-  }
-  .hero .eyebrow {
-    order: 0;
-    margin: 0;
-    font-size: 9px;
-  }
-  .hero h1 {
-    order: 1;
-    font-size: 29px;
-    line-height: 1.65;
-    letter-spacing: -1px;
-    white-space: normal;
-    margin: 0;
-  }
-  .hero .lead {
-    display: none;
-  }
-  .hero-media {
-    order: 2;
-    border-radius: 24px;
-  }
-  .hero-media > img {
-    aspect-ratio: 350/330;
-    border-radius: 24px;
-  }
-  .hero-caption {
-    padding: 12px 16px;
-  }
-  .hero-caption strong {
-    font-size: 12px;
-  }
-  .hero-caption .btn {
-    font-size: 12px;
-    padding: 8px 14px;
-    min-height: 38px;
-  }
-  .carousel-controls {
-    padding: 0 16px 10px;
-  }
-  .hero .actions {
-    order: 3;
-    display: grid;
-    grid-template-columns: 1.2fr 1fr;
-    gap: 12px;
-  }
-  .hero .actions .btn {
-    padding-inline: 10px;
-    font-size: 13px;
-  }
-  .hero-trust {
-    order: 4;
-    margin: 0;
-    font-size: 10px;
+    font-weight: 700;
   }
   .section-heading {
     gap: 16px;
@@ -1299,18 +1224,9 @@ button:disabled {
   .section-heading .eyebrow {
     font-size: 9px;
   }
-  .home-pets .section-heading .eyebrow {
-    display: none;
-  }
-  .home-pets .section-heading h2 {
-    font-size: 22px;
-  }
   .section-heading > .text-link {
     white-space: nowrap;
     font-size: 12px;
-  }
-  .home-pets {
-    padding: 0 0 36px;
   }
   .pet-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1320,7 +1236,7 @@ button:disabled {
     aspect-ratio: 171/170;
   }
   .pet-card-body {
-    padding: 13px 12px;
+    padding: 10px 0 0;
   }
   .pet-card h3 {
     font-size: 14px;
@@ -1331,19 +1247,30 @@ button:disabled {
     font-size: 10px;
     margin-bottom: 9px;
   }
-  .pet-card strong {
-    font-size: 22px;
+  /* 手机卡片较窄：价签只留价格，品种名在卡片标题里 */
+  .pet-card .pet-tag {
+    left: 8px;
+    top: 8px;
+    padding: 4px 9px 3px 18px;
+  }
+  .pet-card .pet-tag span {
+    display: none;
+  }
+  .pet-card .pet-tag b {
+    font-size: 19px;
+  }
+  .pet-availability {
+    font-size: 13px;
+    letter-spacing: 2px;
+    border-width: 2px;
+    right: 8px;
+    top: 10px;
   }
   .pet-card small {
-    font-size: 10px;
-    margin-top: 12px;
-  }
-  .pet-card {
-    border-radius: 16px;
+    font-size: 11px;
   }
   .shop-card {
     padding: 24px;
-    border-radius: 20px;
   }
   .shop-card h3 {
     font-size: 19px;
@@ -1453,7 +1380,6 @@ button:disabled {
   }
   .panel {
     padding: 24px;
-    border-radius: 20px;
   }
   .login-photo {
     display: none;
@@ -1542,7 +1468,6 @@ button:disabled {
     padding: 18px;
     max-height: calc(100dvh - 196px);
     min-height: 470px;
-    border-radius: 20px;
   }
   .chat-header h2 {
     font-size: 19px;
@@ -1631,7 +1556,7 @@ button:disabled {
   bottom: 3px;
   height: 2px;
   border-radius: 2px;
-  background: var(--brand);
+  background: var(--tag);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.3s var(--motion-ease);
@@ -1653,24 +1578,8 @@ button:disabled {
 .icon-button:active {
   transform: scale(0.97);
 }
-.pet-card {
-  transition:
-    box-shadow 0.35s ease,
-    transform 0.45s var(--motion-ease);
-}
 .pet-cover img {
   transition: transform 0.65s var(--motion-ease);
-}
-.pet-card:focus-visible {
-  box-shadow: 0 16px 35px #4a301713;
-}
-.carousel-controls > button:not(.carousel-pause) {
-  transition:
-    background 0.25s ease,
-    transform 0.3s var(--motion-ease);
-}
-.carousel-controls > button.active {
-  transform: scaleY(1.25);
 }
 .drawer-enter-active,
 .drawer-leave-active {
@@ -1684,19 +1593,12 @@ button:disabled {
   .nav nav a:hover:after {
     transform: scaleX(1);
   }
-  .btn:hover {
-    box-shadow: 0 6px 18px #4a301713;
-  }
-  .pet-card:hover {
-    transform: translateY(-6px);
-  }
   .pet-card:hover img {
     transform: scale(1.055);
   }
 }
 @media (hover: none) {
   .btn:hover,
-  .pet-card:hover,
   .pet-card:hover img {
     transform: none;
   }
@@ -1705,9 +1607,7 @@ button:disabled {
 @media (prefers-reduced-motion: reduce) {
   .btn:active,
   .btn:hover,
-  .pet-card:hover,
-  .pet-card:hover img,
-  .carousel-controls > button.active {
+  .pet-card:hover img {
     transform: none;
   }
 }
@@ -1722,8 +1622,9 @@ button:disabled {
   color: #fff;
   padding: 14px 20px;
   border-radius: 30px;
-  box-shadow: 0 5px 22px #56270c20;
-  font-size: 13px;
+  box-shadow: 0 5px 22px #0f1d1833;
+  font-size: 14px;
+  font-weight: 700;
 }
 .nav {
   gap: 22px;

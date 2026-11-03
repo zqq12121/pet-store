@@ -51,8 +51,8 @@ const changePassword = () =>
 </script>
 <template>
   <div class="container page narrow">
-    <p class="eyebrow">YOUR LITTLE WORLD</p>
-    <h1>你好，{{ user?.nickname || '未来的家人' }}。</h1>
+    <p class="eyebrow">我的</p>
+    <h1>你好，{{ user?.nickname || '新朋友' }}</h1>
     <p class="lead">{{ user?.phoneMasked }}</p>
     <div class="panel stack">
       <form class="stack" @submit.prevent="save">
@@ -128,7 +128,7 @@ const changePassword = () =>
         >我的店铺评价 →</RouterLink
       ><RouterLink to="/community/notices" class="profile-link">社区消息 →</RouterLink>
       <RouterLink to="/orders" class="profile-link">我的预约 →</RouterLink
-      ><RouterLink to="/ai" class="profile-link">AI 养宠助手 →</RouterLink
+      ><RouterLink to="/ai" class="profile-link">问问 AI 怎么养 →</RouterLink
       ><RouterLink to="/shop" class="profile-link">联系店主 →</RouterLink
       ><button class="text-link" :disabled="loading" @click="logout">退出登录</button>
     </div>

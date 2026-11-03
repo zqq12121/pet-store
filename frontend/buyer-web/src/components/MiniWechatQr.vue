@@ -155,7 +155,7 @@ onUnmounted(() => {
 .mini-qr-panel {
   border: 1px solid var(--line);
   background: var(--sand);
-  border-radius: 20px;
+  border-radius: 4px;
   padding: 24px 16px 20px;
   text-align: center;
   min-height: 302px;
@@ -178,7 +178,7 @@ h2 {
   min-height: 190px;
   max-width: 100%;
   margin: 0 auto 16px;
-  border-radius: 12px;
+  border-radius: 4px;
   background: var(--surface);
   display: grid;
   place-items: center;

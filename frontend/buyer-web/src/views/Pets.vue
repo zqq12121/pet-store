@@ -86,9 +86,9 @@ onMounted(async () => {
 </script>
 <template>
   <div class="container page">
-    <p class="eyebrow">FIND YOUR LITTLE FRIEND</p>
-    <h1>寻找与你合拍的它</h1>
-    <p class="lead">品种、性格、年龄慢慢挑；每只宠物都有独立档案。</p>
+    <p class="eyebrow">找猫狗</p>
+    <h1>店里现在有这些</h1>
+    <p class="lead">照片都是店里拍的。点进去能看疫苗、驱虫记录和检疫证明。</p>
     <form class="search-row" @submit.prevent="load()">
       <input
         v-model="form.keyword"
@@ -123,13 +123,13 @@ onMounted(async () => {
     <LoadState :loading="loading" :error="error" @retry="load()" /><template
       v-if="result && !loading"
     >
-      <p class="muted">找到 {{ result.total }} 位小伙伴</p>
+      <p class="muted">共 {{ result.total }} 只</p>
       <div v-if="result.items.length" class="pet-grid">
         <PetCard v-for="pet in result.items" :key="pet.id" :pet="pet" />
       </div>
       <div v-else class="empty">
         <h2>试试放宽一点条件。</h2>
-        <p>暂时没有符合条件的小伙伴。</p>
+        <p>暂时没有符合条件的猫狗。</p>
         <button class="btn" @click="reset">清除筛选条件</button>
       </div>
       <div v-if="result.total > 12" class="pagination">
@@ -154,7 +154,7 @@ onMounted(async () => {
       >
         <section class="drawer" role="dialog" aria-modal="true" aria-labelledby="filter-title">
           <div class="section-heading">
-            <h2 id="filter-title">找到合适的小伙伴</h2>
+            <h2 id="filter-title">按品种和价格筛选</h2>
             <button class="icon-button" aria-label="关闭筛选" @click="drawer = false">×</button>
           </div>
           <label

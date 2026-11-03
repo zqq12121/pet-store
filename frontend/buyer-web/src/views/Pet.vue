@@ -21,7 +21,7 @@ onMounted(load);
 <template>
   <div class="container page">
     <nav class="breadcrumb">
-      <RouterLink to="/">首页</RouterLink> / <RouterLink to="/pets">发现宠物</RouterLink> /
+      <RouterLink to="/">首页</RouterLink> / <RouterLink to="/pets">找猫狗</RouterLink> /
       {{ pet?.name || '详情' }}
     </nav>
     <LoadState :loading="loading" :error="error" @retry="load" /><template v-if="pet"
@@ -60,21 +60,34 @@ onMounted(load);
             }}
             · 到店自提</span
           >
-          <h1>{{ pet.name }}，想做你的<br />快乐小尾巴。</h1>
+          <h1>{{ pet.name }}</h1>
           <p class="muted">
             {{ pet.breed }} / {{ pet.gender === 'male' ? '弟弟' : '妹妹' }} /
             {{ pet.ageMonths }}个月 / {{ pet.weightKg }} kg
           </p>
-          <strong class="price large">{{ money(pet.priceAmount) }}</strong>
+          <span class="pet-tag static"
+            ><span>到店付</span><b>{{ money(pet.priceAmount).replace(/\.00$/, '') }}</b></span
+          >
           <p>{{ pet.description }}</p>
           <div class="tags">
             <span v-for="tag in pet.personalityTags" :key="tag" class="status">{{ tag }}</span>
           </div>
           <div class="panel health">
-            <h3>健康与成长档案</h3>
-            <p>疫苗：{{ pet.vaccineStatus }}</p>
-            <p>驱虫：{{ pet.dewormStatus }}</p>
-            <p>{{ pet.healthDescription }}</p>
+            <h3>健康档案</h3>
+            <dl class="record">
+              <div>
+                <dt>疫苗</dt>
+                <dd>{{ pet.vaccineStatus || '见检疫证明' }}</dd>
+              </div>
+              <div>
+                <dt>驱虫</dt>
+                <dd>{{ pet.dewormStatus || '到店可问店长' }}</dd>
+              </div>
+              <div v-if="pet.healthDescription">
+                <dt>健康情况</dt>
+                <dd>{{ pet.healthDescription }}</dd>
+              </div>
+            </dl>
             <button class="btn secondary" @click="certificate = true">查看检疫证明</button>
           </div>
           <div class="actions purchase-actions">
@@ -90,7 +103,7 @@ onMounted(load);
         </section>
       </div>
       <section class="feeding">
-        <h2>和它慢慢熟悉</h2>
+        <h2>喂养和习惯</h2>
         <p>{{ pet.feedingNotes }}</p>
       </section>
       <ShopCard :shop="pet.shop" />

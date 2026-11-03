@@ -5,7 +5,7 @@ defineProps<{ shop: Shop }>();
 <template>
   <section class="shop-card">
     <h3>{{ shop.name }}</h3>
-    <p>到店看见真实的它，再开始一段陪伴。</p>
+    <p>到店当面看，满意了再付款接走。</p>
     <p>{{ shop.address }}</p>
     <p>{{ shop.businessHours }} · 仅到店自提</p>
     <div class="actions">

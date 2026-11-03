@@ -215,8 +215,8 @@ onUnmounted(() => {
 <template>
   <div class="container page chat-layout">
     <aside class="chat-intro">
-      <p class="eyebrow">PAW COMPANION</p>
-      <h1>懂一点它，<br />就更靠近一点。</h1>
+      <p class="eyebrow">问问怎么养</p>
+      <h1>养宠问题，<br />先问这里。</h1>
       <p class="lead">猫狗饲养、健康护理、品种特点，<br />随时聊聊你的疑问。</p>
       <img src="/images/cat.jpg" alt="陪伴在身边的猫咪" />
       <p class="small muted">AI 生成，仅供参考。<br />出现持续不适，请及时就医。</p>

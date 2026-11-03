@@ -24,8 +24,8 @@ onMounted(() => load());
 </script>
 <template>
   <div class="container page">
-    <p class="eyebrow">MY ORDERS</p>
-    <h1>每一次相遇，都有记录。</h1>
+    <p class="eyebrow">我的预约</p>
+    <h1>预约与订单</h1>
     <div class="tabs order-tabs">
       <button
         v-for="item in tabs"
@@ -74,7 +74,7 @@ onMounted(() => load());
       <div v-if="!result.items.length" class="empty">
         <h2>还没有这里的订单</h2>
         <p>去认识一位合拍的小伙伴吧。</p>
-        <RouterLink class="btn" to="/pets">发现宠物</RouterLink>
+        <RouterLink class="btn" to="/pets">去找猫狗</RouterLink>
       </div>
       <div v-if="result.total > 10" class="pagination">
         <button class="btn secondary" :disabled="result.page === 1" @click="load(result.page - 1)">
