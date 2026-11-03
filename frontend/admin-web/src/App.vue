@@ -43,7 +43,7 @@ async function logout() {
   <RouterView v-if="route.path === '/login'" />
   <div v-else class="admin-shell">
     <aside class="sidebar">
-      <RouterLink to="/" class="brand">暖爪</RouterLink>
+      <RouterLink to="/" class="brand">茸茸星球</RouterLink>
       <p class="console-label">STORE CONSOLE</p>
       <nav aria-label="管理导航">
         <RouterLink

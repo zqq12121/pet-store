@@ -1,6 +1,6 @@
 <template>
-  <section class="container page auth-layout" aria-label="暖爪账号登录">
-    <RouterLink to="/" class="brand auth-brand">暖爪 <span>paw &amp; home</span></RouterLink>
+  <section class="container page auth-layout" aria-label="茸茸星球账号登录">
+    <RouterLink to="/" class="brand auth-brand">茸茸星球</RouterLink>
     <div class="auth-columns">
       <div class="auth-form"><slot /></div>
       <slot name="wechat" />

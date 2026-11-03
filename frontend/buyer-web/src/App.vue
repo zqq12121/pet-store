@@ -7,7 +7,7 @@ import CommunityNoticeLink from './components/CommunityNoticeLink.vue';
   <!-- 首页自带全屏顶部和页脚，其他页面使用统一导航。 -->
   <header v-if="$route.path !== '/'" class="site-header">
     <div class="container nav">
-      <RouterLink to="/" class="brand">暖爪 <span>paw & home</span></RouterLink>
+      <RouterLink to="/" class="brand">茸茸星球</RouterLink>
       <nav aria-label="主导航">
         <RouterLink to="/">首页</RouterLink>
         <RouterLink to="/pets">发现宠物</RouterLink>
@@ -40,7 +40,7 @@ import CommunityNoticeLink from './components/CommunityNoticeLink.vue';
     </RouterView>
   </main>
   <footer v-if="$route.path !== '/'" class="site-footer container">
-    <RouterLink to="/" class="brand">暖爪 <span>paw & home</span></RouterLink>
+    <RouterLink to="/" class="brand">茸茸星球</RouterLink>
     <p>以陪伴为开始，以责任为约定。</p>
     <RouterLink to="/shop">联系店主 ↗</RouterLink>
   </footer>

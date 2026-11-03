@@ -124,7 +124,7 @@ onUnmounted(() => clearInterval(timer));
 <template>
   <BuyerLoginLayout>
     <form @submit.prevent="login">
-      <h1 class="auth-title">{{ bindTicket ? '绑定手机号' : '登录暖爪' }}</h1>
+      <h1 class="auth-title">{{ bindTicket ? '绑定手机号' : '登录茸茸星球' }}</h1>
       <p v-if="bindTicket" class="notice">请绑定手机号，完成本次微信网页授权。</p>
       <p v-if="isJavaLocal" class="notice">本地联调：短信保存在开发收件箱，不发送真实短信。</p>
       <p v-else-if="isDemo" class="notice">当前为演示环境，不发送真实短信。</p>

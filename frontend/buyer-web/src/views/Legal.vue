@@ -13,8 +13,7 @@ defineProps<{ kind: 'terms' | 'privacy' }>();
       ><RouterLink to="/login" class="text-link">前往登录 ↗</RouterLink>
     </nav>
     <p class="notice">
-      本网站是“暖爪 /
-      茸茸星球”个人练习与演示项目，由项目维护者维护，当前不正式运营。页面标注的模拟宠物、地址、健康及检疫资料仅供测试，请勿据此进行真实交易。
+      本网站是“茸茸星球”个人练习与演示项目，由项目维护者维护，当前不正式运营。页面标注的模拟宠物、地址、健康及检疫资料仅供测试，请勿据此进行真实交易。
     </p>
     <article v-if="kind === 'terms'" class="panel legal-content" aria-label="用户服务协议正文">
       <p>

@@ -14,7 +14,7 @@ import { expect, test } from '@playwright/test';
 test.describe('买家端冒烟', () => {
   test('登录页渲染手机号与验证码表单', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.getByRole('heading', { name: '登录暖爪' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '登录茸茸星球' })).toBeVisible();
     await expect(page.getByLabel('手机号')).toBeVisible();
     await expect(page.getByLabel('短信验证码')).toBeVisible();
   });
@@ -23,7 +23,7 @@ test.describe('买家端冒烟', () => {
     await page.goto('/orders');
     // 守卫是 meta.auth + 未登录 → /login?redirect=...
     await expect(page).toHaveURL(/\/login/);
-    await expect(page.getByRole('heading', { name: '登录暖爪' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '登录茸茸星球' })).toBeVisible();
   });
 
   test('用户协议无需登录即可阅读', async ({ page }) => {

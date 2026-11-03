@@ -223,7 +223,7 @@ onUnmounted(() => {
     </aside>
     <section class="chat-panel">
       <div class="chat-header">
-        <h2>暖爪 AI 助手</h2>
+        <h2>茸茸星球 AI 助手</h2>
         <button class="text-link" :disabled="sending" @click="openSession">新会话</button>
       </div>
       <select
@@ -253,7 +253,7 @@ onUnmounted(() => {
           class="chat-message"
           :class="message.role"
         >
-          <small>{{ message.role === 'user' ? '你' : '暖爪助手' }}</small>
+          <small>{{ message.role === 'user' ? '你' : '店里的 AI' }}</small>
           <p class="message-content">
             {{
               message.content || (message.status === 'generating' ? '正在思考…' : '暂未收到回答')

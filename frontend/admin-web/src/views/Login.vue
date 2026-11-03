@@ -26,9 +26,9 @@ async function submit() {
   <!-- 登录只保留一个表单，输入框按 Enter 与点击按钮走同一提交逻辑。 -->
   <div class="login-page">
     <el-form class="login-panel" label-position="top" @submit.prevent="submit"
-      ><span class="brand">暖爪</span>
+      ><span class="brand">茸茸星球</span>
       <p class="eyebrow">STORE ACCESS</p>
-      <h1>欢迎回到暖爪。</h1>
+      <h1>欢迎回到茸茸星球。</h1>
       <p>店长与员工共用入口，登录后进入各自的工作台。</p>
       <el-form-item label="后台账号"
         ><el-input

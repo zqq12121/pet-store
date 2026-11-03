@@ -12,7 +12,7 @@ import { expect, test } from '@playwright/test';
  */
 test('登录页在手机视口下没有横向溢出', async ({ page }) => {
   await page.goto('/login');
-  await expect(page.getByRole('heading', { name: '登录暖爪' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '登录茸茸星球' })).toBeVisible();
 
   const overflow = await page.evaluate(() => {
     const doc = document.documentElement;

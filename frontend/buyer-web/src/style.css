@@ -1,4 +1,4 @@
-/* 设计变量对应 Figma 暖爪色板；布局使用流式网格，避免依赖画布坐标。 */
+/* 设计变量对应“街边宠物店”色板（门头绿、纸色、价签黄）；布局使用流式网格，避免依赖画布坐标。 */
 :root {
   font-family: 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
   color: #2b2724;
