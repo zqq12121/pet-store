@@ -393,6 +393,14 @@ class CommerceIntegrationTest {
     assertEquals(200, home.statusCode());
     assertEquals("OK", text(read(home.body()), "code"));
     assertTrue(object(read(home.body()), "data").containsKey("banners"));
+    // 全新建库时门店名片来自 Bootstrap：前端首页直接展示店名，并靠空手机号隐藏电话行。
+    Map<String, Object> seededShop = object(object(read(home.body()), "data"), "shop");
+    assertEquals("茸茸星球", seededShop.get("name"));
+    assertEquals("", seededShop.get("phone"));
+    assertEquals("", seededShop.get("wechat"));
+    // 新库没有真实位置时不能带默认坐标，否则到店页会出现指向无关地点的导航。
+    assertNull(seededShop.get("latitude"));
+    assertNull(seededShop.get("longitude"));
     var invalid =
         client.send(
             HttpRequest.newBuilder(URI.create(base + "/home"))
@@ -1058,6 +1066,38 @@ class CommerceIntegrationTest {
     Map<String, Object> link = files.access(text(report, "id"), buyer);
     String token = text(link, "url").split("access=")[1];
     assertTrue(Files.exists(files.content(text(report, "id"), token)));
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void homeLatestPetsListEveryOnSalePetForStorefrontCounts() {
+    // 首页“在售 N 只”和按品种汇总都由 latestPets 算出，所以不能截断，也不能混入已预订。
+    List<String> onSale = new ArrayList<>();
+    for (int i = 0; i < 9; i++) onSale.add(text(pet(), "id"));
+    String reserved = text(pet(), "id");
+    tx.execute(
+        status -> {
+          store.lock();
+          Map<String, Object> current = store.get("pet", reserved);
+          current.put("status", "reserved");
+          store.save(current);
+          return null;
+        });
+
+    List<Map<String, Object>> latest =
+        (List<Map<String, Object>>) call("GET", "/home", map(), null).get("latestPets");
+    List<Object> ids = latest.stream().map(p -> p.get("id")).toList();
+
+    assertTrue(ids.containsAll(onSale));
+    assertFalse(ids.contains(reserved));
+    assertTrue(latest.stream().allMatch(p -> "on_sale".equals(p.get("status"))));
+    Map<String, Object> card =
+        latest.stream().filter(p -> onSale.getFirst().equals(p.get("id"))).findFirst().orElseThrow();
+    assertEquals("测试记录", card.get("vaccineStatus"));
+    // 详情页把阻断原因直接显示在按钮上，文案要和全站“预约”口径一致。
+    assertEquals(
+        "当前不可预约，请联系店主核实",
+        call("GET", "/pets/" + reserved, map(), null).get("purchaseBlockedReason"));
   }
 
   @Test

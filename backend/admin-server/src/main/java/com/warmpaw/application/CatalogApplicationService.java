@@ -64,7 +64,7 @@ public class CatalogApplicationService {
    * 买家侧宠物详情。
    *
    * <p>只有 {@code off}（草稿/下架）返回 404；{@code sold}/{@code reserved} 仍可查看，
-   * 但会通过 {@code purchasable=false} 与阻断原因提示"当前不可购买"。
+   * 但会通过 {@code purchasable=false} 与阻断原因提示"当前不可预约"。
    * 这样做是为了避免买家点过的链接突然变成 404，同时仍能引导到相似推荐。
    */
   public OperationResult pet(String petId) {

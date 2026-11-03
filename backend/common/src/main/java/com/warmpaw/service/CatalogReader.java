@@ -246,7 +246,7 @@ public class CatalogReader {
   /**
    * 列表卡片视图：买家列表与首页推荐共用的最小字段集。
    *
-   * <p>只有 10 个标量字段 + 币种 + 封面图。刻意<b>不含</b>描述、图片列表、检疫证明、
+   * <p>只有 11 个标量字段（含首页卡片展示的疫苗情况）+ 币种 + 封面图。刻意<b>不含</b>描述、图片列表、检疫证明、
    * 购买资格——列表页一次返回几十条，任何额外的文件查询都会被放大成 N+1。
    *
    * <p><b>月龄会覆盖库里的值</b>：只要实体上有 {@code birthDate}，就用"今天 - 出生日期"
@@ -260,7 +260,7 @@ public class CatalogReader {
     Map<String, Object> c =
         select(
             p,
-            "id,name,category,breed,priceAmount,gender,ageMonths,status,isRecommended,publishedAt");
+            "id,name,category,breed,priceAmount,gender,ageMonths,status,isRecommended,publishedAt,vaccineStatus");
     c.put("currency", "CNY");
     c.put(
         "coverUrl",
@@ -312,7 +312,7 @@ public class CatalogReader {
     c.put("quarantine", publicQuarantine(object(p, "quarantine")));
     c.put("shop", publicShop());
     c.put("purchaseAllowed", purchasable(p));
-    c.put("purchaseBlockedReason", purchasable(p) ? null : "当前不可购买，请联系店主核实");
+    c.put("purchaseBlockedReason", purchasable(p) ? null : "当前不可预约，请联系店主核实");
     return c;
   }
 
@@ -425,7 +425,9 @@ public class CatalogReader {
    *   <li>只取 {@code on_sale}/{@code reserved}：首页是导购入口，已售出/下架的东西不占位；
    *   <li>banner 若指向具体宠物（{@code linkType=pet}），而该宠物已不在上述状态，
    *       整条 banner 会被过滤掉——避免用户点进一个 404；
-   *   <li>推荐位最多 8 条，按 {@link #comprehensive} 排；最新位最多 8 条，只按发布时间排；
+   *   <li>推荐位最多 8 条，按 {@link #comprehensive} 排；
+   *   <li>最新位是全部 {@code on_sale} 宠物，只按发布时间排、不截断：
+   *       买家首页的"在售 N 只"和按品种汇总都由它算出，截断或混入已预订都会算错；
    *   <li>banner 的图片走 {@code store.get("file", ...)}，文件缺失会 404 而不是静默留空，
    *       让配置错误在首页立刻暴露。
    * </ul>
@@ -466,10 +468,10 @@ public class CatalogReader {
             .toList(),
         "latestPets",
         pets.stream()
+            .filter(p -> "on_sale".equals(text(p, "status")))
             .sorted(
                 Comparator.comparing(
                     p -> Objects.toString(p.get("publishedAt"), ""), Comparator.reverseOrder()))
-            .limit(8)
             .map(this::card)
             .toList(),
         "shop",

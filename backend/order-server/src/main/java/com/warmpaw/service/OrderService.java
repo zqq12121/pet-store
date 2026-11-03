@@ -86,7 +86,7 @@ public class OrderService {
         "purchaseAllowed",
         catalog.purchasable(p),
         "blockedReason",
-        catalog.purchasable(p) ? null : "当前宠物不可购买");
+        catalog.purchasable(p) ? null : "当前宠物不可预约");
   }
 
   /** 线上购买入口的默认实现：联系人手机号必须是登录账号本人。 */

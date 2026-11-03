@@ -247,7 +247,7 @@ public class WechatGateway {
             "mchid",
             merchant,
             "description",
-            "暖爪宠物门店订单",
+            "茸茸星球宠物门店订单",
             "out_trade_no",
             payment.get("outTradeNo"),
             "notify_url",

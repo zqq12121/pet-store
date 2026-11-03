@@ -35,7 +35,7 @@ public class HomeController {
    *
    * <p>返回首页所需的全部板块：{@code banners}（只含 enabled 且跳转目标仍有效的）、
    * {@code categories}、{@code recommendedPets}（推荐位，最多 8）、{@code latestPets}
-   * （按发布时间倒序，最多 8）与 {@code shop} 公开信息。
+   * （全部 {@code on_sale}，按发布时间倒序，不截断）与 {@code shop} 公开信息。
    *
    * <p>候选宠物只取 {@code on_sale}/{@code reserved}，所以 {@code off}/{@code sold} 不会出现在
    * 首页；轮播若指向已下架宠物会被过滤掉，避免用户点进死链。
