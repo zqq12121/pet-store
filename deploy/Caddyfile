@@ -2,6 +2,10 @@
     email {$ACME_EMAIL}
 }
 
+www.{$PAW_DOMAIN} {
+    redir https://{$PAW_DOMAIN}{uri} permanent
+}
+
 {$PAW_DOMAIN} {
     # 自动申请、续期证书并将 HTTP 跳转至 HTTPS；不记录含凭证的请求 URL。
     header {
