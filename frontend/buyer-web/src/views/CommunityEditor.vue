@@ -6,6 +6,7 @@ import { communityCategories, communityLength } from '../../../shared/communityT
 import type { CommunityContent, CommunityImage, ReviewOrder } from '../../../shared/communityTypes';
 import { useLoad } from '../../../shared/useLoad';
 import CommunityImages from '../components/CommunityImages.vue';
+import PageHead from '../components/PageHead.vue';
 const route = useRoute(),
   router = useRouter(),
   editing = !!route.params.id,
@@ -81,14 +82,13 @@ const save = () =>
   });
 </script>
 <template>
+  <PageHead
+    compact
+    narrow
+    :back="{ to: `/community?type=${type}`, label: '宠友社区' }"
+    :title="`${editing ? '编辑' : type === 'post' ? '发布' : '发表'}${type === 'post' ? '养宠帖子' : '店铺评价'}`"
+  />
   <div class="container page narrow">
-    <RouterLink :to="{ path: '/community', query: { type } }" class="text-link"
-      >返回宠友社区</RouterLink
-    >
-    <h1>
-      {{ editing ? '编辑' : type === 'post' ? '发布' : '发表'
-      }}{{ type === 'post' ? '养宠帖子' : '店铺评价' }}
-    </h1>
     <p v-if="loading" role="status">正在处理…</p>
     <p v-if="error" class="error-text" role="alert">
       {{ error }}

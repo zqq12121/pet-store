@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { buyer, clearAuth } from '../../../shared/api';
 import { useLoad } from '../../../shared/useLoad';
 import { useGraphCaptcha } from '../../../shared/useGraphCaptcha';
+import PageHead from '../components/PageHead.vue';
 const graph = useGraphCaptcha();
 const router = useRouter(),
   phone = ref(''),
@@ -69,12 +70,14 @@ onMounted(() => {
 onUnmounted(() => clearInterval(timer));
 </script>
 <template>
+  <PageHead
+    compact
+    narrow
+    title="设置或重置密码"
+    lead="验证已绑定的手机号。密码设置、修改和重置共用 7 天限制，成功后需重新登录。新用户请先短信登录。"
+  />
   <div class="container page narrow">
     <form class="panel stack" @submit.prevent="submit">
-      <h1>设置或重置密码</h1>
-      <p class="muted">
-        验证已绑定的手机号。密码设置、修改和重置共用7天限制；成功后需重新登录。新用户请先短信登录。
-      </p>
       <label
         >手机号<input
           v-model="phone"

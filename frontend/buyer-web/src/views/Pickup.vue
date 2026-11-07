@@ -2,11 +2,12 @@
 import QrCode from '../components/QrCode.vue';
 import { ref, reactive, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { buyer, isDemo, date, mutationKey } from '../../../shared/api';
+import { buyer, date, mutationKey } from '../../../shared/api';
 import type { Order, Agreement } from '../../../shared/types';
 import { useLoad } from '../../../shared/useLoad';
 import LoadState from '../components/LoadState.vue';
 import OrderSummary from '../components/OrderSummary.vue';
+import PageHead from '../components/PageHead.vue';
 const route = useRoute(),
   order = ref<Order>(),
   agreement = ref<Agreement>(),
@@ -69,11 +70,17 @@ onMounted(() => {
 onUnmounted(() => clearInterval(timer));
 </script>
 <template>
+  <PageHead
+    compact
+    narrow
+    title="到店接它"
+    lead="到店后把自提码给店主看，现场完成健康确认就能带它回家。"
+  >
+    <template #actions
+      ><button class="btn secondary" :disabled="loading" @click="load">刷新状态</button></template
+    >
+  </PageHead>
   <div class="container page narrow">
-    <div class="section-heading">
-      <h1>到店接它</h1>
-      <button class="btn secondary" :disabled="loading" @click="load">刷新状态</button>
-    </div>
     <LoadState v-if="!order" :loading="loading" :error="error" @retry="load" /><template
       v-if="order"
       ><OrderSummary :product="order.product" :amount="order.amount" />
@@ -99,7 +106,6 @@ onUnmounted(() => clearInterval(timer));
         <label class="check"
           ><input v-model="accepted" type="checkbox" />我已阅读并同意上述现场确认内容</label
         >
-        <p v-if="isDemo" class="notice">演示验证码 123456，不会发送真实短信。</p>
         <label
           >本人短信验证码
           <div class="captcha-row">

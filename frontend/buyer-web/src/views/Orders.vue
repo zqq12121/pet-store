@@ -4,6 +4,7 @@ import { buyer, date, money } from '../../../shared/api';
 import type { Page, Order } from '../../../shared/types';
 import { useLoad } from '../../../shared/useLoad';
 import LoadState from '../components/LoadState.vue';
+import PageHead from '../components/PageHead.vue';
 const result = ref<Page<Order>>(),
   tab = ref('all'),
   { loading, error, run } = useLoad();
@@ -23,9 +24,12 @@ const load = (page = 1) =>
 onMounted(() => load());
 </script>
 <template>
+  <PageHead
+    compact
+    title="预约与订单"
+    lead="线上占位不扣款。店长确认后按约定时间到店，看过满意再付款。"
+  />
   <div class="container page">
-    <p class="eyebrow">我的预约</p>
-    <h1>预约与订单</h1>
     <div class="tabs order-tabs">
       <button
         v-for="item in tabs"
@@ -42,33 +46,36 @@ onMounted(() => load());
     <LoadState :loading="loading" :error="error" @retry="load()" />
     <div v-if="result && !loading" class="stack">
       <article v-for="order in result.items" :key="order.id" class="panel order-list-item">
-        <div class="between">
-          <span class="small muted">{{ order.orderNo }} · {{ date(order.createdAt) }}</span
-          ><span class="status">{{ order.statusText }}</span>
+        <RouterLink :to="`/orders/${order.id}`" class="order-photo"
+          ><img :src="order.product.coverUrl" :alt="order.product.name"
+        /></RouterLink>
+        <div class="order-main">
+          <span class="status">{{ order.statusText }}</span>
+          <h3>
+            <RouterLink :to="`/orders/${order.id}`">{{ order.product.name }}</RouterLink
+            ><small>{{ order.product.breed }}</small>
+          </h3>
+          <p v-if="order.appointment">到店时间：{{ date(order.appointment.visitAt) }}</p>
+          <p class="small muted">订单号 {{ order.orderNo }}，{{ date(order.createdAt) }} 提交</p>
         </div>
-        <RouterLink :to="`/orders/${order.id}`" class="order-summary"
-          ><img :src="order.product.coverUrl" :alt="order.product.name" />
-          <div>
-            <h3>{{ order.product.name }} · {{ order.product.breed }}</h3>
-            <strong class="price">{{ money(order.amount) }}</strong>
-          </div></RouterLink
-        >
-        <p v-if="order.appointment">到店时间：{{ date(order.appointment.visitAt) }}</p>
-        <div class="actions">
-          <RouterLink class="btn secondary" :to="`/orders/${order.id}`">{{
-            order.appointment ? '预约详情' : '订单详情'
-          }}</RouterLink
-          ><RouterLink
-            v-if="order.availableActions.includes('pay')"
-            class="btn"
-            :to="`/orders/${order.id}/payment`"
-            >继续支付</RouterLink
-          ><RouterLink
-            v-if="order.availableActions.includes('view_pickup')"
-            class="btn"
-            :to="`/orders/${order.id}/pickup`"
-            >查看自提凭证</RouterLink
-          >
+        <div class="order-side">
+          <strong class="price">{{ money(order.amount) }}</strong>
+          <div class="actions">
+            <RouterLink class="btn secondary" :to="`/orders/${order.id}`">{{
+              order.appointment ? '预约详情' : '订单详情'
+            }}</RouterLink
+            ><RouterLink
+              v-if="order.availableActions.includes('pay')"
+              class="btn"
+              :to="`/orders/${order.id}/payment`"
+              >继续支付</RouterLink
+            ><RouterLink
+              v-if="order.availableActions.includes('view_pickup')"
+              class="btn"
+              :to="`/orders/${order.id}/pickup`"
+              >查看自提凭证</RouterLink
+            >
+          </div>
         </div>
       </article>
       <div v-if="!result.items.length" class="empty">

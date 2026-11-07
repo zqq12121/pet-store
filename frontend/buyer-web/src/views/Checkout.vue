@@ -7,6 +7,7 @@ import { useLoad } from '../../../shared/useLoad';
 import LoadState from '../components/LoadState.vue';
 import OrderSummary from '../components/OrderSummary.vue';
 import ShopCard from '../components/ShopCard.vue';
+import PageHead from '../components/PageHead.vue';
 const route = useRoute(),
   router = useRouter(),
   preview = ref<OrderPreview>(),
@@ -64,10 +65,19 @@ async function submit() {
 onMounted(load);
 </script>
 <template>
+  <PageHead
+    compact
+    title="约个时间来看它"
+    :photos="preview ? [preview.product.coverUrl] : undefined"
+  >
+    <!-- 预约是真实的三步流程，当前处在第一步 -->
+    <ol class="flow-steps" aria-label="预约流程">
+      <li aria-current="step">提交预约</li>
+      <li>店长确认</li>
+      <li>到店付款并接宠</li>
+    </ol>
+  </PageHead>
   <div class="container page">
-    <p class="eyebrow">占位预约</p>
-    <h1>约个时间来看它</h1>
-    <p class="lead">提交预约 — 店长确认 — 到店付款并接宠</p>
     <LoadState v-if="!preview" :loading="loading" :error="error" @retry="load" />
     <form v-if="preview" class="checkout-grid" @submit.prevent="submit">
       <div class="stack">

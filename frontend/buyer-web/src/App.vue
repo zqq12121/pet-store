@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
-import { isDemo, isJavaLocal } from '../../shared/api';
 import CommunityNoticeLink from './components/CommunityNoticeLink.vue';
 import CursorBubble from './components/CursorBubble.vue';
 import { smoothScrollTo } from './motion';
@@ -90,11 +89,4 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll));
     <RouterLink to="/profile">我的</RouterLink>
   </nav>
   <CursorBubble />
-  <div v-if="isDemo" class="demo-note" role="note">
-    {{
-      isJavaLocal
-        ? '本地联调 · 支付、短信为模拟服务 · AI 暂未接入'
-        : '演示环境 · 示例宠物与门店信息 ·支付、短信和 AI 均为模拟'
-    }}
-  </div>
 </template>

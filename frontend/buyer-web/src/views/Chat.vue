@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
-import { buyer, headers, auth, isDemo, safeUrl, randomId } from '../../../shared/api';
+import { buyer, headers, auth, safeUrl, randomId } from '../../../shared/api';
 import { readSse } from '../../../shared/sse';
 import type { AiMessage, Source, Pet } from '../../../shared/types';
 import PetCard from '../components/PetCard.vue';
@@ -216,10 +216,9 @@ onUnmounted(() => {
 <template>
   <div class="container page chat-layout">
     <aside class="chat-intro">
-      <p class="eyebrow">问问怎么养</p>
       <h1>养宠问题，<br />先问这里。</h1>
       <p class="lead">猫狗饲养、健康护理、品种特点，<br />随时聊聊你的疑问。</p>
-      <img v-wipe src="/images/cat.jpg" alt="店里的猫" />
+      <img v-wipe src="/images/pets/white-cat.jpg" alt="店里的猫" />
       <p class="small muted">AI 生成，仅供参考。<br />出现持续不适，请及时就医。</p>
     </aside>
     <section class="chat-panel">
@@ -238,7 +237,6 @@ onUnmounted(() => {
           {{ s.title || `会话 ${index + 1}` }}
         </option>
       </select>
-      <p v-if="isDemo" class="notice small">演示回复来自本地示例内容，尚未调用 DeepSeek。</p>
       <div ref="scroller" class="chat-messages" role="log" aria-live="polite">
         <div v-if="!messages.length" class="welcome-message">
           <p>你好！我是你的养宠小助手。<br />想了解哪位小伙伴，或聊聊日常照护？</p>

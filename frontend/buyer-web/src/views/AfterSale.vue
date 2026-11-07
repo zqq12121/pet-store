@@ -5,6 +5,7 @@ import { buyer, date, upload, mutationKey } from '../../../shared/api';
 import type { Order, AfterSale } from '../../../shared/types';
 import { useLoad } from '../../../shared/useLoad';
 import LoadState from '../components/LoadState.vue';
+import PageHead from '../components/PageHead.vue';
 const route = useRoute(),
   router = useRouter(),
   order = ref<Order>(),
@@ -73,9 +74,8 @@ async function submit() {
 onMounted(load);
 </script>
 <template>
+  <PageHead compact narrow :title="sale ? '售后进度' : '申请售后'" />
   <div class="container page narrow">
-    <p class="eyebrow">售后</p>
-    <h1>{{ sale ? '售后进度' : '申请售后' }}</h1>
     <LoadState v-if="!order && !sale" :loading="loading" :error="error" @retry="load" />
     <section v-if="sale" class="panel stack">
       <span class="status orange">{{ labels[sale.status] || sale.status }}</span>

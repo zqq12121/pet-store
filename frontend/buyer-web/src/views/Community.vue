@@ -7,6 +7,7 @@ import type { CommunityPage } from '../../../shared/communityTypes';
 import { useLoad } from '../../../shared/useLoad';
 import LoadState from '../components/LoadState.vue';
 import CommunityNoticeLink from '../components/CommunityNoticeLink.vue';
+import PageHead from '../components/PageHead.vue';
 const route = useRoute(),
   router = useRouter(),
   result = ref<CommunityPage>(),
@@ -47,20 +48,23 @@ function personal(value: string) {
 }
 </script>
 <template>
-  <div class="container page community-page">
-    <div class="section-heading">
-      <div>
-        <h1>宠友社区</h1>
-        <p class="lead">分享养宠日常，一起交流成长。</p>
-      </div>
-      <div class="actions">
-        <CommunityNoticeLink /><RouterLink
-          class="btn"
-          :to="{ path: '/community/new', query: { type } }"
-          >{{ type === 'post' ? '发布帖子' : '评价店铺' }}</RouterLink
-        >
-      </div>
+  <PageHead
+    title="宠友社区"
+    lead="接回家以后的日子，都可以在这里聊：养宠心得、晒日常、求助，还有到店后的评价。"
+    :photos="[
+      '/images/pets/border-collie-lavender.jpg',
+      '/images/pets/golden-ball.jpg',
+      '/images/pets/siamese-sofa.jpg',
+    ]"
+  >
+    <div class="actions community-head-actions">
+      <RouterLink class="btn" :to="{ path: '/community/new', query: { type } }">{{
+        type === 'post' ? '发布帖子' : '评价店铺'
+      }}</RouterLink
+      ><CommunityNoticeLink />
     </div>
+  </PageHead>
+  <div class="container page community-page">
     <div class="tabs community-tabs" aria-label="社区板块">
       <button
         :class="{ active: type === 'post' }"
@@ -125,7 +129,13 @@ function personal(value: string) {
           :key="item.id"
           :to="`/community/${item.id}`"
           class="panel community-card"
-          ><div class="between">
+          ><div v-if="item.images.length && item.status === 'published'" class="community-cover">
+            <img :src="item.images[0].url" alt="社区内容配图" loading="lazy" /><span
+              v-if="item.images.length > 1"
+              >共 {{ item.images.length }} 张</span
+            >
+          </div>
+          <div class="between">
             <small class="muted">{{ item.authorName }} · {{ date(item.createdAt) }}</small
             ><span v-if="item.status === 'hidden'" class="status">已隐藏</span
             ><span v-else-if="item.type === 'post'" class="status">{{
@@ -138,15 +148,6 @@ function personal(value: string) {
           </div>
           <h2 v-if="item.title">{{ item.title }}</h2>
           <p>{{ item.body.length > 180 ? item.body.slice(0, 180) + '…' : item.body }}</p>
-          <div v-if="item.images.length && item.status === 'published'" class="community-preview">
-            <img
-              v-for="image in item.images.slice(0, 3)"
-              :key="image.id"
-              :src="image.url"
-              alt="社区内容配图"
-              loading="lazy"
-            />
-          </div>
           <small v-if="item.type === 'post'" class="muted"
             >{{ item.likeCount }} 人点赞{{ item.favorited ? ' · 已收藏' : '' }}</small
           ><small v-else class="muted">已完成到店消费</small></RouterLink
@@ -172,90 +173,108 @@ function personal(value: string) {
   </div>
 </template>
 <style scoped>
-.community-page {
-  max-width: 1040px;
-}
-.section-heading .lead {
-  margin: 8px 0 0;
+.community-head-actions {
+  margin-top: 26px;
 }
 .community-tabs {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 .community-filters {
   gap: 24px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 .community-filters [aria-pressed='true'] {
   font-weight: 700;
   text-decoration: underline;
+  text-underline-offset: 5px;
 }
 .community-search {
   display: flex;
   gap: 12px;
   align-items: end;
-  margin: 16px 0;
+  max-width: 720px;
+  margin: 12px 0 16px;
 }
 .community-search label {
   flex: 1;
 }
 .community-categories {
-  margin-bottom: 24px;
+  margin-bottom: 28px;
   flex-wrap: wrap;
 }
+/* 两列瀑布流：有图的卡片更高，错落排列 */
 .community-list {
-  display: grid;
-  gap: 20px;
+  columns: 2;
+  column-gap: 24px;
 }
 .community-card {
   display: block;
+  break-inside: avoid;
+  margin-bottom: 24px;
+  padding: 0 0 24px;
+  overflow: hidden;
   transition: border-color 0.2s;
   border: 1px solid var(--line);
+}
+.community-card > :not(.community-cover) {
+  margin-inline: 26px;
+}
+.community-card > .between {
+  margin-top: 22px;
 }
 .community-card:hover {
   border-color: var(--brand);
 }
+.community-cover {
+  position: relative;
+}
+.community-cover img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+.community-cover span {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: #3d2f22b3;
+  color: #fff;
+  font-size: 12px;
+}
 .community-card h2 {
   overflow-wrap: anywhere;
-  font-size: 22px;
-  margin: 14px 0 8px;
+  font-family: var(--heavy);
+  font-weight: 800;
+  font-size: 24px;
+  line-height: 1.3;
+  margin: 12px 0 6px;
 }
 .community-card p {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  margin-top: 12px;
+  margin-top: 10px;
 }
 .community-card .between {
   flex-wrap: wrap;
 }
-.community-preview {
-  display: flex;
-  gap: 12px;
-  margin: 16px 0;
-}
-.community-preview img {
-  width: calc((100% - 24px) / 3);
-  max-width: 210px;
-  aspect-ratio: 1;
-  object-fit: cover;
-  border-radius: 4px;
-}
 .community-rating {
-  color: var(--brand);
+  color: var(--accent);
   white-space: nowrap;
 }
 .community-pagination {
   margin-top: 28px;
 }
 @media (max-width: 760px) {
-  .section-heading {
-    flex-wrap: wrap;
+  .community-head-actions {
+    margin-top: 18px;
   }
-  .section-heading .actions {
-    width: 100%;
-    justify-content: space-between;
+  .community-list {
+    columns: 1;
   }
-  .community-card {
-    padding: 20px;
+  .community-card > :not(.community-cover) {
+    margin-inline: 20px;
   }
   .community-card h2 {
     font-size: 20px;
@@ -265,12 +284,6 @@ function personal(value: string) {
   }
   .community-categories button {
     padding: 10px 12px;
-  }
-  .community-preview {
-    gap: 8px;
-  }
-  .community-preview img {
-    width: calc((100% - 16px) / 3);
   }
   .community-pagination {
     font-size: 12px;

@@ -4,7 +4,7 @@ import { buyer } from '../../../shared/api';
 import type { Shop } from '../../../shared/types';
 import { useLoad } from '../../../shared/useLoad';
 import LoadState from '../components/LoadState.vue';
-import { vWipe } from '../reveal';
+import PageHead from '../components/PageHead.vue';
 const shop = ref<Shop>(),
   copied = ref(false),
   { loading, error, run } = useLoad();
@@ -23,23 +23,38 @@ const copy = () =>
   });
 </script>
 <template>
+  <PageHead
+    title="店在哪，怎么来"
+    lead="真实的相处比照片更能帮你作出决定。来之前在网上占个位，店长确认后会替你留着。"
+    :photos="[
+      '/images/pets/golden-lake.jpg',
+      '/images/pets/corgi-sit.jpg',
+      '/images/pets/tabby-basket.jpg',
+    ]"
+  />
   <div class="container page">
-    <p class="eyebrow">到店指南</p>
-    <h1>店在哪，怎么来</h1>
-    <p class="lead">我们相信，真实的相处比照片更能帮你作出决定。</p>
     <LoadState :loading="loading" :error="error" @retry="load" />
-    <div v-if="shop" class="shop-layout">
-      <img v-wipe src="/images/golden.jpg" alt="店里的金毛" />
-      <section class="panel stack">
+    <div v-if="shop" class="shop-guide">
+      <section class="panel shop-info">
         <h2>{{ shop.name }}</h2>
-        <p>{{ shop.address }}</p>
-        <p>{{ shop.businessHours }}</p>
-        <p>{{ shop.pickupInstructions }}</p>
-        <hr />
-        <h3>到店流程</h3>
-        <p>01 查看档案与检疫证明</p>
-        <p>02 当面观察健康与性格</p>
-        <p>03 买家确认后完成交付</p>
+        <dl class="record">
+          <div>
+            <dt>地址</dt>
+            <dd>{{ shop.address }}</dd>
+          </div>
+          <div>
+            <dt>营业时间</dt>
+            <dd>{{ shop.businessHours }}</dd>
+          </div>
+          <div v-if="shop.pickupInstructions">
+            <dt>到店须知</dt>
+            <dd>{{ shop.pickupInstructions }}</dd>
+          </div>
+          <div v-if="shop.phone">
+            <dt>电话</dt>
+            <dd>{{ shop.phone }}</dd>
+          </div>
+        </dl>
         <div class="actions">
           <RouterLink class="btn secondary" to="/community?type=review">查看店铺评价</RouterLink
           ><a
@@ -55,6 +70,23 @@ const copy = () =>
           </button>
         </div>
         <small v-if="shop.wechat" class="muted">微信号：{{ shop.wechat }}</small>
+      </section>
+      <section class="visit-steps" aria-labelledby="visit-steps-title">
+        <h2 id="visit-steps-title">到店之后</h2>
+        <ol>
+          <li>
+            <h3>查看档案与检疫证明</h3>
+            <p>疫苗本、驱虫记录和检疫证明都摊开给你看，编号可以当场核对。</p>
+          </li>
+          <li>
+            <h3>当面观察健康与性格</h3>
+            <p>看精神、眼鼻、毛发和排便，抱一抱、逗一逗，看它和你合不合得来。</p>
+          </li>
+          <li>
+            <h3>确认后付款交付</h3>
+            <p>满意了现场付款，在手机上完成健康确认，就能接它回家。</p>
+          </li>
+        </ol>
       </section>
     </div>
   </div>

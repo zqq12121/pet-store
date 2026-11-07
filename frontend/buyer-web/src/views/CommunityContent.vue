@@ -70,7 +70,7 @@ const report = () =>
 </script>
 <template>
   <div class="container page narrow">
-    <RouterLink to="/community" class="text-link">返回宠友社区</RouterLink
+    <RouterLink to="/community" class="page-back">← 宠友社区</RouterLink
     ><LoadState :loading="loading" :error="error" @retry="load" /><template v-if="item"
       ><article class="panel community-content">
         <div class="between">
@@ -158,10 +158,17 @@ const report = () =>
   </div>
 </template>
 <style scoped>
+.community-content {
+  padding: 44px 48px;
+}
 .community-content h1 {
   overflow-wrap: anywhere;
-  font-size: 30px;
-  margin: 20px 0;
+  font-family: var(--heavy);
+  font-weight: 800;
+  font-size: clamp(30px, 3.6vw, 44px);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin: 18px 0 20px;
 }
 .community-content .between {
   flex-wrap: wrap;
@@ -171,7 +178,7 @@ const report = () =>
   overflow-wrap: anywhere;
 }
 .community-rating {
-  color: var(--brand);
+  color: var(--accent);
   font-size: 22px;
 }
 .community-images {
@@ -184,13 +191,20 @@ const report = () =>
   width: 100%;
   aspect-ratio: 1;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
+}
+/* 第一张图放大占满一行，其余排成小图 */
+.community-images a:first-child {
+  grid-column: 1 / -1;
+}
+.community-images a:first-child img {
+  aspect-ratio: 16 / 10;
 }
 .community-report-dialog {
   width: min(540px, calc(100% - 32px));
   border: 1px solid var(--line);
-  border-radius: 4px;
-  padding: 24px;
+  border-radius: var(--radius);
+  padding: 28px;
   background: var(--surface);
   color: inherit;
 }
@@ -198,8 +212,11 @@ const report = () =>
   background: #0005;
 }
 @media (max-width: 760px) {
+  .community-content {
+    padding: 24px 20px;
+  }
   .community-content h1 {
-    font-size: 25px;
+    font-size: 26px;
   }
   .community-images {
     gap: 8px;

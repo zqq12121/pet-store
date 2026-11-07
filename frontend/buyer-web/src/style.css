@@ -1,22 +1,24 @@
-/* 设计变量对应“街边宠物店”色板（门头绿、纸色、价签黄）；布局使用流式网格，避免依赖画布坐标。 */
+/* 设计变量取自宠物照片：草地绿、阳光金、焦糖毛色、暖奶油底；布局使用流式网格，避免依赖画布坐标。 */
 :root {
   font-family: 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
-  color: #1d1d1b;
-  background: #f4f0e6;
+  color: #3d2f22;
+  background: #fffbf3;
   font-synthesis: none;
-  --bg: #f4f0e6; /* 纸色底 */
-  --surface: #fffdf8; /* 卡片白 */
-  --ink: #1d1d1b;
-  --brand: #1e4a3b; /* 门头绿：导航、主按钮、链接 */
-  --hover: #143328;
-  --muted: #5e5a52;
-  --line: #d8d0bf;
-  --line-strong: #bdb4a2;
-  --sand: #ebe4d6;
-  --peach: #fbefc0; /* 淡黄：提醒、选中 */
-  --sage: #dce8df;
-  --green: #1e4a3b;
-  --tag: #f3d046; /* 价签黄 */
+  --bg: #fffbf3; /* 暖奶油底 */
+  --surface: #ffffff; /* 卡片白 */
+  --ink: #3d2f22; /* 可可棕：标题文字 */
+  --brand: #3f7d2c; /* 草地绿：导航、链接 */
+  --hover: #346a24;
+  --muted: #7a6a58;
+  --line: #ece3d2;
+  --line-strong: #d6c6a8;
+  --sand: #f6efe2;
+  --peach: #fdf0d8; /* 淡金：提醒、选中 */
+  --sage: #eaf4dc;
+  --green: #3f7d2c;
+  --tag: #f5cf7a; /* 阳光金：主按钮、价签、点缀 */
+  --tag-hover: #efbf55; /* 阳光金悬停 */
+  --accent: #a86a22; /* 焦糖色：次按钮描边 */
   --stamp: #b5362a; /* 印章红：已预订、错误 */
   --rose: #f6dcd6;
   --display: 'HomeDisplay', 'PingFang SC', 'Microsoft YaHei', sans-serif;
@@ -66,7 +68,7 @@ a:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 3px solid #1e4a3b80;
+  outline: 3px solid #3f7d2c80;
   outline-offset: 3px;
 }
 img {
@@ -207,7 +209,7 @@ button:disabled {
   font-weight: 700;
 }
 .site-header .btn.nav-order:hover {
-  background: #e8c22f;
+  background: var(--tag-hover);
 }
 .nav {
   height: 80px;
@@ -221,7 +223,7 @@ button:disabled {
   gap: 32px;
   margin-left: auto;
   font-size: 15px;
-  color: #fffdf8d9;
+  color: #ffffffd9;
 }
 .nav nav a {
   padding: 12px 0;
@@ -240,8 +242,8 @@ button:disabled {
 .btn {
   border: 1px solid transparent;
   border-radius: 4px;
-  background: var(--brand);
-  color: white;
+  background: var(--tag);
+  color: var(--ink);
   display: inline-flex;
   justify-content: center;
   align-items: center;
@@ -258,15 +260,15 @@ button:disabled {
   white-space: normal;
 }
 .btn:hover {
-  background: var(--hover);
+  background: var(--tag-hover);
 }
 .btn.secondary {
   background: var(--surface);
-  color: var(--brand);
-  border-color: var(--brand);
+  color: var(--accent);
+  border-color: var(--accent);
 }
 .btn.secondary:hover {
-  background: var(--sage);
+  background: var(--peach);
 }
 .btn.full {
   width: 100%;
@@ -441,7 +443,7 @@ button:disabled {
   top: 16px;
   border: 3px solid var(--stamp);
   color: var(--stamp);
-  background: #fffdf8eb;
+  background: #ffffffeb;
   font-weight: 900;
   font-size: 17px;
   letter-spacing: 3px;
@@ -471,7 +473,7 @@ button:disabled {
   margin-bottom: -28px;
   padding-top: calc(var(--curve) + 64px);
   padding-bottom: 28px;
-  background: #0f1d18;
+  background: #3d2f22;
   color: var(--surface);
 }
 .site-footer:before {
@@ -495,7 +497,7 @@ button:disabled {
   margin: 0 0 12px;
   font-size: 13px;
   letter-spacing: 0.2em;
-  color: #fffdf8b3;
+  color: #ffffffb3;
 }
 .footer-title {
   margin: 0;
@@ -521,9 +523,9 @@ button:disabled {
   gap: 12px 24px;
   margin-top: 48px;
   padding-top: 18px;
-  border-top: 1px solid #fffdf82e;
+  border-top: 1px solid #ffffff2e;
   font-size: 13px;
-  color: #fffdf8a6;
+  color: #ffffffa6;
 }
 .footer-bar button {
   background: none;
@@ -536,25 +538,11 @@ button:disabled {
   font-family: var(--display);
   font-weight: 900;
   font-size: min(23vw, 300px);
-  line-height: 0.8;
+  line-height: 1;
   color: var(--tag);
   text-align: center;
   white-space: nowrap;
-  transform: translateY(0.14em);
   user-select: none;
-}
-.demo-note {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 35;
-  text-align: center;
-  background: var(--ink);
-  color: var(--bg);
-  font-size: 10px;
-  line-height: 22px;
-  padding: 2px 12px;
 }
 .search-row {
   display: flex;
@@ -652,7 +640,7 @@ button:disabled {
 .modal-layer {
   position: fixed;
   inset: 0;
-  background: #1d1d1b66;
+  background: #3d2f2266;
   z-index: 60;
   display: flex;
   align-items: center;
@@ -785,7 +773,7 @@ button:disabled {
 .record dt {
   flex: 0 0 96px;
   padding: 10px 12px;
-  background: #efe9dc;
+  background: #f6efe2;
   color: var(--muted);
 }
 .record dd {
@@ -999,23 +987,6 @@ button:disabled {
   color: var(--muted);
   margin-top: 6px;
 }
-.profile-link {
-  border-bottom: 1px solid var(--line);
-  padding: 16px 0;
-}
-.shop-layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 64px;
-}
-.shop-layout > img {
-  width: 100%;
-  aspect-ratio: 1/1;
-  object-fit: cover;
-}
-.shop-layout .panel p {
-  margin: 0;
-}
 .chat-layout {
   display: grid;
   grid-template-columns: 350px 1fr;
@@ -1202,8 +1173,7 @@ button:disabled {
   .pet-card h3 {
     font-size: 16px;
   }
-  .detail-grid,
-  .shop-layout {
+  .detail-grid {
     gap: 36px;
   }
   .checkout-grid {
@@ -1262,7 +1232,7 @@ button:disabled {
     right: 0;
     height: 66px;
     padding: 8px 12px;
-    background: #fffdf8f5;
+    background: #fffffff5;
     backdrop-filter: blur(12px);
     z-index: 30;
     border-top: 1px solid var(--line);
@@ -1408,7 +1378,6 @@ button:disabled {
   }
   .detail-grid,
   .checkout-grid,
-  .shop-layout,
   .login-layout,
   .chat-layout {
     display: block;
@@ -1558,10 +1527,6 @@ button:disabled {
   .chat-compose textarea {
     font-size: 13px;
   }
-  .shop-layout > img {
-    aspect-ratio: 350/270;
-    margin-bottom: 24px;
-  }
   .between {
     gap: 12px;
   }
@@ -1576,9 +1541,6 @@ button:disabled {
   }
   .stack {
     gap: 20px;
-  }
-  .demo-note {
-    font-size: 9px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1700,7 +1662,7 @@ button:disabled {
   color: #fff;
   padding: 14px 20px;
   border-radius: 30px;
-  box-shadow: 0 5px 22px #0f1d1833;
+  box-shadow: 0 5px 22px #3d2f2233;
   font-size: 14px;
   font-weight: 700;
 }
@@ -1729,5 +1691,645 @@ button:disabled {
 @media (max-width: 760px) {
   .header-community-notices {
     display: none;
+  }
+}
+
+/* ==========================================================================
+   其余页面与首页对齐：弧形页头 + 粗黑大标题；胶囊按钮；“店里的纸”（收据、取货票、便签）。
+   集中写在这里覆盖上方旧规则，便于对照和回退。
+   ========================================================================== */
+:root {
+  --curve: clamp(28px, 5vw, 72px);
+  /* 动态内容（宠物名、帖子标题等）用系统粗体：标题字体是子集，缺字会混排 */
+  --heavy: 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+  --paper: #fdf7ea; /* 小票与便签的纸色 */
+  --radius: 20px; /* 面板 */
+  --radius-sm: 14px; /* 输入框、图片 */
+}
+
+/* ---- 页头 ---- */
+.page-head {
+  position: relative;
+  background: var(--sand);
+  border-radius: 0 0 50% 50% / 0 0 var(--curve) var(--curve);
+  padding: clamp(40px, 6vw, 84px) 0 calc(var(--curve) + clamp(28px, 4vw, 48px));
+  margin-bottom: clamp(8px, 2vw, 24px);
+  overflow: hidden;
+}
+.page-head.compact {
+  padding-top: clamp(32px, 4vw, 56px);
+}
+.page-head-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 24px 48px;
+}
+.page-head h1 {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: clamp(42px, 6.2vw, 92px);
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  /* 两行时字数均衡，避免最后一个字单独掉到下一行 */
+  text-wrap: balance;
+  animation: title-rise 0.9s var(--motion-ease, ease) backwards;
+}
+.page-head.compact h1 {
+  font-size: clamp(36px, 4.6vw, 64px);
+}
+.page-lead {
+  margin: 18px 0 0;
+  max-width: 34em;
+  font-size: 16px;
+  line-height: 1.85;
+  color: var(--muted);
+}
+.page-back {
+  display: inline-block;
+  margin-bottom: 18px;
+  font-size: 14px;
+  color: var(--brand);
+}
+.page-back:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.page-head-actions {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: end;
+}
+/* 叠放的圆形照片，与首页“店主的话”里的小圆图同源 */
+.page-head-photos {
+  position: relative;
+  width: 300px;
+  height: 200px;
+}
+.page-head-photos img {
+  position: absolute;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 6px solid var(--sand);
+}
+.page-head-photos .p0 {
+  width: 190px;
+  height: 190px;
+  right: 0;
+  bottom: 0;
+}
+.page-head-photos .p1 {
+  width: 120px;
+  height: 120px;
+  right: 168px;
+  bottom: 70px;
+}
+.page-head-photos .p2 {
+  width: 88px;
+  height: 88px;
+  right: 150px;
+  bottom: -10px;
+}
+/* 页头已接管标题，正文区上边距收紧 */
+.page-head + .page {
+  padding-top: 24px;
+}
+
+/* ---- 基础控件：与首页的胶囊按钮一致 ---- */
+.btn,
+.tabs button,
+.mobile-ai {
+  border-radius: 999px;
+}
+.btn {
+  padding-inline: 28px;
+}
+input,
+select,
+textarea {
+  border-radius: var(--radius-sm);
+  border-color: var(--line-strong);
+}
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--brand);
+  outline: none;
+  box-shadow: 0 0 0 4px var(--sage);
+}
+.tabs button {
+  padding-inline: 22px;
+}
+/* 搜索框旁的按钮不换行，避免“搜索”两个字被挤成上下两行 */
+.search-row .btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.panel,
+.shop-card,
+.order-summary,
+.chat-panel,
+.record {
+  border-radius: var(--radius);
+}
+.panel {
+  border-color: var(--line);
+}
+.panel > h2,
+.stack > h2 {
+  font-family: var(--heavy);
+  font-weight: 800;
+  font-size: 24px;
+}
+.record {
+  overflow: hidden;
+}
+.detail-photo,
+.thumbnails img,
+.chat-intro img,
+.login-photo {
+  border-radius: var(--radius-sm);
+}
+.thumbnails button {
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.status {
+  border-radius: 999px;
+  padding: 4px 12px;
+}
+
+/* ---- 店长便签：提醒类文字 ---- */
+.notice {
+  position: relative;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--tag);
+  border-radius: 6px var(--radius-sm) var(--radius-sm) 6px;
+  color: var(--ink);
+}
+
+/* ---- 收据小票：订单摘要 ---- */
+.order-summary {
+  background: var(--paper);
+  border: 0;
+  border-radius: 6px;
+  padding: 20px 22px 26px;
+  /* 下边缘的锯齿撕口 */
+  -webkit-mask: radial-gradient(circle 6px at 8px 100%, #0000 98%, #000) 0 0 / 16px 100% repeat-x;
+  mask: radial-gradient(circle 6px at 8px 100%, #0000 98%, #000) 0 0 / 16px 100% repeat-x;
+  box-shadow: none;
+}
+.order-summary img {
+  border-radius: 10px;
+}
+.order-summary .price {
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 30px;
+}
+
+/* ---- 取货票：自提码 ---- */
+.pickup-code {
+  position: relative;
+  background: var(--tag);
+  border: 0;
+  border-radius: var(--radius);
+  color: var(--ink);
+  -webkit-mask:
+    radial-gradient(circle 16px at 0 62%, #0000 98%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle 16px at 100% 62%, #0000 98%, #000) right / 51% 100% no-repeat;
+  mask:
+    radial-gradient(circle 16px at 0 62%, #0000 98%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle 16px at 100% 62%, #0000 98%, #000) right / 51% 100% no-repeat;
+}
+.pickup-code h2 {
+  font-family: var(--display);
+  font-weight: 900;
+}
+.pickup-code .status {
+  background: #ffffffa8;
+}
+.pickup-code > strong {
+  font-family: var(--display);
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  font-size: 64px;
+  border-top: 2px dashed #3d2f2259;
+  padding-top: 20px;
+}
+.pickup-code img,
+.pickup-code canvas,
+.pickup-code svg {
+  border-radius: 12px;
+  background: #fff;
+  padding: 10px;
+}
+
+/* ---- 空状态与加载 ---- */
+.empty {
+  padding: 56px 20px;
+}
+.empty h2 {
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: clamp(26px, 3vw, 36px);
+}
+.error-panel {
+  border-radius: var(--radius);
+}
+
+@media (max-width: 1100px) {
+  .page-head-photos {
+    width: 230px;
+    height: 160px;
+  }
+  .page-head-photos .p0 {
+    width: 150px;
+    height: 150px;
+  }
+  .page-head-photos .p1 {
+    width: 96px;
+    height: 96px;
+    right: 132px;
+    bottom: 56px;
+  }
+  .page-head-photos .p2 {
+    width: 72px;
+    height: 72px;
+    right: 118px;
+    bottom: -8px;
+  }
+}
+@media (max-width: 760px) {
+  .page-head {
+    padding: 28px 0 calc(var(--curve) + 22px);
+  }
+  .page-head-inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+  }
+  .page-head h1 {
+    font-size: clamp(32px, 9.5vw, 44px);
+  }
+  .page-head.compact h1 {
+    font-size: clamp(28px, 8vw, 36px);
+  }
+  .page-lead {
+    font-size: 14px;
+    margin-top: 12px;
+  }
+  .page-head-photos {
+    width: 92px;
+    height: 92px;
+    align-self: start;
+  }
+  .page-head-photos .p0 {
+    width: 92px;
+    height: 92px;
+    border-width: 4px;
+  }
+  .page-head-photos .p1,
+  .page-head-photos .p2 {
+    display: none;
+  }
+  .page-head-actions {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+  .page-head + .page {
+    padding-top: 12px;
+  }
+  .pickup-code > strong {
+    font-size: 44px;
+  }
+}
+
+/* ---- 宠物详情 ---- */
+.detail-photo {
+  border-radius: var(--radius);
+}
+.detail-info h1 {
+  font-family: var(--heavy);
+  font-weight: 800;
+  font-size: clamp(40px, 4.2vw, 60px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.feeding {
+  margin: 56px 0 32px;
+  padding: clamp(28px, 4vw, 48px);
+  background: var(--sand);
+  border-radius: var(--radius);
+}
+.feeding h2 {
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: clamp(26px, 2.8vw, 36px);
+}
+.feeding p {
+  max-width: 40em;
+  margin: 0;
+  color: var(--ink);
+}
+
+/* ---- 到店指南 ---- */
+.shop-guide {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 40px;
+  align-items: start;
+}
+.shop-info {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.shop-info h2,
+.visit-steps h2 {
+  margin: 0;
+}
+.visit-steps h2 {
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+/* 到店步骤是真实的先后顺序，用首页同款圆形序号 */
+.visit-steps ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: visit;
+}
+.visit-steps li {
+  counter-increment: visit;
+  position: relative;
+  padding: 22px 0 22px 64px;
+  border-bottom: 1px solid var(--line-strong);
+}
+.visit-steps li:last-child {
+  border-bottom: 0;
+}
+.visit-steps li:before {
+  content: counter(visit);
+  position: absolute;
+  left: 0;
+  top: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--brand);
+  color: #fff;
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: 20px;
+}
+.visit-steps h3 {
+  margin: 0 0 6px;
+  font-size: 19px;
+}
+.visit-steps p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* ---- 问问 AI ---- */
+.chat-intro h1 {
+  font-size: clamp(40px, 4.2vw, 60px);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+.chat-intro img {
+  border-radius: 50%;
+  width: min(100%, 280px);
+  height: auto;
+  aspect-ratio: 1;
+}
+.chat-panel {
+  border-color: var(--line);
+}
+.chat-header h2 {
+  font-weight: 800;
+}
+.welcome-message > p,
+.chat-message {
+  border-radius: var(--radius) var(--radius) var(--radius) 6px;
+  background: var(--paper);
+}
+.chat-message.user {
+  border-radius: var(--radius) var(--radius) 6px var(--radius);
+  background: var(--sage);
+}
+.suggestion {
+  border-radius: 999px;
+  padding-inline: 20px;
+}
+
+/* ---- 协议正文 ---- */
+.legal-content {
+  padding: clamp(24px, 4vw, 48px);
+}
+.legal-content h2 {
+  font-weight: 800;
+  font-size: 22px;
+  margin-top: 36px;
+}
+
+@media (max-width: 760px) {
+  .shop-guide {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .visit-steps li {
+    padding-left: 56px;
+  }
+  .feeding {
+    margin-top: 36px;
+  }
+}
+
+/* ---- 预约流程三步（真实顺序） ---- */
+.flow-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  list-style: none;
+  margin: 22px 0 0;
+  padding: 0;
+  counter-reset: flow;
+}
+.flow-steps li {
+  counter-increment: flow;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px 6px 6px;
+  border-radius: 999px;
+  background: #ffffffb3;
+  font-size: 14px;
+  color: var(--muted);
+}
+.flow-steps li:before {
+  content: counter(flow);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--line);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 13px;
+}
+.flow-steps li[aria-current='step'] {
+  background: var(--brand);
+  color: #fff;
+}
+.flow-steps li[aria-current='step']:before {
+  background: var(--tag);
+}
+
+/* ---- 结算侧栏：像一张收据 ---- */
+.order-total {
+  background: var(--paper);
+  border: 0;
+}
+.order-total hr {
+  border-top: 2px dashed var(--line-strong);
+}
+.order-total h2 {
+  font-family: var(--heavy);
+  font-weight: 800;
+}
+.order-total .price.large {
+  font-family: var(--hand);
+  font-size: 48px;
+}
+
+/* ---- 预约与订单列表 ---- */
+.order-list-item {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr) auto;
+  gap: 24px;
+  align-items: center;
+  padding: 18px 24px 18px 18px;
+}
+.order-photo img {
+  width: 132px;
+  height: 132px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+.order-main h3 {
+  margin: 10px 0 6px;
+  font-size: 20px;
+}
+.order-main h3 a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.order-main h3 small {
+  margin-left: 10px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.order-main p {
+  margin: 0 0 4px;
+}
+.order-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 14px;
+}
+.order-side .price {
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 30px;
+}
+.order-list-item .order-side .actions {
+  justify-content: flex-end;
+}
+
+/* ---- 订单详情：状态当标题 ---- */
+.order-detail .section-heading h1 {
+  font-family: var(--heavy);
+  font-weight: 800;
+  font-size: clamp(32px, 4vw, 52px);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+
+/* ---- 我的 ---- */
+.profile-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.profile-links a {
+  display: flex;
+  align-items: center;
+  min-height: 64px;
+  padding: 14px 20px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-weight: 700;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+}
+.profile-links a:hover {
+  border-color: var(--brand);
+  background: var(--sage);
+}
+.profile-settings form + form {
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+}
+.profile-logout {
+  align-self: flex-start;
+  color: var(--stamp);
+}
+
+@media (max-width: 760px) {
+  .flow-steps li {
+    font-size: 12px;
+  }
+  .order-list-item {
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 14px 16px;
+    padding: 16px;
+  }
+  .order-photo img {
+    width: 88px;
+    height: 88px;
+  }
+  .order-main h3 {
+    font-size: 17px;
+  }
+  .order-side {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .order-side .price {
+    font-size: 24px;
+  }
+  .profile-links {
+    grid-template-columns: 1fr 1fr;
+  }
+  .order-total .price.large {
+    font-size: 40px;
   }
 }

@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { buyer, clearAuth, date } from '../../../shared/api';
 import type { User } from '../../../shared/types';
 import { useLoad } from '../../../shared/useLoad';
+import PageHead from '../components/PageHead.vue';
 const user = ref<User>(),
   nickname = ref(''),
   username = ref(''),
@@ -50,11 +51,24 @@ const changePassword = () =>
   });
 </script>
 <template>
+  <PageHead
+    compact
+    narrow
+    title="我的"
+    :lead="user ? `你好，${user.nickname || '新朋友'}。登录手机 ${user.phoneMasked}` : undefined"
+  />
   <div class="container page narrow">
-    <p class="eyebrow">我的</p>
-    <h1>你好，{{ user?.nickname || '新朋友' }}</h1>
-    <p class="lead">{{ user?.phoneMasked }}</p>
-    <div class="panel stack">
+    <!-- 常去的地方放在最前面，账号设置放在下面 -->
+    <nav class="profile-links" aria-label="我的常用入口">
+      <RouterLink to="/orders">我的预约</RouterLink
+      ><RouterLink to="/community?scope=mine">我的社区帖子</RouterLink
+      ><RouterLink to="/community?scope=favorites">我的收藏</RouterLink
+      ><RouterLink to="/community?type=review&amp;scope=mine">我的店铺评价</RouterLink
+      ><RouterLink to="/community/notices">社区消息</RouterLink
+      ><RouterLink to="/ai">问问 AI 怎么养</RouterLink><RouterLink to="/shop">联系店主</RouterLink>
+    </nav>
+    <div class="panel stack profile-settings">
+      <h2>账号设置</h2>
       <form class="stack" @submit.prevent="save">
         <label>昵称<input v-model="nickname" required maxlength="30" /></label
         ><button class="btn secondary" :disabled="loading || !user || !nickname.trim()">
@@ -122,15 +136,7 @@ const changePassword = () =>
       </p>
       <p v-if="message" role="status">{{ message }}</p>
       <p v-if="error" class="error-text" role="alert">{{ error }}</p>
-      <RouterLink to="/community?scope=mine" class="profile-link">我的社区帖子 →</RouterLink
-      ><RouterLink to="/community?scope=favorites" class="profile-link">我的收藏 →</RouterLink
-      ><RouterLink to="/community?type=review&amp;scope=mine" class="profile-link"
-        >我的店铺评价 →</RouterLink
-      ><RouterLink to="/community/notices" class="profile-link">社区消息 →</RouterLink>
-      <RouterLink to="/orders" class="profile-link">我的预约 →</RouterLink
-      ><RouterLink to="/ai" class="profile-link">问问 AI 怎么养 →</RouterLink
-      ><RouterLink to="/shop" class="profile-link">联系店主 →</RouterLink
-      ><button class="text-link" :disabled="loading" @click="logout">退出登录</button>
+      <button class="text-link profile-logout" :disabled="loading" @click="logout">退出登录</button>
     </div>
   </div>
 </template>

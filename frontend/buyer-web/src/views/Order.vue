@@ -29,8 +29,8 @@ async function cancel() {
 onMounted(load);
 </script>
 <template>
-  <div class="container page narrow">
-    <RouterLink to="/orders" class="text-link">← 我的预约与订单</RouterLink
+  <div class="container page narrow order-detail">
+    <RouterLink to="/orders" class="page-back">← 预约与订单</RouterLink
     ><LoadState v-if="!order" :loading="loading" :error="error" @retry="load" /><template
       v-if="order"
       ><div class="section-heading">

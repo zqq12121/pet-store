@@ -1,12 +1,16 @@
 <script setup lang="ts">
+import PageHead from '../components/PageHead.vue';
 // 两份公开文件共用阅读布局，正文按实际提供的服务分别展示。
 defineProps<{ kind: 'terms' | 'privacy' }>();
 </script>
 <template>
+  <PageHead
+    compact
+    narrow
+    :title="kind === 'terms' ? '用户服务协议' : '隐私政策'"
+    lead="版本 2026-10-12，2026年10月12日更新并生效。"
+  />
   <div class="container page narrow legal-page">
-    <p class="eyebrow">{{ kind === 'terms' ? '买家须知' : '个人信息' }}</p>
-    <h1>{{ kind === 'terms' ? '用户服务协议' : '隐私政策' }}</h1>
-    <p class="muted">版本：2026-10-12 · 更新日期：2026年10月12日 · 生效日期：2026年10月12日</p>
     <nav class="actions legal-nav" aria-label="协议导航">
       <RouterLink to="/terms" class="text-link">用户服务协议</RouterLink
       ><RouterLink to="/privacy" class="text-link">隐私政策</RouterLink

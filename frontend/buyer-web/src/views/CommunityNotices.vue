@@ -5,6 +5,7 @@ import { buyer, date } from '../../../shared/api';
 import type { CommunityNotice, CommunityNotices } from '../../../shared/communityTypes';
 import { useLoad } from '../../../shared/useLoad';
 import LoadState from '../components/LoadState.vue';
+import PageHead from '../components/PageHead.vue';
 const result = ref<CommunityNotices>(),
   router = useRouter(),
   { loading, error, run } = useLoad();
@@ -25,10 +26,14 @@ const open = (notice: CommunityNotice) =>
   });
 </script>
 <template>
+  <PageHead
+    compact
+    narrow
+    :back="{ to: '/community', label: '宠友社区' }"
+    title="社区消息"
+    :lead="result ? `${result.unreadCount} 条未读消息` : undefined"
+  />
   <div class="container page narrow">
-    <RouterLink to="/community" class="text-link">返回宠友社区</RouterLink>
-    <h1>社区消息</h1>
-    <p v-if="result" class="lead">{{ result.unreadCount }} 条未读消息</p>
     <LoadState :loading="loading" :error="error" @retry="load" /><template v-if="result"
       ><p v-if="!result.items.length" class="panel muted">还没有互动消息。</p>
       <div class="stack">

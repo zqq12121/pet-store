@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch } from 'vue';
+import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { buyer } from '../../../shared/api';
 import type { Pet, Page, Category } from '../../../shared/types';
 import { useLoad } from '../../../shared/useLoad';
 import PetCard from '../components/PetCard.vue';
 import LoadState from '../components/LoadState.vue';
+import PageHead from '../components/PageHead.vue';
 const route = useRoute(),
   router = useRouter(),
   { loading, error, run } = useLoad(),
@@ -25,6 +26,8 @@ const form = reactive({
   sort: 'comprehensive',
 });
 const validation = ref('');
+// 页头的圆形照片直接用在售宠物的封面。
+const headPhotos = computed(() => (result.value?.items ?? []).slice(0, 3).map((p) => p.coverUrl));
 async function load(page = 1) {
   validation.value = '';
   if (form.min && form.max && Number(form.min) > Number(form.max)) {
@@ -85,10 +88,12 @@ onMounted(async () => {
 });
 </script>
 <template>
+  <PageHead
+    title="店里现在有这些"
+    lead="照片都是店里拍的。点进去能看疫苗、驱虫记录和检疫证明。"
+    :photos="headPhotos"
+  />
   <div class="container page">
-    <p class="eyebrow">找猫狗</p>
-    <h1>店里现在有这些</h1>
-    <p class="lead">照片都是店里拍的。点进去能看疫苗、驱虫记录和检疫证明。</p>
     <form class="search-row" @submit.prevent="load()">
       <input
         v-model="form.keyword"
