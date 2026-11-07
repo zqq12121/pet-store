@@ -163,4 +163,71 @@ class RelationalPersistenceTest {
     assertThrows(IllegalArgumentException.class, () -> repository.insert("pet", null, p));
     assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM pets", Integer.class));
   }
+
+  /** 只统计读查询次数，用来证明批量装配的查询数与行数无关。 */
+  static class CountingJdbc extends JdbcTemplate {
+    int reads;
+
+    CountingJdbc(javax.sql.DataSource ds) {
+      super(ds);
+    }
+
+    @Override
+    public List<Map<String, Object>> queryForList(String sql) {
+      reads++;
+      return super.queryForList(sql);
+    }
+
+    @Override
+    public List<Map<String, Object>> queryForList(String sql, Object... args) {
+      reads++;
+      return super.queryForList(sql, args);
+    }
+  }
+
+  Map<String, Object> pet(String id, List<String> images, List<String> tags, String file) {
+    var p = pet();
+    p.put("id", "pet_" + id);
+    p.put("name", "猫" + id);
+    p.put("imageFileIds", images);
+    p.put("personalityTags", tags);
+    object(p, "quarantine").put("publicImageFileIds", List.of(file));
+    return p;
+  }
+
+  @Test
+  void batchHydrationMatchesSingleReadsAndQueryCountIsConstant() throws Exception {
+    for (var f : List.of("a", "b", "c", "d")) repository.insert("file", null, entity("file", f));
+    var counting = new CountingJdbc(ds);
+    var batch = new RelationalRepository(counting);
+
+    repository.insert("pet", null, pet("one", List.of("file_b", "file_a"), List.of("亲人"), "file_a"));
+    counting.reads = 0;
+    assertEquals(1, batch.list("pet").size());
+    int onePet = counting.reads;
+
+    repository.insert("pet", null, pet("two", List.of("file_c"), List.of("安静", "黏人"), "file_b"));
+    repository.insert("pet", null, pet("three", List.of(), List.of(), "file_d"));
+    counting.reads = 0;
+    var all = batch.list("pet");
+    assertEquals(3, all.size());
+    // 1 次主表 + 每张子表 1 次（pet 共 5 张，含两张嵌套检疫附件表），与宠物数量无关。
+    assertEquals(onePet, counting.reads);
+    assertEquals(6, onePet);
+
+    // 批量装配的结果与逐条读取完全一致：列表顺序、嵌套子表都按各自的根记录分开。
+    for (var e : all) assertEquals(repository.find("pet", text(e, "id")), e);
+    var two = repository.find("pet", "pet_two");
+    assertEquals(List.of("file_c"), strings(two, "imageFileIds"));
+    assertEquals(List.of("安静", "黏人"), strings(two, "personalityTags"));
+    assertEquals(List.of("file_b"), strings(object(two, "quarantine"), "publicImageFileIds"));
+    assertEquals(List.of("file_b", "file_a"), strings(repository.find("pet", "pet_one"), "imageFileIds"));
+    assertEquals(List.of(), strings(repository.find("pet", "pet_three"), "imageFileIds"));
+
+    // findAll 按传入顺序返回，跳过不存在的 id。
+    counting.reads = 0;
+    var page = batch.findAll("pet", List.of("pet_three", "pet_missing", "pet_one"));
+    assertEquals(List.of("pet_three", "pet_one"), page.stream().map(e -> text(e, "id")).toList());
+    assertEquals(6, counting.reads);
+  }
 }

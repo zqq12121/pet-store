@@ -134,7 +134,27 @@ public class RelationalRepository {
   private Map<String, Object> one(Map<String, Object> m, String column, String value) {
     var rows =
         jdbc.queryForList("SELECT * FROM " + m.get("table") + " WHERE " + column + "=?", value);
-    return rows.isEmpty() ? null : hydrate(m, rows.getFirst(), text(rows.getFirst(), "id"));
+    return rows.isEmpty() ? null : hydrateAll(m, List.of(rows.getFirst())).getFirst();
+  }
+
+  /**
+   * 按 id 批量取实体，结果顺序与 {@code ids} 一致，不存在的 id 直接跳过。
+   *
+   * <p>给"先用 SQL 筛出一页 id、再装配完整实体"的场景用（宠物分页）：
+   * 主表一次 {@code IN}，每张子表一次 {@code IN}，查询次数与 id 个数无关。
+   */
+  public List<Map<String, Object>> findAll(String kind, List<String> ids) {
+    if (ids.isEmpty()) return List.of();
+    var m = model(kind);
+    List<Map<String, Object>> rows = new ArrayList<>();
+    for (var chunk : chunks(ids))
+      rows.addAll(
+          jdbc.queryForList(
+              "SELECT * FROM " + m.get("table") + " WHERE id IN (" + marks(chunk) + ")",
+              chunk.toArray()));
+    Map<String, Map<String, Object>> byId = new HashMap<>();
+    for (var e : hydrateAll(m, rows)) byId.put(text(e, "id"), e);
+    return ids.stream().map(byId::get).filter(Objects::nonNull).toList();
   }
 
   /**
@@ -148,11 +168,8 @@ public class RelationalRepository {
    */
   public List<Map<String, Object>> list(String kind) {
     var m = model(kind);
-    return jdbc
-        .queryForList("SELECT * FROM " + m.get("table") + " ORDER BY created_at DESC,id DESC")
-        .stream()
-        .map(row -> hydrate(m, row, text(row, "id")))
-        .toList();
+    return hydrateAll(
+        m, jdbc.queryForList("SELECT * FROM " + m.get("table") + " ORDER BY created_at DESC,id DESC"));
   }
 
   /**
@@ -169,9 +186,7 @@ public class RelationalRepository {
    * <p><b>分页语义</b>：{@code limit <= 0} 表示不分页（返回全部匹配行），
    * {@code offset} 为负数时按 0 处理。调用方传 {@code limit=20} 即得到标准分页。
    *
-   * <p><b>仍然存在的 N+1</b>：{@link #hydrate} 对每条记录的每个子表各查一次。
-   * 下推分页把 N 从"全表行数"降到"一页行数"（20），但不消除它。
-   * 彻底解决需要按子表批量 {@code IN} 查询，属于下一步优化。
+   * <p>子表装配走 {@link #hydrateAll}：每张子表一次 {@code IN} 查询，与页大小无关。
    *
    * @param filters 条件列表，之间是 AND；空列表表示不过滤
    * @param keyword 关键词，为 {@code null}/空白 时不参与过滤
@@ -194,9 +209,7 @@ public class RelationalRepository {
       args.add(limit);
       args.add(Math.max(0, offset));
     }
-    return jdbc.queryForList(sql.toString(), args.toArray()).stream()
-        .map(row -> hydrate(m, row, text(row, "id")))
-        .toList();
+    return hydrateAll(m, jdbc.queryForList(sql.toString(), args.toArray()));
   }
 
   /**
@@ -404,10 +417,10 @@ public class RelationalRepository {
    * <p>{@code embedded} 形态会把子行字段<b>并进父 Map</b>（订单快照、交付凭证就是这种），
    * 在业务层看来它们和普通字段没有区别。
    *
-   * <p>性能上这是 1 + N 次查询：单条查询可接受，但对 {@code list()} 的每一行都调用一次，
-   * 属于典型的 N+1。项目依赖"单店数据量小"这一前提，量级上来后应改为批量 IN 查询。
+   * <p>子表行来自 {@link Children} 的批量缓存，不在这里逐条查询。
    */
-  private Map<String, Object> hydrate(Map<String, Object> m, Map<String, Object> row, String id) {
+  private Map<String, Object> hydrate(
+      Map<String, Object> m, Map<String, Object> row, String id, Children children) {
     Map<String, Object> result = new LinkedHashMap<>();
     for (var f : objects(m, "fields")) {
       Object v = decode(f, row.get(text(f, "column")));
@@ -416,27 +429,85 @@ public class RelationalRepository {
     }
     for (var c : objects(m, "children")) {
       boolean list = "list".equals(c.get("mode"));
-      var rows =
-          jdbc.queryForList(
-              "SELECT * FROM "
-                  + c.get("table")
-                  + " WHERE parent_id=?"
-                  + (list ? " ORDER BY position" : ""),
-              id);
+      var rows = children.rows(c, id);
       if (list) {
         List<Object> values = new ArrayList<>();
         for (var child : rows) {
-          var item = hydrate(c, child, id);
+          var item = hydrate(c, child, id, children);
           values.add(c.get("scalar") == null ? item : item.get(text(c, "scalar")));
         }
         result.put(text(c, "path"), values);
       } else if (!rows.isEmpty()) {
-        var item = hydrate(c, rows.getFirst(), id);
+        var item = hydrate(c, rows.getFirst(), id, children);
         if ("embedded".equals(c.get("mode"))) result.putAll(item);
         else result.put(text(c, "path"), item);
       }
     }
     return result;
+  }
+
+  /**
+   * 批量装配一组主表行：先收集根 id，每张子表（含嵌套子表）只查一次 {@code IN}。
+   *
+   * <p>原来每条记录的每张子表各查一次（N+1）：一页 20 只宠物 × 5 张子表 = 100 次查询；
+   * 现在固定为"子表数"次，与行数无关。
+   */
+  private List<Map<String, Object>> hydrateAll(
+      Map<String, Object> m, List<Map<String, Object>> rows) {
+    var children = new Children(rows.stream().map(r -> text(r, "id")).toList());
+    return rows.stream().map(row -> hydrate(m, row, text(row, "id"), children)).toList();
+  }
+
+  /** 单次 IN 的参数上限；超过时分批，避免超长 SQL。 */
+  private static final int IN_BATCH = 500;
+
+  private static List<List<String>> chunks(List<String> ids) {
+    List<List<String>> result = new ArrayList<>();
+    for (int i = 0; i < ids.size(); i += IN_BATCH)
+      result.add(ids.subList(i, Math.min(ids.size(), i + IN_BATCH)));
+    return result;
+  }
+
+  private static String marks(List<String> ids) {
+    return String.join(",", Collections.nCopies(ids.size(), "?"));
+  }
+
+  /**
+   * 一组根记录的子表行缓存：每张子表第一次用到时查一次 {@code IN}，按 {@code parent_id} 分组。
+   *
+   * <p>嵌套子表的 {@code parent_id} 也指向根记录（见 {@link #hydrate}），所以同一组根 id
+   * 对所有层级都适用；列表形态按 {@code position} 排序，分组时保持该顺序。
+   */
+  private final class Children {
+    private final List<String> ids;
+    private final Map<String, Map<String, List<Map<String, Object>>>> byTable = new HashMap<>();
+
+    Children(List<String> ids) {
+      this.ids = ids;
+    }
+
+    List<Map<String, Object>> rows(Map<String, Object> c, String parentId) {
+      boolean list = "list".equals(c.get("mode"));
+      return byTable
+          .computeIfAbsent(text(c, "table") + (list ? ":list" : ""), k -> load(c, list))
+          .getOrDefault(parentId, List.of());
+    }
+
+    private Map<String, List<Map<String, Object>>> load(Map<String, Object> c, boolean list) {
+      Map<String, List<Map<String, Object>>> grouped = new HashMap<>();
+      for (var chunk : chunks(ids))
+        for (var row :
+            jdbc.queryForList(
+                "SELECT * FROM "
+                    + c.get("table")
+                    + " WHERE parent_id IN ("
+                    + marks(chunk)
+                    + ")"
+                    + (list ? " ORDER BY position" : ""),
+                chunk.toArray()))
+          grouped.computeIfAbsent(text(row, "parent_id"), k -> new ArrayList<>()).add(row);
+      return grouped;
+    }
   }
 
   /**

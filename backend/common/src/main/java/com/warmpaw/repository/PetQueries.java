@@ -57,9 +57,8 @@ public class PetQueries {
    * 在同一份 WHERE 下自洽。两次查询之间若有写入，total 与当页内容可能轻微不一致，
    * 这是可接受的最终一致性。
    *
-   * <p><b>按 id 逐条回表</b>：拿到 id 列表后用 {@code repository.find} 逐条 hydrate，
-   * 因此每页会触发 1+2N 次查询（N 还要乘上子表数）。选它是为了复用模型层的解码逻辑，
-   * 代价是页大小直接决定查询数——这也是 {@code pageSize} 被限制在 100 的原因之一。
+   * <p><b>按 id 批量回表</b>：拿到 id 列表后用 {@code repository.findAll} 一次装配整页，
+   * 主表与每张子表各一次 {@code IN}，查询数与页大小无关；复用模型层的解码逻辑。
    */
   public Map<String, Object> page(Map<String, Object> q, boolean admin) {
     List<String> where = new ArrayList<>();
@@ -109,7 +108,7 @@ public class PetQueries {
             args.toArray());
     return map(
         "items",
-        ids.stream().map(id -> repository.find("pet", id)).toList(),
+        repository.findAll("pet", ids),
         "total",
         total,
         "page",
