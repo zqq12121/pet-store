@@ -149,6 +149,7 @@ public class FileService {
           415,
           "UNSUPPORTED_FILE_TYPE",
           "文件真实类型不符合用途");
+      BufferedImage decoded = null;
       if (image) {
         try (var input = ImageIO.createImageInputStream(target.toFile())) {
           var readers = ImageIO.getImageReaders(input);
@@ -161,8 +162,8 @@ public class FileService {
                 415,
                 "UNSUPPORTED_FILE_TYPE",
                 "图片像素数量过大");
-            BufferedImage img = reader.read(0);
-            require(img != null, 415, "UNSUPPORTED_FILE_TYPE", "图片无法解码");
+            decoded = reader.read(0);
+            require(decoded != null, 415, "UNSUPPORTED_FILE_TYPE", "图片无法解码");
           } finally {
             reader.dispose();
           }
@@ -191,6 +192,11 @@ public class FileService {
             "UNSUPPORTED_FILE_TYPE",
             "PDF 损坏或包含主动内容");
       }
+      // 对外展示的图片缩到 1920 以内再存；诊断、售后、检疫等证据类文件保持原样。
+      if (decoded != null
+          && List.of("pet_image", "banner", "community_image", "avatar").contains(purpose))
+        ImageShrinker.shrink(target, mime, decoded, ImageShrinker.MAX_EDGE);
+      decoded = null;
       boolean pub =
           List.of("avatar", "pet_image", "banner", "pet_video", "quarantine_public")
               .contains(purpose);
@@ -212,7 +218,7 @@ public class FileService {
                   "mimeType",
                   mime,
                   "sizeBytes",
-                  file.getSize(),
+                  Files.size(target),
                   "purpose",
                   purpose,
                   "visibility",
