@@ -74,10 +74,12 @@ public class DemoAdminApplication {
       buyer.put("passwordHash", auth.passwordHash("DemoBuyer2026!"));
       store.save(buyer);
       // 新到店预约不开放在线售后；另建明确标记的历史订单夹具验证旧售后流程。
-      if (store.byKey("order", "demo-legacy-after-sale") == null) {
-        Map<String, Object> legacy = copy(store.list("order").stream()
-            .filter(o -> !o.containsKey("appointment") && "completed".equals(text(o, "status")))
-            .findFirst().orElseThrow(() -> new IllegalStateException("备份缺少历史订单演示模板")));
+      // 空库（CI 的 --fresh 模式）没有历史订单可作模板：跳过售后夹具，浏览器验收用 --core-only。
+      var template = store.list("order").stream()
+          .filter(o -> !o.containsKey("appointment") && "completed".equals(text(o, "status")))
+          .findFirst();
+      if (store.byKey("order", "demo-legacy-after-sale") == null && template.isPresent()) {
+        Map<String, Object> legacy = copy(template.get());
         legacy.remove("id");
         legacy.put("version", 1);
         legacy.put("orderNo", "DEMO-AFTERSALE-20261009");

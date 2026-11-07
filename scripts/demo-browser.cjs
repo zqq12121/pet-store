@@ -7,6 +7,9 @@ const root=path.resolve(__dirname,'..')
 const {chromium}=createRequire(path.join(root,'frontend/package.json'))('@playwright/test')
 const base=process.argv.find(a=>a.startsWith('http://'))||'http://127.0.0.1:8190'
 const interactive=process.argv.includes('--interactive')
+// --core-only：只验收核心预约流程（CI 用 --fresh 空库启动时没有历史售后夹具）
+const coreOnly=process.argv.includes('--core-only')
+// 本机默认用已安装的 Chrome；CI 设 PW_CHANNEL=chromium 用 Playwright 自带浏览器。
 const out=path.join(root,'output/demo-acceptance')
 
 // 只向明确返回测试 ID 的本机副本注入模拟 SDK；正常站点始终使用官方认证。
@@ -37,7 +40,7 @@ async function main(){
  const config=await (await fetch(base+'/api/v1/auth/graph-captcha')).json()
  assert.equal(config.data?.captchaId,'demo-acceptance-only','目标不是隔离验收环境')
  fs.mkdirSync(out,{recursive:true})
- const browser=await chromium.launch({channel:'chrome',headless:!interactive})
+ const browser=await chromium.launch({channel:process.env.PW_CHANNEL||'chrome',headless:!interactive})
  const errors=[]
  try{
   async function newPage(){
@@ -124,6 +127,8 @@ async function main(){
   await buyer.getByRole('heading',{name:'已完成',exact:true}).waitFor()
   await shot(buyer,'05-appointment-completed')
   // 独立历史夹具验证售后上传、权限与审核，不能把此流程冒充新预约功能。
+  // --core-only（CI 空库）没有历史订单夹具，跳过这一段。
+  async function afterSale(){
   const orders=await api(buyer,'buyer','/orders?pageSize=100')
   const legacy=orders.items.find(o=>o.orderNo==='DEMO-AFTERSALE-20261009')
   assert.ok(legacy)
@@ -159,11 +164,21 @@ async function main(){
   await buyer.getByRole('button',{name:'刷新进度',exact:true}).click()
   await buyer.getByText('申请已驳回',{exact:true}).first().waitFor()
   await shot(buyer,'08-after-sale-reviewed')
+  return {legacyOrderId:legacy.id,saleId,diagnosisFileId:asset.id}
+  }
+  const afterSaleResult=coreOnly?{}:await afterSale()
   assert.deepEqual(errors,[])
-  const result={result:'PASS',base,appointmentId,legacyOrderId:legacy.id,saleId,diagnosisFileId:asset.id,
-   checks:['真实密码登录与会话','买家 24 小时 HttpOnly Cookie','公开模拟证明','协议阅读和预约提交','后台确认','线下交付与宠物已售','新预约在线售后保持关闭','历史订单诊断上传','私有附件授权可读且匿名404','后台审核及买家进度','390px结算无横向溢出'],
+  const result={result:'PASS',base,mode:coreOnly?'core-only':'full',appointmentId,...afterSaleResult,
+   checks:['真实密码登录与会话','买家 24 小时 HttpOnly Cookie','公开模拟证明','协议阅读和预约提交','后台确认','线下交付与宠物已售','新预约在线售后保持关闭',
+    ...(coreOnly?[]:['历史订单诊断上传','私有附件授权可读且匿名404','后台审核及买家进度']),'390px结算无横向溢出'],
    thirdPartyMode:'simulated',pageErrors:errors,screenshots:shots}
   fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result))
+ }catch(error){
+  // 失败时给每个页面留截图，CI 里作为产物上传，便于定位。
+  let i=0
+  for(const context of browser.contexts())for(const page of context.pages())
+   await page.screenshot({path:path.join(out,'failure-'+(i++)+'.png'),fullPage:true}).catch(()=>{})
+  throw error
  }finally{await browser.close()}
 }
 main().catch(error=>{console.error(error);process.exitCode=1})

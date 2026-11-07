@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""从完整备份启动独立演示副本；不改变主项目配置、账户或数据卷。"""
+"""从完整备份（或 --fresh 空库）启动独立演示副本；不改变主项目配置、账户或数据卷。"""
 import argparse
 from datetime import datetime
 import json
@@ -13,9 +13,13 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('backup', type=Path)
+    parser.add_argument('backup', type=Path, nargs='?')
+    parser.add_argument('--fresh', action='store_true',
+                        help='不恢复备份，从空库启动（CI 用；业务数据由 seed-acceptance.py 通过接口补齐）')
     parser.add_argument('--port', type=int, default=8190)
     args = parser.parse_args()
+    if bool(args.backup) == args.fresh:
+        parser.error('请提供备份目录，或使用 --fresh（二选一）')
     # 演示只暴露本机入口，已占用的端口直接报错，不停止其他服务。
     with socket.socket() as probe:
         probe.bind(('127.0.0.1', args.port))
@@ -31,8 +35,9 @@ def main():
     jar = folder / 'demo-support.jar'
     subprocess.run(['jar', 'cf', str(jar), '-C',
                     str(ROOT / 'backend/integration-tests/target/test-classes'), 'demoacceptance'], check=True)
-    subprocess.run(['python3', str(ROOT / 'scripts/restore-compose.py'), str(args.backup.resolve()),
-                    '--project', project], cwd=ROOT, env=env, check=True)
+    if not args.fresh:
+        subprocess.run(['python3', str(ROOT / 'scripts/restore-compose.py'), str(args.backup.resolve()),
+                        '--project', project], cwd=ROOT, env=env, check=True)
     # 模拟环境删除第三方凭据；所有业务数据和服务发现使用本次 Compose 网络与卷。
     isolated = {'SPRING_PROFILES_ACTIVE': 'local', 'PAW_MOCK_PROVIDERS': 'true', 'PAW_OSS_ENABLED': 'false',
                 **{key: '' for key in ('OSS_ACCESS_KEY_ID', 'OSS_ACCESS_KEY_SECRET',
@@ -59,7 +64,8 @@ def main():
     subprocess.run([*compose, 'up', '-d', '--no-build', '--wait', '--wait-timeout', '600'],
                    cwd=ROOT, env=env, check=True)
     result = {'project': project, 'port': args.port, 'url': f'http://127.0.0.1:{args.port}',
-              'compose': compose, 'backup': str(args.backup.resolve()), 'thirdPartyMode': 'simulated'}
+              'compose': compose, 'backup': str(args.backup.resolve()) if args.backup else None,
+              'thirdPartyMode': 'simulated'}
     (folder / 'environment.json').write_text(json.dumps(result, ensure_ascii=False, indent=2))
     print(json.dumps(result, ensure_ascii=False))
 
