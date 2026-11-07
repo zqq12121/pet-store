@@ -35,7 +35,11 @@ test.describe('买家端冒烟', () => {
 
   test('协议与隐私政策可互相跳转', async ({ page }) => {
     await page.goto('/terms');
-    await page.getByRole('link', { name: '隐私政策' }).click();
+    // 页脚也有同名链接，限定在协议页自己的导航里点击。
+    await page
+      .getByRole('navigation', { name: '协议导航' })
+      .getByRole('link', { name: '隐私政策' })
+      .click();
     await expect(page).toHaveURL(/\/privacy/);
     await expect(page.getByRole('heading', { name: '隐私政策', level: 1 })).toBeVisible();
   });
