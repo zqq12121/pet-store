@@ -13,13 +13,16 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .agent import PetAgent
-from .business import ApiError, BusinessClient
+from .business import ApiError, BusinessClient, Identity
 from .config import Settings
 from .knowledge import Knowledge
 from .knowledge_store import KnowledgeStore
 from .knowledge_api import register_knowledge_api
 from .store import DISCLAIMER, Store, now, uid
 from .statistics import register_statistics_api
+
+# 与 Java 端 BuyerSessionCookie.NAME 保持一致。
+BUYER_COOKIE = "warmpaw_buyer"
 
 Id = Annotated[str, Field(pattern=r"^[A-Za-z0-9_-]{1,100}$")]
 
@@ -103,8 +106,13 @@ def create_app(settings=None, business=None, agent=None):
         response.headers["Cache-Control"] = "no-store, no-transform"
         return response
 
-    async def identity(request: Request):
-        return await business.identify(request.headers.get("Authorization"), request.headers.get("X-Guest-Token"))
+    async def identity(request: Request) -> Identity:
+        authorization, guest = request.headers.get("Authorization"), request.headers.get("X-Guest-Token")
+        # 买家网站的登录态在 HttpOnly Cookie 里；与 Java 侧规则一致，只有两种头都没带时才使用它。
+        cookie = request.cookies.get(BUYER_COOKIE)
+        if authorization is None and guest is None and cookie:
+            authorization = "Bearer " + cookie
+        return await business.identify(authorization, guest)
 
     @app.get("/health")
     async def health():

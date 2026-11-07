@@ -10,36 +10,45 @@ export class ApiError extends Error {
   }
 }
 const storageKey = (role: Role) => `warmpaw:${role}:auth`;
+// 买家 token 在后端下发的 HttpOnly Cookie 里，JS 读不到；本地只存有效期和资料用于判断登录状态，
+// 放 localStorage 让多个标签页共享、关掉浏览器后仍在（与 Cookie 同为 24 小时）。
+// 管理端仍把 Bearer token 放 sessionStorage，关闭标签页即失效。
+const storage = (role: Role) => (role === 'buyer' ? localStorage : sessionStorage);
 export function auth(role: Role): {
-  accessToken: string;
+  accessToken?: string;
   expiresAt: number;
   user?: { nickname: string; phoneMasked: string };
   admin?: { id: string; username: string; role: 'admin' | 'staff'; displayName?: string };
 } | null {
   try {
-    const value = JSON.parse(sessionStorage.getItem(storageKey(role)) || 'null');
+    const value = JSON.parse(storage(role).getItem(storageKey(role)) || 'null');
     if (value?.expiresAt > Date.now()) return value;
   } catch {
     /* 损坏或过期会话按未登录处理。 */
   }
-  sessionStorage.removeItem(storageKey(role));
+  clearAuth(role);
   return null;
 }
 export function saveAuth(
   role: Role,
-  data: { accessToken: string; expiresIn: number; user?: unknown; admin?: unknown }
+  data: { accessToken?: string; expiresIn: number; user?: unknown; admin?: unknown }
 ) {
-  sessionStorage.setItem(
+  storage(role).setItem(
     storageKey(role),
     JSON.stringify({ ...data, expiresAt: Date.now() + data.expiresIn * 1000 })
   );
 }
 export function clearAuth(role: Role) {
-  sessionStorage.removeItem(storageKey(role));
+  try {
+    storage(role).removeItem(storageKey(role));
+  } catch {
+    /* 存储不可用（如部分无痕模式）时无需清理。 */
+  }
 }
+// 买家没有 accessToken，浏览器同源请求会自动带上 Cookie，这里返回空对象。
 export function headers(role: Role): Record<string, string> {
   const value = auth(role);
-  return value ? { Authorization: `Bearer ${value.accessToken}` } : {};
+  return value?.accessToken ? { Authorization: `Bearer ${value.accessToken}` } : {};
 }
 export function client(role: Role) {
   const http = axios.create({ baseURL: '/api/v1', timeout: 15000 });

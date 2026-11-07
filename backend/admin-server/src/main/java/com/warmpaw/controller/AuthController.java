@@ -8,6 +8,7 @@ import com.warmpaw.common.Input;
 import com.warmpaw.service.AuthService;
 import com.warmpaw.service.GraphCaptchaService;
 import com.warmpaw.service.GuestService;
+import com.warmpaw.web.BuyerSessionCookie;
 import jakarta.servlet.http.*;
 import java.time.*;
 import java.util.*;
@@ -40,11 +41,26 @@ public class AuthController {
   private final GuestService guests;
   private final AuthService auth;
   private final GraphCaptchaService graphCaptcha;
+  private final BuyerSessionCookie cookie;
 
-  public AuthController(GuestService guests, AuthService auth, GraphCaptchaService graphCaptcha) {
+  public AuthController(
+      GuestService guests, AuthService auth, GraphCaptchaService graphCaptcha, BuyerSessionCookie cookie) {
     this.guests = guests;
     this.auth = auth;
     this.graphCaptcha = graphCaptcha;
+    this.cookie = cookie;
+  }
+
+  /**
+   * 买家网站登录成功：token 只写进 HttpOnly Cookie，响应体去掉 {@code accessToken}，前端 JS 拿不到。
+   * 小程序走 {@code /auth/mini-wechat/login}，仍在响应体里返回 Bearer token。
+   */
+  private ResponseEntity<Object> webLogin(Map<String, Object> session, HttpServletResponse res) {
+    Map<String, Object> body = new LinkedHashMap<>(session);
+    String token = (String) body.remove("accessToken");
+    body.remove("tokenType");
+    res.addHeader(HttpHeaders.SET_COOKIE, cookie.issue(token, ((Number) body.get("expiresIn")).longValue()));
+    return ok(200, body);
   }
 
   /**
@@ -162,15 +178,16 @@ public class AuthController {
    *
    * <p>鉴权：可选身份校验，未登录可调用。写入用户记录时持全局锁，避免并发注册出两条同号账号。
    *
-   * <p>非幂等：每次成功都签发新会话（买家 2 小时）。验证码错误 400，过期 400
+   * <p>非幂等：每次成功都签发新会话（买家 24 小时，token 写入 HttpOnly Cookie）。验证码错误 400，过期 400
    * {@code SMS_CODE_EXPIRED}。
    *
-   * @return 200 与 {@code accessToken}、{@code expiresIn} 及 {@code user} 资料
+   * @return 200 与 {@code expiresIn} 及 {@code user} 资料；token 只在 {@code Set-Cookie} 里
    */
   @PostMapping("/auth/sms-login")
-  public ResponseEntity<Object> login(@RequestBody Map<String, Object> b, HttpServletRequest req) {
+  public ResponseEntity<Object> login(
+      @RequestBody Map<String, Object> b, HttpServletRequest req, HttpServletResponse res) {
     actor(req);
-    return ok(200, auth.smsLogin(b));
+    return webLogin(auth.smsLogin(b), res);
   }
 
   /**
@@ -186,11 +203,12 @@ public class AuthController {
    * <p>非幂等（每次签发新会话）。成功清零失败计数。
    *
    * @param b 字段 {@code account/password} 与图形验证码字段
-   * @return 200 与买家会话及资料
+   * @return 200 与买家会话有效期及资料；token 只在 {@code Set-Cookie} 里
    */
   @PostMapping("/auth/password-login")
-  public ResponseEntity<Object> passwordLogin(@RequestBody Map<String, Object> b, HttpServletRequest req) {
-    return ok(200, auth.passwordLogin(b, req.getRemoteAddr()));
+  public ResponseEntity<Object> passwordLogin(
+      @RequestBody Map<String, Object> b, HttpServletRequest req, HttpServletResponse res) {
+    return webLogin(auth.passwordLogin(b, req.getRemoteAddr()), res);
   }
 
   /**
@@ -226,8 +244,12 @@ public class AuthController {
    * @return 200 与提示文案
    */
   @PutMapping("/me/password")
-  public ResponseEntity<Object> changePassword(@RequestBody Map<String, Object> b, HttpServletRequest req) {
-    return ok(200, auth.changePassword(actor(req), b, "buyer"));
+  public ResponseEntity<Object> changePassword(
+      @RequestBody Map<String, Object> b, HttpServletRequest req, HttpServletResponse res) {
+    Map<String, Object> result = auth.changePassword(actor(req), b, "buyer");
+    // 改密已撤销全部会话，本浏览器的登录 Cookie 同步删除。
+    res.addHeader(HttpHeaders.SET_COOKIE, cookie.clear());
+    return ok(200, result);
   }
 
   /**
@@ -309,12 +331,14 @@ public class AuthController {
    * <p><b>幂等</b>：这是本类唯一刻意吞掉 401 的接口。令牌已过期或已撤销时返回 200，
    * 因为"退出"的目标状态已经达成，让客户端看到错误只会阻止它清理本地凭证。
    *
-   * <p>只撤销当前会话，不影响该账号在其它设备上的登录。
+   * <p>只撤销当前会话，不影响该账号在其它设备上的登录。买家退出时总是下发删除 Cookie，
+   * 即使会话早已失效，也能让浏览器清掉残留的登录 Cookie。
    *
    * @return 始终 200，body 为 null
    */
   @PostMapping({"/auth/logout", "/admin/auth/logout"})
-  public ResponseEntity<Object> logout(HttpServletRequest req) {
+  public ResponseEntity<Object> logout(HttpServletRequest req, HttpServletResponse res) {
+    if (!req.getRequestURI().contains("/admin/")) res.addHeader(HttpHeaders.SET_COOKIE, cookie.clear());
     AuthService.Actor a;
     try {
       a = actor(req);

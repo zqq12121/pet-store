@@ -186,4 +186,33 @@ class AccountSecurityTest {
         .content(write(reset("password_reset",password)))).andExpect(status().isOk());
     mvc.perform(get("/api/v1/me").header("Authorization","Bearer "+token)).andExpect(status().isUnauthorized());
   }
+
+  /** 网站登录：token 只进 HttpOnly Cookie，24 小时有效；管理端不认 Cookie；失效后响应顺手删除 Cookie。 */
+  @Test void buyerWebSessionLivesInHttpOnlyCookie() throws Exception {
+    var mvc=MockMvcBuilders.webAppContextSetup(context)
+        .addFilters(context.getBean(com.warmpaw.web.BuyerCookieAuthFilter.class)).build();
+    auth.resetPassword(reset("password_reset",password));
+    var login=mvc.perform(post("/api/v1/auth/password-login").contentType("application/json")
+        .content(write(map("account",phone,"password",password))))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.data.accessToken").doesNotExist())
+        .andExpect(jsonPath("$.data.expiresIn").value(86400)).andReturn().getResponse();
+    String issued=login.getHeader("Set-Cookie");
+    assertTrue(issued.startsWith("warmpaw_buyer=")&&issued.contains("HttpOnly")&&issued.contains("SameSite=Lax")
+        &&issued.contains("Max-Age=86400")&&issued.contains("Path=/api"),issued);
+    var cookie=new jakarta.servlet.http.Cookie("warmpaw_buyer",issued.substring(14,issued.indexOf(';')));
+
+    mvc.perform(get("/api/v1/me").cookie(cookie)).andExpect(status().isOk())
+        .andExpect(jsonPath("$.data.phoneMasked").exists());
+    // 管理端路径不转换买家 Cookie，按未登录处理，也不清掉 Cookie。
+    mvc.perform(get("/api/v1/admin/auth/security").cookie(cookie))
+        .andExpect(status().isUnauthorized()).andExpect(header().doesNotExist("Set-Cookie"));
+
+    var logout=mvc.perform(post("/api/v1/auth/logout").cookie(cookie)).andExpect(status().isOk())
+        .andReturn().getResponse().getHeader("Set-Cookie");
+    assertTrue(logout.startsWith("warmpaw_buyer=;")&&logout.contains("Max-Age=0"),logout);
+    // 已撤销的 Cookie：401，并下发删除 Cookie，下次请求按匿名处理。
+    var stale=mvc.perform(get("/api/v1/me").cookie(cookie)).andExpect(status().isUnauthorized())
+        .andReturn().getResponse().getHeader("Set-Cookie");
+    assertTrue(stale!=null&&stale.contains("Max-Age=0"),stale);
+  }
 }

@@ -21,7 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
  * （{@code session} 表按摘要做键）。好处是数据库泄露也拿不到可用 token，且退出登录可以真正撤销
  * ——JWT 的痛点正是"签出去就撤不回"，除非再维护一张黑名单表，那还不如直接存会话。
  *
- * <p>会话有效期：管理端 30 分钟、买家 2 小时。管理端更短是因为它能改价格、发货、退款。
+ * <p>会话有效期：管理端 30 分钟、买家 24 小时（网站靠 HttpOnly Cookie 保持，见 {@code BuyerSessionCookie}）。
+ * 管理端更短是因为它能改价格、发货、退款。
  *
  * <p><b>{@link #identify} 返回 null 而不是抛异常</b>：公开接口（宠物列表、门店信息）允许匿名访问，
  * 但登录用户能看到更多（比如收藏状态）。所以"没有 Authorization 头"是合法的匿名，
@@ -312,7 +313,7 @@ public class AuthService {
   /**
    * 签发会话，返回登录响应。
    *
-   * <p>有效期按角色区分：管理端 1800 秒（30 分钟），买家 7200 秒（2 小时）。
+   * <p>有效期按角色区分：管理端 1800 秒（30 分钟），买家 86400 秒（24 小时）。
    *
    * <p>响应结构有一个动态键：管理端用 {@code admin}，买家端用 {@code user}。
    * 这不是笔误，而是为了让同一份前端代码能按角色读不同字段，同时不把管理端的
@@ -323,7 +324,7 @@ public class AuthService {
   public Map<String, Object> login(Map<String, Object> account, String role) {
     String token = randomToken();
     boolean management = List.of("admin", "staff").contains(role);
-    int seconds = management ? 1800 : 7200;
+    int seconds = management ? 1800 : 86400;
     store.create(
         "session",
         text(account, "id"),

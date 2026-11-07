@@ -1,6 +1,13 @@
 # 公网单机入口：docker compose -f compose.yaml -f compose.production.yaml up -d --build --wait
 # 需要 Compose 2.24.4+；真实域名须解析到部署服务器，80/443 必须可达。
 services:
+  # 全站 HTTPS：买家登录 Cookie 加 Secure，只经 HTTPS 发送。
+  admin-server:
+    environment:
+      PAW_AUTH_COOKIE_SECURE: "true"
+  order-server:
+    environment:
+      PAW_AUTH_COOKIE_SECURE: "true"
   web:
     ports: !reset []
   edge:

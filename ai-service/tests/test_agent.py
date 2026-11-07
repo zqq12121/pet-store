@@ -107,6 +107,19 @@ async def test_identity_fail_closed(env, headers, code):
     assert response.status_code == code
 
 
+async def test_buyer_cookie_identifies_and_explicit_headers_win(env):
+    client, *_ = env
+    client.cookies.set("warmpaw_buyer", "buyer")
+    try:
+        assert (await client.post("/api/v1/ai/sessions", json={})).status_code == 201
+        # 显式游客头优先于 Cookie，不会被判为两种身份并存。
+        assert (await client.post("/api/v1/ai/sessions", json={}, headers={"X-Guest-Token": "guest"})).status_code == 201
+        client.cookies.set("warmpaw_buyer", "revoked")
+        assert (await client.post("/api/v1/ai/sessions", json={})).status_code == 401
+    finally:
+        client.cookies.clear()
+
+
 async def test_cross_owner_and_login_do_not_inherit_guest_history(env):
     client, agent, *_ = env
     path = await session(client)

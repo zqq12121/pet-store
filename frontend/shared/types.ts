@@ -81,8 +81,8 @@ export interface User {
   passwordChangeAvailableAt?: string | null;
   usernameChangeAvailableAt?: string | null;
 }
+// 买家网站登录：token 在 HttpOnly Cookie 里，响应体只有有效期与资料。
 export interface LoginResult {
-  accessToken: string;
   expiresIn: number;
   user: User;
 }
