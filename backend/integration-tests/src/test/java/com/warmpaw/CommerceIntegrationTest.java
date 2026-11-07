@@ -1362,6 +1362,30 @@ class CommerceIntegrationTest {
   }
 
   /** 接待员工使用真实会话办理交付，经营类操作仍必须由店长处理。 */
+  /** 后台编辑在售宠物：只改价格、介绍、照片不应下架；体重真的变化才下架复审。 */
+  @Test
+  void editingNonHealthFieldsKeepsPetOnSale() {
+    var p = pet();
+    assertEquals("on_sale", p.get("status"));
+    var detail = call("GET", "/admin/pets/" + p.get("id"), map(), admin);
+    Map<String, Object> body = new LinkedHashMap<>();
+    for (String k :
+        List.of("name", "category", "breed", "priceAmount", "gender", "ageMonths", "birthDate",
+            "weightKg", "color", "personalityTags", "vaccineStatus", "dewormStatus", "description",
+            "feedingNotes", "healthDescription", "imageFileIds", "videoFileId", "quarantine",
+            "isRecommended", "recommendationOrder", "version"))
+      if (detail.get(k) != null) body.put(k, detail.get(k));
+    // 模拟浏览器：经过一次 JSON 往返，库里的 DECIMAL 2.50 变成 JSON 数字 2.5。
+    body = read(write(body));
+    body.put("priceAmount", 12000);
+    body.put("description", "改了介绍");
+    var saved = call("PUT", "/admin/pets/" + p.get("id"), body, admin);
+    assertEquals("on_sale", saved.get("status"));
+    body.put("version", saved.get("version"));
+    body.put("weightKg", 2.6);
+    assertEquals("off", call("PUT", "/admin/pets/" + p.get("id"), body, admin).get("status"));
+  }
+
   @Test void staffCompletesAppointmentWithOperatorAuditAndIdempotency() {
     var employee = tx.execute(status -> store.create("admin", null, "staff-" + buyer.id(),
         map("username", "staff" + counter++, "role", "staff", "status", "active",

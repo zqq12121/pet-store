@@ -153,7 +153,7 @@ public class CatalogService extends CatalogReader {
                       "weightKg",
                       "color")
                   .stream()
-                  .anyMatch(k -> !canonical(proposed.get(k)).equals(canonical(old.get(k))))
+                  .anyMatch(k -> !sameValue(proposed.get(k), old.get(k)))
               || !validQuarantine(old);
       old.putAll(p);
       p = old;
@@ -162,6 +162,16 @@ public class CatalogService extends CatalogReader {
     }
     store.audit(admin, "pet.write", text(p, "id"));
     return adminPet(p);
+  }
+
+  /**
+   * 健康字段是否未变。数字按数值比较：库里 DECIMAL 读出来是 {@code 9.00}，请求 JSON 解析成
+   * {@code 9.0}，按序列化文本比会误判为"体重变了"，导致后台随便改个价格就把在售宠物下架。
+   */
+  private static boolean sameValue(Object proposed, Object old) {
+    if (proposed instanceof Number a && old instanceof Number b)
+      return new java.math.BigDecimal(a.toString()).compareTo(new java.math.BigDecimal(b.toString())) == 0;
+    return canonical(proposed).equals(canonical(old));
   }
 
   /**
