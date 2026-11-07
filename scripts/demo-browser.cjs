@@ -64,6 +64,10 @@ async function main(){
   await buyer.getByRole('button',{name:'登录',exact:true}).click()
   await buyer.getByRole('button',{name:'通过模拟验证',exact:true}).click()
   await buyer.waitForURL('**/profile')
+  // 买家登录态只在 HttpOnly Cookie 里（24 小时），页面脚本读不到 token。
+  const session=(await buyer.context().cookies()).find(c=>c.name==='warmpaw_buyer')
+  assert.ok(session?.httpOnly);assert.ok(session.expires*1000-Date.now()>23*3600*1000)
+  assert.equal(await buyer.evaluate(()=>document.cookie.includes('warmpaw_buyer')),false)
   await admin.getByRole('button',{name:'登录工作台',exact:true}).click()
   await admin.waitForURL(base+'/admin/')
   const shots=[]
@@ -72,13 +76,15 @@ async function main(){
   }
   async function api(page,role,url){
    return page.evaluate(async({role,url})=>{
-    const auth=JSON.parse(sessionStorage.getItem('warmpaw:'+role+':auth'))
-    const response=await fetch('/api/v1'+url,{headers:{Authorization:'Bearer '+auth.accessToken}})
+    // 买家登录态在 HttpOnly Cookie 里，同源请求自动携带；后台仍用 sessionStorage 中的 Bearer。
+    const auth=role==='admin'?JSON.parse(sessionStorage.getItem('warmpaw:admin:auth')):null
+    const response=await fetch('/api/v1'+url,{headers:auth?{Authorization:'Bearer '+auth.accessToken}:{}})
     const body=await response.json();if(body.code!=='OK')throw new Error(body.message);return body.data
    },{role,url})
   }
   await buyer.goto(base+'/pets')
-  await buyer.getByRole('link',{name:/奶霜（示例）/}).first().click()
+  // 示例宠物随资料更新会换名字，只取列表里第一只示例宠物。
+  await buyer.getByRole('link',{name:/（示例）/}).first().click()
   await buyer.getByRole('button',{name:'查看检疫证明',exact:true}).click()
   await buyer.getByRole('dialog').getByText(/DEMO-/).waitFor()
   await shot(buyer,'01-quarantine')
@@ -127,7 +133,10 @@ async function main(){
   const diagnosis=new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date()).replace(' ','T')
   await buyer.getByLabel('诊断时间').fill(diagnosis)
   const uploadResponse=buyer.waitForResponse(r=>r.url().endsWith('/api/v1/files')&&r.request().method()==='POST')
-  await buyer.locator('input[type=file]').setInputFiles(path.join(root,'output/demo-materials/diagnosis-demo.png'))
+  // 诊断附件只需是一张真实可解码的图片：截取当前页面一角生成，不依赖本机遗留素材。
+  const diagnosisFile=path.join(out,'diagnosis-demo.png')
+  await buyer.screenshot({path:diagnosisFile,clip:{x:0,y:0,width:240,height:160}})
+  await buyer.locator('input[type=file]').setInputFiles(diagnosisFile)
   const asset=(await (await uploadResponse).json()).data
   assert.equal(asset.visibility,'private');assert.equal(asset.publicUrl,null)
   await buyer.getByRole('button',{name:'移除',exact:true}).waitFor()
@@ -142,7 +151,8 @@ async function main(){
   const report=await popupEvent;await report.waitForLoadState()
   assert.equal(await report.locator('img').evaluate(i=>i.complete&&i.naturalWidth>0),true)
   await shot(report,'07-private-diagnosis');await report.close()
-  assert.equal((await buyer.context().request.get(base+'/api/v1/media/'+asset.id)).status(),404)
+  // 浏览器上下文会自动带买家 Cookie，匿名访问要用不带任何凭据的独立请求。
+  assert.equal((await fetch(base+'/api/v1/media/'+asset.id)).status,404)
   await admin.getByPlaceholder('请记录责任认定依据与处理说明').fill('模拟审核：附件展示和权限校验通过，本次演示按驳回分支结束。')
   await admin.getByRole('button',{name:'驳回并说明原因',exact:true}).click()
   await admin.getByRole('button',{name:'驳回并说明原因',exact:true}).waitFor({state:'hidden'})
@@ -151,7 +161,7 @@ async function main(){
   await shot(buyer,'08-after-sale-reviewed')
   assert.deepEqual(errors,[])
   const result={result:'PASS',base,appointmentId,legacyOrderId:legacy.id,saleId,diagnosisFileId:asset.id,
-   checks:['真实密码登录与会话','公开模拟证明','协议阅读和预约提交','后台确认','线下交付与宠物已售','新预约在线售后保持关闭','历史订单诊断上传','私有附件授权可读且匿名404','后台审核及买家进度','390px结算无横向溢出'],
+   checks:['真实密码登录与会话','买家 24 小时 HttpOnly Cookie','公开模拟证明','协议阅读和预约提交','后台确认','线下交付与宠物已售','新预约在线售后保持关闭','历史订单诊断上传','私有附件授权可读且匿名404','后台审核及买家进度','390px结算无横向溢出'],
    thirdPartyMode:'simulated',pageErrors:errors,screenshots:shots}
   fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result))
  }finally{await browser.close()}
