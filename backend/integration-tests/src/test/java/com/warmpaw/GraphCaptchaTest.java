@@ -121,11 +121,11 @@ class GraphCaptchaTest {
     var graph = mock(GraphCaptchaService.class);
     var auth = new AuthService(store, new TemporaryStore(null, false), sms, graph, new PasswordService(), false);
     doThrow(new ApiException(400, "CAPTCHA_INVALID", "图形验证失败")).when(graph).verify(anyMap());
-    for (String purpose : List.of("login", "wechat_bind", "password_reset")) {
+    for (String purpose : List.of("login", "password_reset")) {
       assertThrows(ApiException.class, () -> auth.sendLoginSms(map("phone", "13900000000", "purpose", purpose), "test"));
     }
     assertThrows(ApiException.class, () -> auth.passwordLogin(map("account", "alice", "password", "TestPassword123"), "test"));
-    verify(graph, times(4)).verify(anyMap());
+    verify(graph, times(3)).verify(anyMap());
     verifyNoInteractions(sms, store);
     // 旧图片验证码参数不能继续成为绕过新验证的入口。
     assertThrows(ApiException.class, () -> auth.sendLoginSms(map("phone", "13900000000", "purpose", "login",
@@ -133,28 +133,7 @@ class GraphCaptchaTest {
     // 后台只接受账号密码，拒绝残留的旧验证码字段。
     assertEquals("VALIDATION_ERROR", assertThrows(ApiException.class, () -> auth.adminLogin(
         map("username", "admin", "password", "TestPassword123", "captchaId", "old", "captchaCode", "1234"), "test")).code);
-    verify(graph, times(4)).verify(anyMap());
+    verify(graph, times(3)).verify(anyMap());
     verifyNoInteractions(sms, store);
-  }
-
-  @Test void wechatAuthorizationIsIssuedOnlyAfterVerificationAndStateCannotBeForged() {
-    var temp = new TemporaryStore(null, false);
-    var auth = mock(AuthService.class);
-    var graph = mock(GraphCaptchaService.class);
-    var service = new WechatLoginService(mock(BusinessRepository.class), temp, auth, graph);
-    try (var env = configured()) {
-      env.when(() -> ProviderSupport.env("PAW_WECHAT_APP_ID")).thenReturn("wechat-app");
-      env.when(() -> ProviderSupport.env("PAW_WECHAT_APP_SECRET")).thenReturn("wechat-secret");
-      env.when(() -> ProviderSupport.env("PAW_WECHAT_OAUTH_REDIRECT")).thenReturn("https://shop.example.test/login");
-      doThrow(new ApiException(400, "CAPTCHA_INVALID", "图形验证失败")).when(graph).verify(anyMap());
-      assertThrows(ApiException.class, () -> service.authorize(map("scene", "login", "returnPath", "/"), null, "browser"));
-      verify(auth, never()).randomToken();
-      doNothing().when(graph).verify(anyMap());
-      when(auth.randomToken()).thenReturn("verified-state");
-      var result = service.authorize(map("scene", "login", "returnPath", "/"), null, "browser");
-      assertTrue(text(result, "authorizeUrl").contains("state=verified-state"));
-      assertEquals(hash("browser"), read(temp.get("oauth:verified-state")).get("browser"));
-      assertThrows(ApiException.class, () -> service.login(map("code", "forged", "state", "forged-state"), null, "browser"));
-    }
   }
 }

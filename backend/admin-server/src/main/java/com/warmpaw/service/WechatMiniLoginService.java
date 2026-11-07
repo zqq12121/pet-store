@@ -27,8 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
  * <p><b>账号归属</b>：身份键是 {@code appId:openid}。同一微信在不同小程序/公众号下 openid 不同，
  * 所以这里不认"同一个人"，也不使用 unionid 做跨应用合并。
  *
- * <p>与 {@link WechatLoginService} 的差异：小程序没有浏览器 Cookie 可以绑定，也不需要 state；
- * 取而代之的是 IP 限流与微信侧一次性 code 本身。
+ * <p>小程序没有浏览器 Cookie 可以绑定，也不需要 state；靠 IP 限流与微信侧一次性 code 本身防刷。
  */
 @Service
 public class WechatMiniLoginService {

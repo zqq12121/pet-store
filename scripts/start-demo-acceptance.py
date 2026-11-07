@@ -39,9 +39,7 @@ def main():
                                       'PAW_SMS_ACCESS_KEY_ID', 'PAW_SMS_ACCESS_KEY_SECRET',
                                       'PAW_CAPTCHA_APP_ID', 'PAW_CAPTCHA_APP_KEY',
                                       'PAW_WECHAT_MINI_APP_ID', 'PAW_WECHAT_MINI_APP_SECRET',
-                                      'PAW_WECHAT_WEB_APP_ID', 'PAW_WECHAT_WEB_APP_SECRET', 'PAW_WECHAT_WEB_REDIRECT',
-                                      'PAW_WECHAT_APP_ID', 'PAW_WECHAT_APP_SECRET',
-                                      'PAW_WECHAT_OAUTH_REDIRECT')}}
+                                      'PAW_WECHAT_APP_ID')}}
     services = {name: {'image': 'warmpaw-' + name + ':latest'}
                 for name in ('admin-server', 'order-server', 'gateway-server', 'ai-service', 'web')}
     services['order-server']['environment'] = isolated

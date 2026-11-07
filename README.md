@@ -18,7 +18,7 @@
 | 买家网站 | 宠物浏览与筛选、宠物档案、到店预约、本人订单与售后、个人资料与账号安全 |
 | 管理后台 | 宠物与检疫材料、预约确认及线下交付、售后处理、门店设置、协议版本、知识库运营、AI 统计 |
 | 智能助手 | 猫狗知识问答与来源引用、在售宠物推荐、本人预约查询、多轮会话、流式回复、赞踩反馈 |
-| 微信小程序 | 首页、选宠、动物详情、收藏、我的、微信登录、网站扫码确认（共 7 个页面，以 `app.json` 为准） |
+| 微信小程序 | 首页、选宠、动物详情、收藏、我的、微信登录（共 6 个页面，以 `app.json` 为准） |
 
 **明确不做的事**：
 
@@ -300,7 +300,6 @@ docker compose exec web nginx -t
 2. 浏览动物 → 按名字、品种、分类或价格筛选 → 查看详情与成长档案。
 3. 收藏 → 阅读隐私说明 → 点击「演示微信登录」→ 返回原页面再次收藏。
 4. 在收藏页查看或取消收藏（演示模式只保存在本机缓存）。
-5. 网站扫码确认：扫码打开小程序 → 微信登录 → 核对电脑上的核对码并主动确认 → 网页自动登录。演示模式下不批准网站登录。
 
 ## 关键配置说明
 
@@ -326,7 +325,7 @@ docker compose exec web nginx -t
 | AI 模型 | `DEEPSEEK_API_KEY`、`DEEPSEEK_MODEL`、`DEEPSEEK_API_BASE` | 默认模型 `deepseek-chat` |
 | AI 数据 | `AI_DB_PATH` | 修改后日志与进程号随数据库父目录移动，启停需保持同一配置 |
 | 文件存储 | `PAW_STORAGE`、`PAW_OSS_ENABLED`、`PAW_OSS_BUCKET`、`PAW_OSS_ENDPOINT`、`OSS_ACCESS_KEY_*` | 默认本机目录，可选私有 OSS |
-| 微信 | `PAW_WECHAT_APP_ID`、`PAW_WECHAT_WEB_APP_ID`、`PAW_WECHAT_MINI_APP_ID` 及对应 `SECRET` / 回调 | 三套凭据互相独立：公众号、开放平台网站扫码、小程序；未完整配置时前端隐藏入口 |
+| 微信 | `PAW_WECHAT_MINI_APP_ID`、`PAW_WECHAT_MINI_APP_SECRET`；支付另用 `PAW_WECHAT_APP_ID` | 小程序登录凭据；网站不提供微信扫码登录 |
 | 端口 | `WEB_PORT` | 容器方式下网站的对外端口 |
 | 前端 | `VITE_API_TARGET`、`VITE_ADMIN_BASE` | 前端开发服务代理的网关地址、后台部署路径 |
 
@@ -402,7 +401,7 @@ docker compose build web && docker compose up -d web
 
 **小程序**
 
-- 当前开发目录仍为演示模式；缺可用的 HTTPS 接口，手机真机与网站扫码中转尚未完成验收。
+- 当前开发目录仍为演示模式；缺可用的 HTTPS 接口，手机真机尚未完成验收。
 - 真实模式收藏的跨设备同步需要有真实微信登录和两台设备验证。
 - 预约、预约记录、养宠助手、门店指南等页面已从注册与打包中排除，旧源码仅作历史参考。
 
@@ -423,8 +422,6 @@ docker compose build web && docker compose up -d web
 | `docs/CLOUD_DEMO.md` | 云服务器演示环境 |
 | `docs/GRAPH_CAPTCHA.md` | 登录人机验证配置与实测 |
 | `docs/ACCOUNT_SECURITY.md` | 密码与用户名规则、迁移步骤 |
-| `docs/WECHAT_WEB_LOGIN.md` | 网站微信扫码登录 |
-| `docs/MINI_WECHAT_QR_LOGIN.md` | 小程序扫码中转 |
 | `docs/MINI_PROGRAM_RELEASE.md` | 小程序上线与真机验收 |
 | `backend/ARCHITECTURE.md` | 微服务结构、职责与事务边界 |
 | `backend/DATABASE.md` | 表结构与数据迁移 |

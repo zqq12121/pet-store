@@ -33,14 +33,8 @@ class ProductionCheckTest(unittest.TestCase):
         del env["PAW_CAPTCHA_APP_KEY"]
         self.assertTrue(any("PAW_CAPTCHA_APP_KEY" in e for e in production.configuration_errors(env)))
         env = self.fixture()
-        env["PAW_WECHAT_WEB_APP_ID"] = "partial"
-        self.assertTrue(any("网站应用微信" in e for e in production.configuration_errors(env)))
-        env = self.fixture()
         env["PAW_WECHAT_MINI_APP_ID"] = "wx0123456789abcdef"
-        self.assertTrue(any("小程序扫码" in e for e in production.configuration_errors(env)))
-        env["PAW_WECHAT_MINI_APP_SECRET"] = "test-secret"
-        env["PAW_WECHAT_MINI_ENV_VERSION"] = "develop"
-        self.assertTrue(any("release" in e for e in production.configuration_errors(env)))
+        self.assertTrue(any("小程序登录" in e for e in production.configuration_errors(env)))
 
     def test_partial_dedicated_credentials_do_not_fall_back(self):
         env = self.fixture()
@@ -52,13 +46,6 @@ class ProductionCheckTest(unittest.TestCase):
             env = self.fixture()
             env["PAW_DOMAIN"] = domain
             self.assertTrue(any(e.startswith("PAW_DOMAIN") for e in production.configuration_errors(env)))
-
-    def test_wechat_callback_must_return_to_same_site_login(self):
-        env = self.fixture()
-        env.update(PAW_WECHAT_APP_ID="test-id", PAW_WECHAT_APP_SECRET="test-secret", PAW_WECHAT_OAUTH_REDIRECT="https://foreign.invalid/login")
-        self.assertTrue(any("微信" in e for e in production.configuration_errors(env)))
-        env["PAW_WECHAT_OAUTH_REDIRECT"] = "https://shop.warmpaw.cn/login"
-        self.assertEqual([], production.configuration_errors(env))
 
     def test_mini_program_requires_own_credentials_but_not_sms_or_ai(self):
         env = {k: "test-only-password" for k in ("MYSQL_ROOT_PASSWORD", "PAW_DB_PASSWORD", "PAW_REDIS_PASSWORD", "PAW_ADMIN_PASSWORD")}

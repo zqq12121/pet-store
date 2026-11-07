@@ -7,10 +7,8 @@ import { useLoad } from '../../../shared/useLoad';
 import { useGraphCaptcha } from '../../../shared/useGraphCaptcha';
 import LoginConsent from '../components/LoginConsent.vue';
 import BuyerLoginLayout from '../components/BuyerLoginLayout.vue';
-import WechatQrLogin from '../components/WechatQrLogin.vue';
 const graph = useGraphCaptcha();
 const accepted = ref(false);
-const wechatBusy = ref(false);
 const router = useRouter(),
   route = useRoute(),
   account = ref(''),
@@ -31,7 +29,7 @@ async function submit() {
     error.value = '请先阅读并同意《用户服务协议》和《隐私政策》';
     return;
   }
-  if (loading.value || wechatBusy.value) return;
+  if (loading.value) return;
   await run(async () => {
     // 点击或按 Enter 提交后验证，通过前不请求密码登录接口。
     const proof = await graph.verify();
@@ -62,7 +60,7 @@ async function submit() {
           v-model="account"
           aria-label="手机号或用户名"
           placeholder="请输入手机号或用户名"
-          :readonly="loading || wechatBusy"
+          :readonly="loading"
           required
           maxlength="32"
           autocomplete="username"
@@ -72,15 +70,15 @@ async function submit() {
           v-model="password"
           aria-label="密码"
           placeholder="请输入密码"
-          :readonly="loading || wechatBusy"
+          :readonly="loading"
           type="password"
           required
           maxlength="128"
           autocomplete="current-password"
       /></label>
-      <LoginConsent v-model="accepted" :disabled="loading || wechatBusy" />
+      <LoginConsent v-model="accepted" :disabled="loading" />
       <p v-if="error" class="error-text" role="alert">{{ error }}</p>
-      <button class="btn full auth-submit" :disabled="loading || wechatBusy || !accepted">
+      <button class="btn full auth-submit" :disabled="loading || !accepted">
         {{ loading ? '请稍候…' : '登录' }}
       </button>
       <div class="auth-links">
@@ -88,12 +86,6 @@ async function submit() {
           >验证码登录</RouterLink
         ><span aria-hidden="true">|</span><RouterLink to="/password-reset">忘记密码</RouterLink>
       </div>
-    </form>
-    <template #wechat
-      ><WechatQrLogin
-        v-model:busy="wechatBusy"
-        :accepted="accepted"
-        :return-path="destination()"
-        :disabled="loading" /></template
-  ></BuyerLoginLayout>
+    </form></BuyerLoginLayout
+  >
 </template>

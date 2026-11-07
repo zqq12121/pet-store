@@ -1,8 +1,8 @@
 # 灵宠小珠 · 原生微信小程序
 
-采用 WXML / WXSS / JavaScript，无 npm 运行依赖。当前启用首页、选宠、动物详情、收藏、我的、微信登录，以及网站扫码确认，共 7 个页面，以 `app.json` 为准。
+采用 WXML / WXSS / JavaScript，无 npm 运行依赖。当前启用首页、选宠、动物详情、收藏、我的、微信登录，共 6 个页面，以 `app.json` 为准。
 
-网站扫码确认是用户要求的中转功能：扫码打开灵宠小珠，微信登录后核对电脑上的核对码并主动确认，电脑网页自动登录。详见 [中转登录说明](../docs/MINI_WECHAT_QR_LOGIN.md)。演示模式不批准网站登录。
+网站不提供微信扫码登录，小程序微信登录只在小程序内使用。
 
 ## 导入与演示
 
@@ -35,7 +35,7 @@ module.exports = {
 | 收藏或取消 | `PUT /me/favorites/{petId}`，请求体为 `{ "active": true }` 或 `{ "active": false }` |
 | 我的、退出 | `GET /me`、`POST /auth/logout` |
 
-真实登录只在用户点击后调用 `wx.login`，由服务端交换微信凭证。Java 对首次通过校验的微信身份自动注册，老用户复用原账号，并返回 `isNewUser`；登录页显示对应成功提示。接口和验证边界见 [微信登录说明](../docs/MINI_WECHAT_LOGIN.md)。服务端需配置 `PAW_WECHAT_MINI_APP_ID` 和 `PAW_WECHAT_MINI_APP_SECRET`，AppSecret 仅留在服务端。小程序凭证与网站扫码登录凭证分别配置。
+真实登录只在用户点击后调用 `wx.login`，由服务端交换微信凭证。Java 对首次通过校验的微信身份自动注册，老用户复用原账号，并返回 `isNewUser`；登录页显示对应成功提示。接口和验证边界见 [微信登录说明](../docs/MINI_WECHAT_LOGIN.md)。服务端需配置 `PAW_WECHAT_MINI_APP_ID` 和 `PAW_WECHAT_MINI_APP_SECRET`，AppSecret 仅留在服务端。
 
 后端继续使用项目现有 Java 服务与 MySQL，收藏归属由登录会话决定，不接收客户端指定的账号 ID。已有数据库需先备份，再检查并应用 `backend/deploy/pet-favorites-migration.sql`；不要通过重跑完整 `schema.sql` 更新已有数据库。真实模式收藏保存到服务端账号，跨设备同步仍需真实微信登录和两台设备验证。
 
@@ -49,7 +49,7 @@ module.exports = {
 
 ## 真实微信身份联调
 
-2026-10-16 已部署新版 Java 并通过开发者工具真实 `wx.login` → 云端 Java → 微信官方接口 → 运行 MySQL 验证：首次自动注册、重复登录复用账号、本人资料/收藏查询、退出撤销均通过。记录见 [真实联调报告](../output/mini-program-real-login-2026-10-16/验证记录.md)。本次通过加密 SSH 传递真实 code，未关闭合法域名校验；当前缺 HTTPS API，因此开发目录仍为演示模式，手机直连和网站扫码中转尚未验收。
+2026-10-16 已部署新版 Java 并通过开发者工具真实 `wx.login` → 云端 Java → 微信官方接口 → 运行 MySQL 验证：首次自动注册、重复登录复用账号、本人资料/收藏查询、退出撤销均通过。记录见 [真实联调报告](../output/mini-program-real-login-2026-10-16/验证记录.md)。本次通过加密 SSH 传递真实 code，未关闭合法域名校验；当前缺 HTTPS API，因此开发目录仍为演示模式，手机直连尚未验收。
 
 ## 验证
 

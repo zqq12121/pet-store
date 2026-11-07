@@ -173,32 +173,21 @@ public class AuthService {
   /**
    * 发送登录类短信验证码。
    *
-   * <p>三种用途：
+   * <p>两种用途：
    *
    * <ul>
    *   <li>{@code login} —— 手机号免密登录（不存在则自动注册）；
-   *   <li>{@code wechat_bind} —— 给微信账号绑定手机号，必须携带有效的 {@code bindTicket}；
    *   <li>{@code password_reset} —— 重置密码。
    * </ul>
    *
    * <p>所有用途都先过图形验证码（{@code GraphCaptchaService.FIELDS}），
    * 这是防"短信轰炸"的第一道闸——只靠手机号维度的频控不够，攻击者可以换号。
-   *
-   * <p>{@code wechat_bind} 额外校验 bindTicket 是否仍在临时存储中：
-   * 没有 ticket 说明微信授权流程没走完，此时发码等于允许任意手机号绑定任意微信号。
    */
   public Map<String, Object> sendLoginSms(Map<String, Object> body, String ip) {
-    Input in = new Input(body, "phone,purpose,bindTicket," + GraphCaptchaService.FIELDS);
-    String phone = in.phone("phone"), purpose = in.choice("purpose", "login,wechat_bind,password_reset");
+    Input in = new Input(body, "phone,purpose," + GraphCaptchaService.FIELDS);
+    String phone = in.phone("phone"), purpose = in.choice("purpose", "login,password_reset");
     graphCaptcha.verify(body);
-    if (purpose.equals("wechat_bind"))
-      require(
-          temp.get("bind:" + in.str("bindTicket", 1, 200)) != null,
-          400,
-          "WECHAT_AUTH_INVALID",
-          "绑定凭证已失效");
-    return sendSms(
-        phone, purpose, purpose.equals("wechat_bind") ? in.str("bindTicket", 1, 200) : "", ip);
+    return sendSms(phone, purpose, "", ip);
   }
 
   /**

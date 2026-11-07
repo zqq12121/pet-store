@@ -55,7 +55,7 @@ class PnvsSmsTest {
   }
 
   @Test void loginAndBindingUseGiftTemplateAndOwnCode() throws Exception {
-    for (String purpose : List.of("login", "wechat_bind", "password_reset")) {
+    for (String purpose : List.of("login", "password_reset")) {
       var params = sentRequest(purpose, true);
       assertEquals("SendSmsVerifyCode", params.get("Action"));
       assertEquals("13900000000", params.get("PhoneNumber"));
@@ -100,7 +100,7 @@ class PnvsSmsTest {
     verify(gateway).send(eq("13900000000"), code.capture(), eq("login"));
     String request = Json.text(result, "smsRequestId");
     assertThrows(ApiException.class, () -> auth.checkSms(request, code.getValue(), "13800000000", "login", ""));
-    assertThrows(ApiException.class, () -> auth.checkSms(request, code.getValue(), "13900000000", "wechat_bind", ""));
+    assertThrows(ApiException.class, () -> auth.checkSms(request, code.getValue(), "13900000000", "password_reset", ""));
     auth.checkSms(request, code.getValue(), "13900000000", "login", "");
     assertThrows(ApiException.class, () -> auth.checkSms(request, code.getValue(), "13900000000", "login", ""));
     assertThrows(ApiException.class, () -> auth.sendSms("13900000000", "login", "", "test"));

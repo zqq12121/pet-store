@@ -12,7 +12,6 @@
       <RouterLink to="/" class="brand auth-brand">茸茸星球</RouterLink>
       <div class="auth-columns">
         <div class="auth-form"><slot /></div>
-        <slot name="wechat" />
       </div>
     </div>
   </section>
@@ -63,7 +62,7 @@
   color: #ffffffd9;
 }
 .auth-layout {
-  max-width: 640px;
+  max-width: 400px;
   width: 100%;
 }
 .auth-brand {
@@ -78,8 +77,7 @@
 }
 .auth-columns {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 240px;
-  gap: 40px;
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
 }
 .auth-form {
@@ -188,9 +186,6 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
-.auth-columns :deep(.wechat-panel) {
-  border-radius: var(--radius);
-}
 @media (max-width: 1100px) {
   .auth-page {
     grid-template-columns: 1fr;
@@ -226,9 +221,6 @@
     gap: 30px;
   }
   .auth-form {
-    width: 100%;
-  }
-  .auth-columns :deep(.wechat-panel) {
     width: 100%;
   }
 }

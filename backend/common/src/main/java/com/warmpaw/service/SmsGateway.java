@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
  * <p><b>两个上游、两套签名参数</b>：
  *
  * <ul>
- *   <li>验证码类（{@code login}/{@code wechat_bind}/{@code password_reset}）走
+ *   <li>验证码类（{@code login}/{@code password_reset}）走
  *       {@code dypnsapi.aliyuncs.com} 的 {@code SendSmsVerifyCode}（号码认证赠送模板），
  *       传 {@code PhoneNumber} + {@code CountryCode}/{@code ValidTime}/{@code Interval}；
  *   <li>其余（自提确认、兑换确认、预约通知）走 {@code dysmsapi.aliyuncs.com} 的 {@code SendSms}，
@@ -41,8 +41,8 @@ public class SmsGateway {
   /**
    * 发送验证码短信。
    *
-   * <p>用途到模板的映射见方法体；{@code login}/{@code wechat_bind}/{@code password_reset}
-   * 三种走号码认证通道，其余走标准短信通道。
+   * <p>用途到模板的映射见方法体；{@code login}/{@code password_reset}
+   * 两种走号码认证通道，其余走标准短信通道。
    *
    * <p>号码认证通道未配置模板时回落到 {@code "100001"}——阿里云号码认证的赠送模板编号，
    * 这样开发/小规模部署不配模板也能收到码。其它用途<b>没有</b>回落值，模板为空即 503。
@@ -51,8 +51,8 @@ public class SmsGateway {
    * 真正的验证码由本服务生成、存在 Redis、由本服务校验；平台只负责投递。
    */
   public void send(String phone, String code, String purpose) {
-    // 登录与微信绑定使用号码认证赠送模板；交付确认仍使用原短信服务。
-    if (purpose.equals("login") || purpose.equals("wechat_bind") || purpose.equals("password_reset")) {
+    // 登录与重置密码使用号码认证赠送模板；交付确认仍使用原短信服务。
+    if (purpose.equals("login") || purpose.equals("password_reset")) {
       String template = ProviderSupport.env("PAW_PNVS_LOGIN_TEMPLATE");
       sendTemplate(phone, template.isBlank() ? "100001" : template,
           Json.map("code", code, "min", "5"), true);

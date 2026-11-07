@@ -8,8 +8,6 @@ import com.warmpaw.common.Input;
 import com.warmpaw.service.AuthService;
 import com.warmpaw.service.GraphCaptchaService;
 import com.warmpaw.service.GuestService;
-import com.warmpaw.service.WechatLoginService;
-import com.warmpaw.service.WechatMiniQrService;
 import jakarta.servlet.http.*;
 import java.time.*;
 import java.util.*;
@@ -17,7 +15,7 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * 账号登录、验证码和微信授权接口（调用方：买家、店长/员工、第三方 AI 服务）。
+ * 账号登录与验证码接口（调用方：买家、店长/员工、第三方 AI 服务）。
  *
  * <p>路由前缀 {@code /api/v1}，本类同时承载买家端 {@code /auth/**}、{@code /me/**} 与
  * 管理端 {@code /admin/auth/**} 三组入口。
@@ -25,8 +23,7 @@ import org.springframework.web.bind.annotation.*;
  * <p><b>权限模型：没有统一的拦截器</b>，每个方法自行决定：
  *
  * <ul>
- *   <li>登录类入口（sms-login、password-login、admin-login、password-reset、capabilities、
- *       graph-captcha）完全公开，靠图形验证码、短信验证码与失败计数防刷；
+ *   <li>登录类入口（sms-login、password-login、admin-login、password-reset、graph-captcha）完全公开，靠图形验证码、短信验证码与失败计数防刷；
  *   <li>其余方法先调用 {@link #actor} 解析身份。{@code AuthService.identify} 在没有
  *       {@code Authorization} 头时返回 {@code null}（匿名合法），所以"调用了 actor(req) 却
  *       不使用返回值"只表示"若带了 token 就必须有效"，并不代表强制登录；
@@ -35,24 +32,19 @@ import org.springframework.web.bind.annotation.*;
  * </ul>
  *
  * <p>委托：{@link GuestService}（游客身份）、{@link AuthService}（会话与账号安全）、
- * {@link WechatLoginService}（公众号/网站扫码）、{@link GraphCaptchaService}（图形验证码）、
- * {@link WechatMiniQrService}（小程序扫码可用性探测）。
+ * {@link GraphCaptchaService}（图形验证码）。
  */
 @RestController
 @RequestMapping("/api/v1")
 public class AuthController {
   private final GuestService guests;
   private final AuthService auth;
-  private final WechatLoginService wechatLogin;
   private final GraphCaptchaService graphCaptcha;
-  private final WechatMiniQrService miniQr;
 
-  public AuthController(GuestService guests, AuthService auth, WechatLoginService wechatLogin, GraphCaptchaService graphCaptcha, WechatMiniQrService miniQr) {
+  public AuthController(GuestService guests, AuthService auth, GraphCaptchaService graphCaptcha) {
     this.guests = guests;
     this.auth = auth;
-    this.wechatLogin = wechatLogin;
     this.graphCaptcha = graphCaptcha;
-    this.miniQr = miniQr;
   }
 
   /**
@@ -143,25 +135,9 @@ public class AuthController {
   }
 
   /**
-   * 登录能力探测（公开）：告诉登录页当前哪些第三方入口真正可用。
-   *
-   * <p>登录页只展示当前可用入口；配置存在不代表第三方已验收，因此这里返回的是
-   * "配置完整且回调地址合法"的结果，而不是简单的密钥非空判断。
-   *
-   * <p>无鉴权、无副作用；不暴露 appId、密钥或回调地址本身。
-   *
-   * @return 200 与 {@code wechatLogin}/{@code wechatQrLogin}/{@code wechatMiniQrLogin} 三个布尔
-   */
-  @GetMapping("/auth/capabilities")
-  public ResponseEntity<Object> capabilities() {
-    return ok(200, map("wechatLogin", wechatLogin.configured(), "wechatQrLogin", wechatLogin.qrConfigured(), "wechatMiniQrLogin", miniQr.configured()));
-  }
-
-  /**
    * 发送登录类短信验证码。
    *
    * <p>POST {@code /auth/sms-codes}。{@code purpose} 只接受 {@code login}（免密登录/自动注册）、
-   * {@code wechat_bind}（微信绑定手机号，必须带有效 {@code bindTicket}）、
    * {@code password_reset}（重置密码）。所有用途都强制携带图形验证码字段。
    *
    * <p>鉴权：可选身份校验（actor 未使用），未登录可调用。限流三层：同号 60 秒 1 条、
@@ -352,85 +328,5 @@ public class AuthController {
     }
     auth.logout(a);
     return ok(200, null);
-  }
-
-  /**
-   * 获取微信授权跳转地址（公众号网页授权 / 网站扫码登录）。
-   *
-   * <p>GET 或 POST {@code /auth/wechat/authorize-url}。参数 {@code mode=oauth|web}、
-   * {@code scene=login|pay}、{@code returnPath}；登录场景必须通过图形验证码，
-   * 支付场景要求买家身份（{@code role(actor, "buyer")}），其余情况允许匿名。
-   *
-   * <p>同时下发 {@code paw_oauth} Cookie：HttpOnly + Secure + SameSite=Lax、
-   * 作用域限定到 {@code /api/v1/auth/wechat}、5 分钟过期。它是一次性 state 与浏览器的绑定凭据，
-   * 回调必须带着同一个 Cookie 才能完成登录，防止"把授权链接发给别人代扫"。
-   *
-   * <p>非幂等（每次生成新 state，旧的 5 分钟后失效）；未配置时 503。
-   * {@code returnPath} 只允许站内相对路径。
-   *
-   * @return 200 与 {@code authorizeUrl}/{@code expiresIn}
-   */
-  @RequestMapping(value = "/auth/wechat/authorize-url", method = {RequestMethod.GET, RequestMethod.POST})
-  public ResponseEntity<Object> authorize(
-      @RequestParam Map<String, Object> q, @RequestBody(required = false) Map<String, Object> b,
-      HttpServletRequest req, HttpServletResponse res) {
-    AuthService.Actor a = actor(req);
-    String cookie = auth.randomToken();
-    Map<String, Object> result = wechatLogin.authorize(b == null ? q : b, a, cookie);
-    res.addHeader(
-        "Set-Cookie",
-        ResponseCookie.from("paw_oauth", cookie)
-            .httpOnly(true)
-            .secure(true)
-            .sameSite("Lax")
-            .path("/api/v1/auth/wechat")
-            .maxAge(300)
-            .build()
-            .toString());
-    return ok(200, result);
-  }
-
-  /**
-   * 微信授权回调换取会话。
-   *
-   * <p>POST {@code /auth/wechat/login}，字段 {@code code/state}，并从 {@code paw_oauth} Cookie
-   * 取浏览器凭据。state 是一次性的（{@code temp.take}），必须与 Cookie 的哈希匹配，
-   * 否则 400 {@code WECHAT_AUTH_INVALID}——这道绑定是防 CSRF/授权码劫持的关键。
-   *
-   * <p>凭据类型与应用归属取自服务端保存的 state，不能由回调请求切换；
-   * 支付场景（{@code scene=pay}）要求当前已是买家账号，登录场景则新建或复用微信账号。
-   *
-   * <p>幂等性：同一 state 只能成功一次，重放返回 400，客户端需重新发起授权。
-   *
-   * @param browser Cookie 中的浏览器凭据，缺失或过期都会失败
-   * @return 200 与买家会话；需要绑定手机号时返回绑定票据而非会话
-   */
-  @PostMapping("/auth/wechat/login")
-  public ResponseEntity<Object> wechat(
-      @RequestBody Map<String, Object> b,
-      @CookieValue(value = "paw_oauth", required = false) String browser,
-      HttpServletRequest req) {
-    return ok(200, wechatLogin.login(b, actor(req), browser));
-  }
-
-  /**
-   * 微信首次登录时绑定手机号并换取会话。
-   *
-   * <p>POST {@code /auth/wechat/bind-phone}，字段 {@code bindTicket/phone/smsRequestId/smsCode}。
-   * {@code bindTicket} 由 {@code /auth/wechat/login} 在 {@code status=bind_required} 时下发，
-   * 5 分钟内有效且只能使用一次；验证码的场景（scope）也被绑定到该 ticket，
-   * 因此不能拿别处的验证码来绑定手机号。
-   *
-   * <p>鉴权：可选身份校验（未使用返回值）——此时用户还没有会话，必须允许匿名进入。
-   * 手机号已存在则复用该买家账号，不存在则新建；随后签发 2 小时买家会话。
-   *
-   * <p>非幂等：ticket 被消费后重放返回 400 {@code WECHAT_AUTH_INVALID}。
-   *
-   * @return 200 与买家会话；微信已绑定其他账号时 409 {@code WECHAT_ALREADY_BOUND}
-   */
-  @PostMapping("/auth/wechat/bind-phone")
-  public ResponseEntity<Object> bind(@RequestBody Map<String, Object> b, HttpServletRequest req) {
-    actor(req);
-    return ok(200, wechatLogin.bindPhone(b));
   }
 }

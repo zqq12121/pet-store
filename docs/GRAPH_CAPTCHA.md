@@ -44,7 +44,6 @@ docker compose up -d --no-deps --wait --wait-timeout 600 admin-server web
 - `POST /api/v1/auth/sms-codes`
 - `POST /api/v1/auth/password-login`
 - `POST /api/v1/admin/auth/login`，请求同时包含 `username`、`password`，不再接受旧 `captchaId`、`captchaCode`
-- `POST /api/v1/auth/wechat/authorize-url`，请求同时包含 `scene: login`、`returnPath`
 
 后端使用 appKey 对 lot_number 做 HMAC-SHA256 签名，以 `application/x-www-form-urlencoded`
 上传二次校验参数。只有 HTTP 200 且 `status`、`result` 均为 `success` 才放行。

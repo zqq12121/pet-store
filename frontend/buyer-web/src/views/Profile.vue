@@ -132,7 +132,7 @@ const changePassword = () =>
         user?.hasPassword ? '忘记密码？通过手机号重置' : '首次设置密码（验证手机号）'
       }}</RouterLink>
       <p v-else-if="user" class="small muted">
-        当前账号使用微信登录，请继续使用同一微信扫码。预约联系电话不绑定或合并登录账号。
+        当前账号使用微信登录，请在小程序中继续使用。预约联系电话不绑定或合并登录账号。
       </p>
       <p v-if="message" role="status">{{ message }}</p>
       <p v-if="error" class="error-text" role="alert">{{ error }}</p>

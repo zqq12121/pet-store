@@ -19,7 +19,7 @@ function prepareRelease(source, output, origin) {
   const app = JSON.parse(fs.readFileSync(path.join(source, 'app.json')))
   const project = JSON.parse(fs.readFileSync(path.join(source, 'project.config.json')))
   if (!/^wx[0-9a-fA-F]{16}$/.test(project.appid) || !project.setting.urlCheck) throw new Error('请配置有效 AppID 并开启合法域名校验')
-  const pages = ['home', 'pets', 'favorites', 'my', 'detail', 'login', 'web-login'].map(name => 'pages/' + name + '/index')
+  const pages = ['home', 'pets', 'favorites', 'my', 'detail', 'login'].map(name => 'pages/' + name + '/index')
   if (app.pages.length !== pages.length || pages.some(p => !app.pages.includes(p))) throw new Error('上线包仅允许六个业务页面及网站登录确认页')
   // 使用全新目录，既不覆盖历史发布包，也不会删除用户已有文件。
   fs.mkdirSync(output, { recursive: true })

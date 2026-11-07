@@ -7,7 +7,6 @@ import { useLoad } from '../../../shared/useLoad';
 import { useGraphCaptcha } from '../../../shared/useGraphCaptcha';
 import LoginConsent from '../components/LoginConsent.vue';
 import BuyerLoginLayout from '../components/BuyerLoginLayout.vue';
-import WechatQrLogin from '../components/WechatQrLogin.vue';
 const graph = useGraphCaptcha();
 const accepted = ref(false);
 // 在图形认证和短信请求前确认同意，避免未勾选时已向第三方发送信息。
@@ -22,11 +21,9 @@ const route = useRoute(),
   smsCode = ref(''),
   smsRequestId = ref(''),
   count = ref(0),
-  bindTicket = ref(''),
   smsNotice = ref(''),
   { loading, error, run } = useLoad();
 let timer: ReturnType<typeof setInterval>;
-const wechatBusy = ref(false);
 const validPath = (value: unknown) =>
   typeof value === 'string' &&
   value.startsWith('/') &&
@@ -48,7 +45,7 @@ async function sendCode() {
     error.value = '请输入正确的手机号';
     return;
   }
-  if (loading.value || wechatBusy.value || count.value > 0) return;
+  if (loading.value || count.value > 0) return;
   const targetPhone = phone.value;
   smsNotice.value = '';
   await run(async () => {
@@ -62,9 +59,8 @@ async function sendCode() {
       status?: string;
     }>('POST', '/auth/sms-codes', {
       phone: targetPhone,
-      purpose: bindTicket.value ? 'wechat_bind' : 'login',
+      purpose: 'login',
       ...proof,
-      ...(bindTicket.value ? { bindTicket: bindTicket.value } : {}),
     });
     count.value = result.retryAfter;
     if (phone.value === targetPhone) {
@@ -77,14 +73,10 @@ async function sendCode() {
   });
 }
 async function login() {
-  if (!requireConsent() || loading.value || wechatBusy.value || !smsRequestId.value) return;
+  if (!requireConsent() || loading.value || !smsRequestId.value) return;
   await run(async () => {
     const body = { phone: phone.value, smsRequestId: smsRequestId.value, smsCode: smsCode.value };
-    const result = await buyer<LoginResult>(
-      'POST',
-      bindTicket.value ? '/auth/wechat/bind-phone' : '/auth/sms-login',
-      bindTicket.value ? { ...body, bindTicket: bindTicket.value } : body
-    );
+    const result = await buyer<LoginResult>('POST', '/auth/sms-login', body);
     saveAuth('buyer', result);
     const target = destination();
     sessionStorage.removeItem('warmpaw:return');
@@ -95,44 +87,20 @@ onMounted(() => {
   timer = setInterval(() => {
     if (count.value > 0) count.value--;
   }, 1000);
-  if (route.query.state)
-    void run(async () => {
-      // 先保存目的页再移除一次性凭据，避免刷新重放以及丢失预约等原入口。
-      const target = destination(),
-        code = route.query.code,
-        state = String(route.query.state);
-      accepted.value = sessionStorage.getItem('warmpaw:wechat-consent') === 'accepted';
-      sessionStorage.removeItem('warmpaw:wechat-consent');
-      await router.replace({ path: '/login', query: target === '/' ? {} : { redirect: target } });
-      if (!code) throw new Error('微信授权已取消，可以重新扫码或使用其他方式登录');
-      const result = await buyer<{ status: string; login?: LoginResult; bindTicket?: string }>(
-        'POST',
-        '/auth/wechat/login',
-        { code: String(code), state }
-      );
-      if (result.login) {
-        saveAuth('buyer', result.login);
-        sessionStorage.removeItem('warmpaw:return');
-        await router.replace(target);
-      } else if (result.status === 'wechat_ready') await router.replace(target);
-      else if (result.bindTicket) bindTicket.value = result.bindTicket;
-      else throw new Error('微信登录未完成，请重新扫码');
-    });
 });
 onUnmounted(() => clearInterval(timer));
 </script>
 <template>
   <BuyerLoginLayout>
     <form @submit.prevent="login">
-      <h1 class="auth-title">{{ bindTicket ? '绑定手机号' : '登录茸茸星球' }}</h1>
-      <p v-if="bindTicket" class="notice">请绑定手机号，完成本次微信网页授权。</p>
+      <h1 class="auth-title">登录茸茸星球</h1>
       <label class="auth-field"
         ><span class="phone-prefix" aria-hidden="true">+86</span
         ><input
           v-model="phone"
           aria-label="手机号"
           type="tel"
-          :readonly="loading || wechatBusy"
+          :readonly="loading"
           autocomplete="tel"
           pattern="1[3-9][0-9]{9}"
           required
@@ -148,12 +116,12 @@ onUnmounted(() => clearInterval(timer));
           pattern="[0-9]{6}"
           required
           maxlength="6"
-          :readonly="loading || wechatBusy"
+          :readonly="loading"
           placeholder="请输入验证码"
         /><button
           type="button"
           class="send-code"
-          :disabled="loading || wechatBusy || count > 0"
+          :disabled="loading || count > 0"
           @click="sendCode"
         >
           {{ count ? `${count}秒后重发` : '发送验证码' }}
@@ -161,29 +129,18 @@ onUnmounted(() => clearInterval(timer));
       >
       <p v-if="smsNotice" class="notice" role="status">{{ smsNotice }}</p>
       <div>
-        <LoginConsent v-model="accepted" :disabled="loading || wechatBusy" />
+        <LoginConsent v-model="accepted" :disabled="loading" />
         <p class="auth-caption">未注册的手机号将自动注册</p>
       </div>
       <p v-if="error" class="error-text" role="alert">{{ error }}</p>
-      <button
-        class="btn full auth-submit"
-        :disabled="loading || wechatBusy || !smsRequestId || !accepted"
-      >
+      <button class="btn full auth-submit" :disabled="loading || !smsRequestId || !accepted">
         {{ loading ? '请稍候…' : '登录' }}
       </button>
-      <div v-if="!bindTicket" class="auth-links">
+      <div class="auth-links">
         <RouterLink :to="{ path: '/password-login', query: { redirect: destination() } }"
           >密码登录</RouterLink
         ><span aria-hidden="true">|</span><RouterLink to="/password-reset">忘记密码</RouterLink>
       </div>
     </form>
-    <template #wechat
-      ><WechatQrLogin
-        v-if="!bindTicket"
-        v-model:busy="wechatBusy"
-        :accepted="accepted"
-        :return-path="destination()"
-        :disabled="loading"
-    /></template>
   </BuyerLoginLayout>
 </template>
