@@ -122,7 +122,7 @@ public class WechatMiniLoginService {
       // 同一应用、同一微信身份复用账号；一次性 code 不能作为用户标识。
       user = store.get("user", text(identity, "ownerId"));
     }
-    var login = auth.login(user, "buyer");
+    var login = auth.login(user, "buyer", AuthService.MINI_PROGRAM_SECONDS);
     login.put("isNewUser", isNewUser);
     return login;
   }

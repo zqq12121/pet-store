@@ -66,6 +66,8 @@ class WechatMiniLoginTest {
     var next = service.login(map("code", "new-code"), openid);
     assertEquals(true, first.get("isNewUser"));
     assertEquals(false, next.get("isNewUser"));
+    // 小程序保持 2 小时，24 小时只用于买家网站 Cookie 会话。
+    assertEquals(7200, first.get("expiresIn"));
     assertEquals(usersBefore + 1, store.list("user").size());
     String id = text(object(first, "user"), "id");
     assertEquals(id, object(next, "user").get("id"));
