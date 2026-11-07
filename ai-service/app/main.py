@@ -1,6 +1,7 @@
 """买家 SSE 与管理员知识接口；交易写入不在此服务开放。"""
 import asyncio
 import json
+import logging
 from time import perf_counter
 from contextlib import asynccontextmanager
 from typing import Annotated, Literal
@@ -12,6 +13,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from . import memory
 from .agent import PetAgent
 from .business import ApiError, BusinessClient, Identity
 from .config import Settings
@@ -23,6 +25,7 @@ from .statistics import register_statistics_api
 
 # 与 Java 端 BuyerSessionCookie.NAME 保持一致。
 BUYER_COOKIE = "warmpaw_buyer"
+log = logging.getLogger(__name__)
 
 Id = Annotated[str, Field(pattern=r"^[A-Za-z0-9_-]{1,100}$")]
 
@@ -148,12 +151,12 @@ def create_app(settings=None, business=None, agent=None):
         evidence = {}
         started = perf_counter()
         try:
-            # 持久化完整历史，但只向模型发送有限最近上下文，不携带凭证或卡片原始记录。
+            # 最近 WINDOW 条原文进上下文，更早的由会话记忆（摘要 + 偏好）承接；不携带凭证或卡片原始记录。
             history = [{"role": m["role"], "content": m["content"][:2000]}
                        for m in store.messages(session["id"]) if m["sequence"] < message["sequence"]-1
-                       and m["status"] == "completed"][-10:]
+                       and m["status"] == "completed"][-memory.WINDOW:]
             async with asyncio.timeout(settings.generation_timeout):
-                async for text in agent.stream(actor, session, history, body, evidence):
+                async for text in agent.stream(actor, session, history, body, evidence, memory.load(session)):
                     # 从实际生成开始计时；没有首字时保持缺失，历史数据不补造耗时。
                     if text and 'firstTokenMs' not in message:
                         message['firstTokenMs'] = round((perf_counter()-started)*1000)
@@ -174,6 +177,19 @@ def create_app(settings=None, business=None, agent=None):
         finally:
             message['generationMs'] = round((perf_counter()-started)*1000)
             store.save(message)
+        if message["status"] == "completed":
+            await remember(actor, session["id"])
+
+    async def remember(actor, sid):
+        """回复已标记完成后再整理记忆，不拖慢本轮回答；失败只影响后续轮次的上下文，不影响本轮。"""
+        try:
+            completed = [m for m in store.messages(sid) if m["status"] == "completed"]
+            async with asyncio.timeout(settings.generation_timeout):
+                updated = await agent.remember(memory.load(store.session(sid, actor.owner)), completed)
+            store.save_memory(sid, updated)
+        except Exception as exc:
+            # 只记异常类型，不记对话内容。
+            log.warning("会话记忆更新失败：%s", type(exc).__name__)
 
     async def events(sid, message, replayed):
         yield sse("meta", dict(sessionId=sid, assistantMessageId=message["id"],

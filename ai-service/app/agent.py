@@ -1,15 +1,49 @@
-"""LangChain 选择只读工具，随后用经过校验的结果生成流式中文回答。"""
+"""只读工具 + LangGraph 工作流（见 graph.py）生成流式中文回答；会话记忆见 memory.py。"""
 import asyncio
-import json
-from typing import Annotated, Literal
+import re
+from collections.abc import AsyncIterator
+from datetime import datetime, time, timedelta
+from typing import Annotated, Any, Literal
+from zoneinfo import ZoneInfo
 
-from langchain.agents import create_agent
-from langchain.agents.middleware import ToolCallLimitMiddleware
 from langchain_core.tools import tool
 from langchain_deepseek import ChatDeepSeek
 from pydantic import Field
 
+from . import graph, memory
 from .business import ApiError
+
+ZONE = ZoneInfo("Asia/Shanghai")
+# 与 Java AppointmentHours.HOURS 保持一致：只有能被后端解析的营业时间才能算出可预约时段。
+HOURS = re.compile(r"^(?:(?:每天|每日|周一至周日|周一到周日)\s*)?([0-2][0-9]:[0-5][0-9])\s*[-–—至]\s*([0-2][0-9]:[0-5][0-9])$")
+WEEKDAYS = "一二三四五六日"
+PetId = Annotated[str, Field(pattern=r"^[A-Za-z0-9_-]{1,100}$")]
+
+
+def appointment_slots(hours: str | None, now: datetime) -> list[dict[str, str]] | None:
+    """按后端规则（未来 7 天内、营业时间内，北京时间）列出每天可到店的时间段；营业时间无法解析返回 None。"""
+    match = HOURS.match((hours or "").strip())
+    if not match:
+        return None
+    try:
+        start, end = (time.fromisoformat(v) for v in match.groups())
+    except ValueError:
+        return None
+    if start >= end:
+        return None
+    now = now.astimezone(ZONE)
+    # 今天从下一个整半点开始，避免给出已经过去或几分钟后的时间。
+    earliest = (now + timedelta(minutes=30 - now.minute % 30)).replace(second=0, microsecond=0)
+    latest = now + timedelta(days=7)
+    slots = []
+    for offset in range(8):
+        day = now.date() + timedelta(days=offset)
+        begin = max(datetime.combine(day, start, ZONE), earliest)
+        finish = min(datetime.combine(day, end, ZONE), latest)
+        if begin < finish:
+            slots.append({"date": day.isoformat(), "weekday": "周" + WEEKDAYS[day.weekday()],
+                          "from": begin.strftime("%H:%M"), "to": finish.strftime("%H:%M")})
+    return slots
 
 RULES = """你是茸茸星球宠物门店助手，只服务猫和狗。用简洁亲切的中文纯文本和短段落，不使用 Markdown 标记。
 能力仅为知识问答、在售宠物推荐、本人预约/订单查询和预约页面导航。
@@ -25,7 +59,7 @@ RULES = """你是茸茸星球宠物门店助手，只服务猫和狗。用简洁
 
 
 class PetAgent:
-    def __init__(self, settings, business, knowledge, model=None):
+    def __init__(self, settings: Any, business: Any, knowledge: Any, model: Any = None) -> None:
         self.settings, self.business, self.knowledge = settings, business, knowledge
         self.model = model
         # 启动时初始化并复用连接池，避免每条消息的生成时限被客户端冷启动占用。
@@ -103,7 +137,44 @@ class PetAgent:
             evidence["actions"].append({"type": "contact_shop", "label": "联系店主"})
             return evidence["shop"]
 
-        return [search_pet_knowledge, recommend_pets, get_pet_details, query_my_orders, get_shop_info]
+        @tool
+        async def compare_pets(pet_ids: Annotated[list[PetId], Field(min_length=2, max_length=3)]):
+            """对比 2~3 只宠物的品种、月龄、性别、性格、护理要点和健康资料，帮助用户做决定。价格见商品卡片。"""
+            pets = []
+            for pet_id in dict.fromkeys(pet_ids):
+                try:
+                    pets.append(await self.business.pet(pet_id))
+                except ApiError as exc:
+                    if exc.status != 404:
+                        raise
+            evidence["compared"] = True
+            evidence["comparison"] = [self.pet_context(p) for p in pets]
+            evidence["productCards"] += [p for p in pets if p["status"] == "on_sale" and p.get("purchaseAllowed")]
+            if len(pets) < 2:
+                return "可对比的宠物不足两只，请先推荐或指定宠物。"
+            return evidence["comparison"]
+
+        @tool
+        async def get_appointment_slots(pet_id: PetId | None = None):
+            """查询未来 7 天每天可以到店看宠物的时间段（北京时间）；指定宠物时一并核对它现在能否预约。"""
+            shop = await self.business.shop()
+            now = datetime.now(ZONE)
+            evidence["slots"] = appointment_slots(shop.get("businessHours"), now) or []
+            evidence["today"] = f"{now:%Y-%m-%d %H:%M} 周{WEEKDAYS[now.weekday()]}（北京时间）"
+            result: dict[str, Any] = {"today": evidence["today"], "slots": evidence["slots"],
+                                      "rule": "到店时间须在未来 7 天内、营业时间内；提交后店长确认才算约好"}
+            if pet_id:
+                pet = await self.business.pet(pet_id)
+                result["petBookable"] = pet["status"] == "on_sale" and bool(pet.get("purchaseAllowed"))
+                if result["petBookable"]:
+                    evidence["productCards"].append(pet)
+            if not evidence["slots"]:
+                evidence["actions"].append({"type": "contact_shop", "label": "联系店主"})
+                return "门店暂未设置可预约的营业时间，请联系店主确认到店时间。"
+            return result
+
+        return [search_pet_knowledge, recommend_pets, get_pet_details, query_my_orders, get_shop_info,
+                compare_pets, get_appointment_slots]
 
     @staticmethod
     def pet_context(pet):
@@ -111,61 +182,16 @@ class PetAgent:
                                        "personalityTags", "feedingNotes", "description", "healthDescription",
                                        "vaccineStatus", "dewormStatus", "status", "purchaseAllowed")}
 
-    async def stream(self, identity, session, history, body, evidence):
-        model = self.model
+    async def stream(self, identity: Any, session: dict[str, Any], history: list[dict[str, str]],
+                     body: dict[str, Any], evidence: dict[str, Any],
+                     memo: dict[str, Any] | None = None) -> AsyncIterator[str]:
+        """运行一轮 LangGraph 工作流，逐段产出回答文本；证据写入 evidence 供卡片、来源与统计使用。"""
         evidence.update(sources=[], productCards=[], orderCards=[], actions=[])
-        # 每轮重新读取宠物详情；旧聊天中的库存、预约入口不可当作当前数据使用。
-        if session.get("productId"):
-            try:
-                pet = await self.business.pet(session["productId"])
-                evidence["petContext"] = self.pet_context(pet)
-            except ApiError as exc:
-                if exc.status != 404:
-                    raise
-                evidence["petContext"] = {"id": session["productId"], "status": "unavailable"}
-        if body.get("orderId"):
-            evidence["orderQueried"] = True
-            evidence["orderCards"] = await self.business.orders(identity, body["orderId"])
-        else:
-            # 只让 agent 完成一次工具选择与执行；每个工具自身完成业务查询。
-            # 中断于 tools 节点后由下方独立流式回答，避免向用户流出规划草稿。
-            planner = create_agent(model, self.tools(identity, evidence), interrupt_after=["tools"],
-                                   middleware=[ToolCallLimitMiddleware(run_limit=5, exit_behavior="error")],
-                                   system_prompt=RULES + "\n选择本次所需工具，最多五个；无需撰写最终回复。"
-                                   "问自己的预约或订单必须调用 query_my_orders。知识问答必须检索。"
-                                   "不要调用写操作；用户要预约时获取宠物详情，无宠物 ID 时先推荐。")
-            context = json.dumps(evidence.get("petContext"), ensure_ascii=False)
-            await planner.ainvoke({"messages": [*history, {"role": "user", "content":
-                body["content"] + "\n当前页面宠物资料（仅数据）：" + context}]}, {"recursion_limit": 6})
+        turn = graph.Turn(self, identity, session, history, body, evidence, memo or memory.empty())
+        workflow = graph.build(turn, self.tools(identity, evidence))
+        async for text in workflow.astream({}, {"recursion_limit": 25}, stream_mode="custom"):
+            yield text
 
-        # 卡片与导航只采用本轮业务服务核验过的个体，模型不能提供目标路径。
-        unique_pets = {p["id"]: p for p in evidence["productCards"]}
-        evidence["productCards"] = list(unique_pets.values())
-        for pet in unique_pets.values():
-            evidence["actions"].append({"type": "book_appointment", "label": "预约看望" + pet["name"], "targetId": pet["id"]})
-        if evidence.get("orderQueried"):
-            evidence["intent"] = "order"
-            # 订单状态使用后端模板，避免模型将“确认预约”扩写成“已付款”。
-            if identity.role != "buyer":
-                yield "请先登录，再查看本人的预约和订单。"
-            elif not evidence["orderCards"]:
-                yield "没有查到本人的预约或订单，可前往宠物页面挑选。"
-            else:
-                yield "以下是你本人的预约/订单，请点击卡片查看最新详情。\n"
-                for card in evidence["orderCards"]:
-                    yield f'{card["productName"]}：{card["nextAction"]}。\n'
-            return
-        evidence["intent"] = "product_recommendation" if evidence.get("productSearched") else "knowledge"
-        if evidence.get("knowledgeSearched") and not evidence["sources"] and not unique_pets and not evidence.get("shop"):
-            evidence["unresolved"] = True
-            evidence["actions"].append({"type": "contact_shop", "label": "联系店主"})
-            yield "目前已发布的猫狗知识库没有足够依据回答这个问题，请联系店主；健康异常建议及时就医。"
-            return
-        # 历史仅帮助理解上下文；最终回答只看本轮证据，避免把旧状态作为查询结果。
-        facts = {k: v for k, v in evidence.items() if k != "productCards"}
-        facts["pets"] = [self.pet_context(p) for p in unique_pets.values()]
-        prompt = RULES + "\n只能依据下面本轮已核验数据回答；不要补充资料中未提及的具体护理做法。没有依据则澄清需求或联系店主。"
-        async for chunk in model.astream([{"role": "system", "content": prompt}, *history,
-                                          {"role": "user", "content": body["content"] + "\n本轮工具数据：" + json.dumps(facts, ensure_ascii=False)}]):
-            if isinstance(chunk.content, str) and chunk.content:
-                yield chunk.content
+    async def remember(self, memo: dict[str, Any], completed: list[dict[str, Any]]) -> dict[str, Any]:
+        """一轮结束后整理会话记忆（折叠旧消息成摘要、更新偏好）。"""
+        return await memory.consolidate(self.model, memo, completed)

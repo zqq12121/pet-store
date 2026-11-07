@@ -136,6 +136,16 @@ class Store:
             db.execute("UPDATE sessions SET data=? WHERE id=?", (json.dumps(s), sid))
             return pair
 
+    def save_memory(self, sid: str, memory: dict) -> None:
+        """只改会话的 memory 字段；与 begin 一样在 IMMEDIATE 事务里读改写，不覆盖并发更新的标题与时间。"""
+        with self.db() as db:
+            db.execute("BEGIN IMMEDIATE")
+            row = db.execute("SELECT data FROM sessions WHERE id=?", (sid,)).fetchone()
+            if row:
+                s = json.loads(row[0])
+                s["memory"] = memory
+                db.execute("UPDATE sessions SET data=? WHERE id=?", (json.dumps(s), sid))
+
     @staticmethod
     def _save_message(db, message):
         db.execute("UPDATE messages SET data=? WHERE id=?", (json.dumps(message), message["id"]))
