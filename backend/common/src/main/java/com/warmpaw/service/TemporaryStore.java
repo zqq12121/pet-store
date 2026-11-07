@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
  *
  * <ul>
  *   <li><b>启用</b>（生产）—— 数据在 Redis，key 统一加 {@code paw:} 前缀；
- *       {@link #take}/{@link #replace}/{@link #limit} 走 Lua 脚本，保证"读-改-写"在 Redis 侧原子，
+ *       {@link #take}/{@link #limit} 走 Redis 原子命令或 Lua 脚本，保证"读-改-写"在 Redis 侧原子，
  *       多实例天然共享同一份状态；
  *   <li><b>关闭</b>（本地/测试默认）—— 数据在进程内的 {@link ConcurrentHashMap}，
  *       重启即全部丢失，且<b>多实例之间互不可见</b>。
@@ -24,8 +24,8 @@ import org.springframework.stereotype.Component;
  * <p><b>内存模式的局限必须说清楚</b>：短信验证码、图形验证 challenge、游客 token、
  * 失败计数、接口限流全都在这个 Map 里。因此部署两个实例且未开 Redis 时会出现：
  * A 实例发的验证码在 B 实例校验不过（表现为"验证码不正确"）、限流额度按实例数翻倍、
- * 扫码登录轮询在不同实例间永远看不到状态推进。这些都是静默的错误而非崩溃，
- * 所以多实例部署<b>必须</b>开启 Redis。{@link #replace} 的注释也依赖这一点。
+ * 一次性凭证可能在两个实例上各被消费一次。这些都是静默的错误而非崩溃，
+ * 所以多实例部署<b>必须</b>开启 Redis。
  *
  * <p><b>过期实现</b>有两种：
  *
@@ -97,42 +97,13 @@ public class TemporaryStore {
    * "读后删"之间不被打断。返回值是删除前的值：并发时只有一个调用方拿到非 null，
    * 其余拿到 null 并因此判定"已被使用"。
    *
-   * <p>用途：短信验证码核销、失败计数清零、扫码 ticket 消费。
+   * <p>用途：短信验证码核销、失败计数清零。
    */
   public synchronized String take(String key) {
     if (enabled) return redis.opsForValue().getAndDelete("paw:" + key);
     String value = get(key);
     local.remove(key);
     return value;
-  }
-
-  /**
-   * 原子推进扫码状态并保留原到期时间，防止并发确认或轮询重复签发登录。
-   *
-   * <p>本质是一次 <b>compare-and-set</b>：只有当前值等于 {@code expected} 才写成 {@code value}。
-   * 用在微信扫码登录上——状态机是 {@code waiting → scanned → confirmed → consumed}，
-   * 每一步都必须"看到旧状态才能推进"，否则两个并发的轮询请求会各自把同一状态推进一次，
-   * 从而各签发一次登录 token。
-   *
-   * <p><b>KEEPTTL 是关键</b>：Lua 里用 {@code SET ... KEEPTTL} 而不是默认 SET，
-   * 否则每次状态推进都会把二维码的有效期重新续满，一个二维码可以被无限期轮询下去。
-   *
-   * <p>Redis 返回 {@code 1} 表示推进成功；返回 null（脚本异常/连接问题）按失败处理——
-   * <b>失败关闭</b>，宁可让用户重新扫码，也不能在状态不确定时签出登录态。
-   *
-   * <p>内存分支在同一把 synchronized 内完成"比较 + 写入"，并且显式复用原有条目的
-   * {@code expires}，与 Redis 的 KEEPTTL 行为对齐。
-   */
-  public synchronized boolean replace(String key, String expected, String value) {
-    if (enabled) {
-      Long changed = redis.execute(new org.springframework.data.redis.core.script.DefaultRedisScript<>(
-          "if redis.call('GET',KEYS[1])==ARGV[1] then redis.call('SET',KEYS[1],ARGV[2],'KEEPTTL'); return 1 end; return 0",
-          Long.class), java.util.List.of("paw:" + key), expected, value);
-      return Long.valueOf(1).equals(changed);
-    }
-    if (!expected.equals(get(key))) return false;
-    local.put(key, new Entry(value, local.get(key).expires()));
-    return true;
   }
 
   /**
