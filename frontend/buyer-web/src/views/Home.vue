@@ -20,7 +20,7 @@ const welcomeBanners: Banner[] = [
   {
     id: 'welcome-corgi',
     title: '遇见柯基，让快乐迈着小短腿跑来。',
-    imageUrl: '/images/corgi.jpg',
+    imageUrl: '/images/pets/corgi-sit.jpg',
     linkType: 'none',
     petId: null,
     noticeText: null,
@@ -28,39 +28,39 @@ const welcomeBanners: Banner[] = [
   {
     id: 'welcome-golden',
     title: '金毛的温柔，是陪伴的模样。',
-    imageUrl: '/images/golden.jpg',
+    imageUrl: '/images/pets/golden-ball.jpg',
     linkType: 'none',
     petId: null,
     noticeText: null,
   },
   {
     id: 'welcome-ginger',
-    title: '蓬松橘猫，陪你慢慢享受日常。',
-    imageUrl: '/images/ginger.jpg',
+    title: '蓬松长毛猫，陪你慢慢享受日常。',
+    imageUrl: '/images/pets/ginger-longhair.jpg',
     linkType: 'none',
     petId: null,
     noticeText: null,
   },
   {
-    id: 'welcome-pug',
-    title: '巴哥的小表情，藏着大大的可爱。',
-    imageUrl: '/images/puppy.jpg',
+    id: 'welcome-collie',
+    title: '边牧的认真眼神，藏着大大的聪明。',
+    imageUrl: '/images/pets/border-collie-sit.jpg',
     linkType: 'none',
     petId: null,
     noticeText: null,
   },
   {
-    id: 'welcome-cat',
-    title: '黑白猫咪，把好奇写进每一天。',
-    imageUrl: '/images/cat.jpg',
+    id: 'welcome-siamese',
+    title: '蓝眼暹罗，把好奇写进每一天。',
+    imageUrl: '/images/pets/siamese-garden.jpg',
     linkType: 'none',
     petId: null,
     noticeText: null,
   },
   {
-    id: 'welcome-kitten',
-    title: '花色猫咪，一次轻轻的亲近。',
-    imageUrl: '/images/kitten.jpg',
+    id: 'welcome-pomeranian',
+    title: '蓬松博美，一次轻轻的亲近。',
+    imageUrl: '/images/pets/pomeranian.jpg',
     linkType: 'none',
     petId: null,
     noticeText: null,
@@ -737,18 +737,18 @@ onUnmounted(() => {
 <style scoped>
 /* 标题字体 HomeDisplay 在 style.css 中全局声明 */
 .hm {
-  --g: #1e4a3b;
-  --g-deep: #143328;
-  --y: #f3d046;
-  --paper: #f4f0e6;
-  --ink: #1d1d1b;
-  --ink2: #3f3b34;
-  --muted: #6b665c;
-  --faint: #cfc8b8;
-  --line: #d8d0bf;
+  --g: #3f7d2c;
+  --g-deep: #346a24;
+  --y: #f5cf7a;
+  --paper: #fffbf3;
+  --ink: #3d2f22;
+  --ink2: #5a4a3a;
+  --muted: #7a6a58;
+  --faint: #d9cdb8;
+  --line: #ece3d2;
   --red: #b5362a;
-  --night: #0f1d18;
-  --white: #fffdf8;
+  --night: #3d2f22;
+  --white: #ffffff;
   --display: 'HomeDisplay', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   --hand: 'Kaiti SC', 'STKaiti', 'KaiTi', serif;
   --gut: max(16px, env(safe-area-inset-left, 0px));
@@ -872,8 +872,8 @@ onUnmounted(() => {
   min-height: 46px;
   padding: 0 18px 0 22px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 253, 248, 0.28);
-  background: rgba(20, 51, 40, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(52, 106, 36, 0.75);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   color: var(--white);
@@ -948,10 +948,10 @@ onUnmounted(() => {
   z-index: 1;
   background: linear-gradient(
     to bottom,
-    rgba(15, 29, 24, 0.45) 0%,
-    rgba(15, 29, 24, 0) 22%,
-    rgba(15, 29, 24, 0) 48%,
-    rgba(15, 29, 24, 0.62) 100%
+    rgba(61, 47, 34, 0.45) 0%,
+    rgba(61, 47, 34, 0) 22%,
+    rgba(61, 47, 34, 0) 48%,
+    rgba(61, 47, 34, 0.62) 100%
   );
 }
 .hm-disclaimer {
@@ -960,7 +960,7 @@ onUnmounted(() => {
   top: calc(84px + env(safe-area-inset-top, 0px));
   z-index: 2;
   font-size: 12px;
-  color: rgba(255, 253, 248, 0.75);
+  color: rgba(255, 255, 255, 0.75);
 }
 .hm-hero-foot {
   position: absolute;
@@ -992,7 +992,7 @@ onUnmounted(() => {
   height: 52px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid rgba(255, 253, 248, 0.8);
+  border: 2px solid rgba(255, 255, 255, 0.8);
 }
 .hm-pills {
   display: flex;
@@ -1006,8 +1006,8 @@ onUnmounted(() => {
   min-height: 36px;
   padding: 0 14px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 253, 248, 0.4);
-  background: rgba(15, 29, 24, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(61, 47, 34, 0.35);
   font-size: 13px;
   color: var(--white);
 }
@@ -1143,7 +1143,7 @@ onUnmounted(() => {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(15, 29, 24, 0.7), rgba(15, 29, 24, 0) 55%);
+  background: linear-gradient(to top, rgba(61, 47, 34, 0.7), rgba(61, 47, 34, 0) 55%);
 }
 .hm-caps {
   list-style: none;
@@ -1213,7 +1213,7 @@ onUnmounted(() => {
   left: 0;
   bottom: 0;
   width: 100%;
-  border-top-color: rgba(255, 253, 248, 0.6);
+  border-top-color: rgba(255, 255, 255, 0.6);
   opacity: 0;
   transform: translateY(40px);
   transition:
@@ -1234,7 +1234,7 @@ onUnmounted(() => {
   margin: 6px 0 10px;
 }
 .is-pin .hm-cap p {
-  color: rgba(255, 253, 248, 0.88);
+  color: rgba(255, 255, 255, 0.88);
   font-size: 17px;
 }
 .is-pin .hm-ticks {
@@ -1249,7 +1249,7 @@ onUnmounted(() => {
 .hm-ticks span {
   width: 3px;
   height: 40px;
-  background: rgba(255, 253, 248, 0.3);
+  background: rgba(255, 255, 255, 0.3);
   transition: background 0.3s;
 }
 .hm-ticks span.on {
@@ -1286,7 +1286,7 @@ onUnmounted(() => {
 .hm-strip-head p {
   margin: 10px 0 0;
   font-size: 15px;
-  color: rgba(255, 253, 248, 0.82);
+  color: rgba(255, 255, 255, 0.82);
 }
 .hm-track {
   display: flex;
@@ -1369,7 +1369,7 @@ onUnmounted(() => {
   letter-spacing: 4px;
   padding: 3px 10px;
   transform: rotate(-10deg);
-  background: rgba(255, 253, 248, 0.92);
+  background: rgba(255, 255, 255, 0.92);
 }
 .hm-pet-meta {
   display: flex;
@@ -1377,19 +1377,19 @@ onUnmounted(() => {
   align-items: baseline;
   gap: 12px;
   padding: 14px 0 12px;
-  border-bottom: 1px solid rgba(255, 253, 248, 0.25);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
 }
 .hm-pet-meta strong {
   font-size: 22px;
 }
 .hm-pet-meta span {
   font-size: 13px;
-  color: rgba(255, 253, 248, 0.75);
+  color: rgba(255, 255, 255, 0.75);
 }
 .hm-pet p {
   margin: 8px 0 0;
   font-size: 14px;
-  color: rgba(255, 253, 248, 0.82);
+  color: rgba(255, 255, 255, 0.82);
 }
 .hm-pill-link-lg {
   display: inline-flex;
@@ -1421,7 +1421,7 @@ onUnmounted(() => {
 .hm-empty p {
   margin: 0;
   max-width: 560px;
-  color: rgba(255, 253, 248, 0.85);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 /* 按品种看 */
@@ -1549,7 +1549,7 @@ onUnmounted(() => {
   padding-top: clamp(64px, 8vw, 120px);
 }
 .hm-foot .hm-eyebrow {
-  color: rgba(255, 253, 248, 0.7);
+  color: rgba(255, 255, 255, 0.7);
 }
 .hm-foot-grid {
   display: flex;
@@ -1569,7 +1569,7 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 18px;
   font-size: 15px;
-  color: rgba(255, 253, 248, 0.85);
+  color: rgba(255, 255, 255, 0.85);
 }
 .hm-foot-side p {
   margin: 0;
@@ -1581,7 +1581,7 @@ onUnmounted(() => {
   gap: 6px 18px;
 }
 .hm-foot-side dt {
-  color: rgba(255, 253, 248, 0.55);
+  color: rgba(255, 255, 255, 0.55);
 }
 .hm-foot-side dd {
   margin: 0;
@@ -1596,9 +1596,9 @@ onUnmounted(() => {
   gap: 12px 24px;
   margin-top: clamp(56px, 7vw, 96px);
   padding-top: 20px;
-  border-top: 1px solid rgba(255, 253, 248, 0.18);
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
   font-size: 13px;
-  color: rgba(255, 253, 248, 0.65);
+  color: rgba(255, 255, 255, 0.65);
 }
 .hm-foot-bar nav {
   display: flex;
@@ -1619,12 +1619,11 @@ onUnmounted(() => {
 }
 /* 店名按字数自动缩放，铺满一行 */
 .hm-giant {
-  font: 900 min(23vw, calc(90vw / var(--n))) / 0.8 var(--display);
+  font: 900 min(23vw, calc(90vw / var(--n))) / 1 var(--display);
   color: var(--y);
   text-align: center;
   white-space: nowrap;
   margin-top: clamp(24px, 4vw, 56px);
-  transform: translateY(0.14em);
   user-select: none;
 }
 
@@ -1730,7 +1729,7 @@ onUnmounted(() => {
   justify-content: space-between;
   gap: 12px;
   font-size: 14px;
-  color: rgba(255, 253, 248, 0.75);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 /* 手机底部有固定导航栏（style.css 中 .mobile-tabs），首屏文字和页脚为它留出空间 */
