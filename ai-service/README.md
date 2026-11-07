@@ -2,7 +2,7 @@
 
 Python 3.11 + LangChain 1.x + DeepSeek，作为现有 Spring Cloud 项目的 AI 功能接入。
 
-已支持：猫狗知识问答与来源引用、在售宠物推荐、本人预约/订单查询、跳转预约页面、多轮会话、流式回复、历史记录和赞踩反馈。**不会提交/取消预约、付款、退款或修改库存。**
+已支持：猫狗知识问答与来源引用、在售宠物推荐与对比、可预约到店时段、本人预约/订单查询、跳转预约页面、多轮会话（滚动摘要 + 偏好记忆）、流式回复、历史记录和赞踩反馈。**不会提交/取消预约、付款、退款或修改库存。**
 
 ## 启动
 
@@ -60,12 +60,33 @@ VITE_API_TARGET=http://127.0.0.1:8080 npm run dev:buyer -- --port 5180
                               └→ SQLite：会话、消息、引用快照和反馈
 ```
 
-- `app/agent.py`：LangChain `create_agent` 选择一次工具批次，最多调用五个工具。工具执行后再流式生成回答；订单使用固定业务模板。
+- `app/graph.py`：一轮对话的 LangGraph `StateGraph` 工作流（见下图）。planner 可多轮调用工具（最多 3 轮、6 次），看到上一轮结果再决定下一步；最终回答由 answer 节点只依据本轮已核验数据单独生成，规划草稿不展示；订单走固定模板。
+- `app/agent.py`：7 个只读工具——知识检索、宠物推荐、宠物详情、本人订单、门店信息、宠物对比（2~3 只）、可预约时段（与 Java `AppointmentHours` 同一规则：未来 7 天、营业时间内、北京时间）。
+- `app/memory.py`：会话内记忆。最近 10 条原文进上下文；更早的消息折叠成摘要，偏好（猫/狗、品种、预算、居住条件、经验等）抽取成结构化字段，每轮带给模型。回复标记完成后再整理，不拖慢本轮；只在本会话生效，不记录手机号等个人信息，也不当作实时事实。
 - `app/business.py`：只有白名单 GET 请求，没有通用 HTTP、SQL、写操作工具。用户身份绑定在工具闭包中，模型不能传入 `userId` 或认证凭证。
 - `app/knowledge.py`：后台异步分块和嵌入，问答只检索当前已发布且向量版本匹配的知识，按猫狗类型和明确品种限定适用范围。
 - `app/knowledge_store.py`、`app/knowledge_api.py`：SQLite 知识持久化、管理员接口、乐观版本锁及审核人记录；修改或归档会立即移除旧向量资格。
-- `app/store.py`：SQLite 保存完整历史；每次模型调用只传最近十条文本，避免无限上下文。不会保存业务凭证、订单联系人、手机号、自提码或付款参数。
+- `app/store.py`：SQLite 保存完整历史和会话记忆（`memory` 字段，随会话详情返回）；每次模型调用只传最近十条原文 + 记忆，避免无限上下文。不会保存业务凭证、订单联系人、手机号、自提码或付款参数。
 - `app/main.py`：FastAPI 会话接口和 SSE；断开网页连接后，已有后台生成仍在超时范围内完成并落库。
+
+```mermaid
+graph TD;
+  START([开始]) --> prepare;
+  prepare -.带订单号.-> collect;
+  prepare -.-> planner;
+  planner -.需要工具.-> tools;
+  tools -.继续规划.-> planner;
+  tools -.已查订单.-> collect;
+  planner -.信息足够/达到上限.-> collect;
+  collect -.-> order_reply;
+  collect -.-> unresolved;
+  collect -.-> answer;
+  order_reply --> END([结束]);
+  unresolved --> END;
+  answer --> END;
+```
+
+上图可由代码重新生成：`graph.build(...).get_graph().draw_mermaid()`。
 
 推荐会复核候选宠物实时详情，仅展示 `on_sale && purchaseAllowed` 的个体。预约入口来自核验过的 ID，前端路由为 `/checkout/:petId`，仍由已有页面完成登录、表单校验、协议确认和提交。查询预约使用现有 `/orders` 接口，`reservation_confirmed` 不会被解释成付款或交付完成。
 
@@ -106,7 +127,7 @@ cd ai-service
 .venv/bin/python -m pytest -q
 ```
 
-测试覆盖真实 LangChain 图的工具调用、游客登录提示、订单脱敏、跨身份隔离、下架/不可预约商品排除、幂等重放、并发、超时和失败恢复。模型与 Java HTTP 响应在自动化测试中替换为隔离样例；真实 DeepSeek、Java 网关、浏览器联调须另外执行，不把这些测试当作外部服务可用性的证明。
+测试覆盖真实 LangGraph 工作流的多轮工具调用与轮次上限、宠物对比与卡片去重、可预约时段边界、记忆折叠与偏好清洗、记忆跨轮传递、游客登录提示、订单脱敏、跨身份隔离、下架/不可预约商品排除、幂等重放、并发、超时和失败恢复。模型与 Java HTTP 响应在自动化测试中替换为隔离样例；真实 DeepSeek、Java 网关、浏览器联调须另外执行，不把这些测试当作外部服务可用性的证明。
 
 ## AI 统计与批量导入（2026-09-13）
 
