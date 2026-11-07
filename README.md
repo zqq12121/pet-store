@@ -105,7 +105,7 @@ SSH 未配置时改用 HTTPS：`git clone https://github.com/zqq12121/pet-store.
 以下命令都在**项目根目录**执行，每行结尾回到根目录，可单独挑一条跑：
 
 ```sh
-# Java：打包三个服务并运行 122 项测试，使用内存 H2，不需要数据库（本机实测约 13 秒）
+# Java：打包三个服务并运行 108 项测试，使用内存 H2，不需要数据库（本机实测约 13 秒）
 cd backend && mvn package && cd ..
 
 # 前端：必须用 npm ci 按 package-lock.json 安装
