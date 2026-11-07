@@ -87,4 +87,4 @@ sh scripts/start-cloud-demo.sh
 
 已完成 admin-server 定向更新，更新前完整备份位于 `/opt/warmpaw/backups/20261016-150530/`，旧镜像保留为 `warmpaw-admin-server:before-mini-login-20261016-79d916`。更新后 8 项服务均 healthy。
 
-灵宠小珠使用开发者工具真实 `wx.login` code，经加密 SSH 交给云端 Java 再调用微信官方 code2Session，首次自动注册、再次复用同一 MySQL 账号、本人资料与收藏查询以及退出撤销均通过。两条验证会话已撤销，真实账号保留。此记录不代表手机直连、跨设备同步或网站扫码中转通过；当前仍缺正式 HTTPS API 与微信合法域名。详见 [真实联调记录](../output/mini-program-real-login-2026-10-16/验证记录.md)。
+灵宠小珠使用开发者工具真实 `wx.login` code，经加密 SSH 交给云端 Java 再调用微信官方 code2Session，首次自动注册、再次复用同一 MySQL 账号、本人资料与收藏查询以及退出撤销均通过。两条验证会话已撤销，真实账号保留。此记录不代表手机直连、跨设备同步或网站扫码中转通过；当前仍缺正式 HTTPS API 与微信合法域名。详见 真实联调记录（本机 `output/mini-program-real-login-2026-10-16/验证记录.md`，`output/` 不入库）。

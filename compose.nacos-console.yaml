@@ -1,0 +1,19 @@
+# 仅本机调试用：把 Nacos 控制台暴露到宿主机 127.0.0.1:8088。
+#
+# 为什么不写进 compose.yaml：主配置第 143 行明确约定「只在私有容器网络提供服务发现，
+# 不发布控制台或注册端口」。这个文件是临时覆盖层，不改变默认部署行为。
+#
+# 开启控制台：
+#   docker compose -f compose.yaml -f compose.nacos-console.yaml up -d --no-deps nacos
+#   访问 http://127.0.0.1:8088/
+#
+# 关闭控制台（恢复默认）：
+#   docker compose -f compose.yaml up -d --no-deps nacos
+#
+# 注意：Nacos 3.x 的控制台独立监听容器 8080，根路径是 /，不是 2.x 的 /nacos。
+# 8848 是服务端 API 端口，浏览器打开只会看到一句「Console default port is 8080」。
+services:
+  nacos:
+    ports:
+      # 与 8848/9848 一样只绑本机，不对局域网开放
+      - "127.0.0.1:8088:8080"
