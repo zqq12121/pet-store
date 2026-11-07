@@ -27,9 +27,9 @@ const copy = () =>
     title="店在哪，怎么来"
     lead="真实的相处比照片更能帮你作出决定。来之前在网上占个位，店长确认后会替你留着。"
     :photos="[
-      '/images/pets/golden-lake.jpg',
-      '/images/pets/corgi-sit.jpg',
-      '/images/pets/tabby-basket.jpg',
+      '/images/pets/golden-lake.webp',
+      '/images/pets/corgi-sit.webp',
+      '/images/pets/tabby-basket.webp',
     ]"
   />
   <div class="container page">

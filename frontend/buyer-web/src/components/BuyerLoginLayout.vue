@@ -2,7 +2,7 @@
   <section class="container page auth-page" aria-label="茸茸星球账号登录">
     <!-- 左侧大照片与首页首屏同一句话；手机上隐藏，只留表单 -->
     <figure class="auth-photo" aria-hidden="true">
-      <img src="/images/pets/golden-ball.jpg" alt="" />
+      <img src="/images/pets/golden-ball.webp" alt="" />
       <figcaption>
         <strong>看中了，<br />先占个位。</strong>
         <span>线上不扣款，到店看过再付款。</span>

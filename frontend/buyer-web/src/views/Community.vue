@@ -52,9 +52,9 @@ function personal(value: string) {
     title="宠友社区"
     lead="接回家以后的日子，都可以在这里聊：养宠心得、晒日常、求助，还有到店后的评价。"
     :photos="[
-      '/images/pets/border-collie-lavender.jpg',
-      '/images/pets/golden-ball.jpg',
-      '/images/pets/siamese-sofa.jpg',
+      '/images/pets/border-collie-lavender.webp',
+      '/images/pets/golden-ball.webp',
+      '/images/pets/siamese-sofa.webp',
     ]"
   >
     <div class="actions community-head-actions">

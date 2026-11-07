@@ -62,11 +62,11 @@ def request(method, path, body=None, token=None, raw=None, content_type=None):
 
 def upload(photo, token):
     """复用项目已有图片作界面示意，不生成或上传检疫证明。"""
-    content = (ROOT.parent / 'frontend/public/images/pets' / f'{photo}.jpg').read_bytes()
+    content = (ROOT.parent / 'frontend/public/images/pets' / f'{photo}.webp').read_bytes()
     boundary = 'paw' + uuid.uuid4().hex
     data = (f'--{boundary}\r\nContent-Disposition: form-data; name="purpose"\r\n\r\npet_image\r\n'
-            f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="example-{photo}.jpg"\r\n'
-            'Content-Type: image/jpeg\r\n\r\n').encode() + content + f'\r\n--{boundary}--\r\n'.encode()
+            f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="example-{photo}.webp"\r\n'
+            'Content-Type: image/webp\r\n\r\n').encode() + content + f'\r\n--{boundary}--\r\n'.encode()
     return request('POST', '/admin/files', token=token, raw=data,
                    content_type='multipart/form-data; boundary=' + boundary)['id']
 

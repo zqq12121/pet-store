@@ -8,7 +8,7 @@
         ><RouterLink class="btn secondary" to="/">回到首页</RouterLink>
       </div>
     </div>
-    <img src="/images/pets/corgi-sit.jpg" alt="" aria-hidden="true" />
+    <img src="/images/pets/corgi-sit.webp" alt="" aria-hidden="true" />
   </div>
 </template>
 <style scoped>

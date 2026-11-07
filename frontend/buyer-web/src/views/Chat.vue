@@ -218,7 +218,7 @@ onUnmounted(() => {
     <aside class="chat-intro">
       <h1>养宠问题，<br />先问这里。</h1>
       <p class="lead">猫狗饲养、健康护理、品种特点，<br />随时聊聊你的疑问。</p>
-      <img v-wipe src="/images/pets/white-cat.jpg" alt="店里的猫" />
+      <img v-wipe src="/images/pets/white-cat.webp" alt="店里的猫" />
       <p class="small muted">AI 生成，仅供参考。<br />出现持续不适，请及时就医。</p>
     </aside>
     <section class="chat-panel">

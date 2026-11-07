@@ -20,7 +20,7 @@ const welcomeBanners: Banner[] = [
   {
     id: 'welcome-corgi',
     title: '遇见柯基，让快乐迈着小短腿跑来。',
-    imageUrl: '/images/pets/corgi-sit.jpg',
+    imageUrl: '/images/pets/corgi-sit.webp',
     linkType: 'none',
     petId: null,
     noticeText: null,
@@ -28,7 +28,7 @@ const welcomeBanners: Banner[] = [
   {
     id: 'welcome-golden',
     title: '金毛的温柔，是陪伴的模样。',
-    imageUrl: '/images/pets/golden-ball.jpg',
+    imageUrl: '/images/pets/golden-ball.webp',
     linkType: 'none',
     petId: null,
     noticeText: null,
@@ -36,7 +36,7 @@ const welcomeBanners: Banner[] = [
   {
     id: 'welcome-ginger',
     title: '蓬松长毛猫，陪你慢慢享受日常。',
-    imageUrl: '/images/pets/ginger-longhair.jpg',
+    imageUrl: '/images/pets/ginger-longhair.webp',
     linkType: 'none',
     petId: null,
     noticeText: null,
@@ -44,7 +44,7 @@ const welcomeBanners: Banner[] = [
   {
     id: 'welcome-collie',
     title: '边牧的认真眼神，藏着大大的聪明。',
-    imageUrl: '/images/pets/border-collie-sit.jpg',
+    imageUrl: '/images/pets/border-collie-sit.webp',
     linkType: 'none',
     petId: null,
     noticeText: null,
@@ -52,7 +52,7 @@ const welcomeBanners: Banner[] = [
   {
     id: 'welcome-siamese',
     title: '蓝眼暹罗，把好奇写进每一天。',
-    imageUrl: '/images/pets/siamese-garden.jpg',
+    imageUrl: '/images/pets/siamese-garden.webp',
     linkType: 'none',
     petId: null,
     noticeText: null,
@@ -60,7 +60,7 @@ const welcomeBanners: Banner[] = [
   {
     id: 'welcome-pomeranian',
     title: '蓬松博美，一次轻轻的亲近。',
-    imageUrl: '/images/pets/pomeranian.jpg',
+    imageUrl: '/images/pets/pomeranian.webp',
     linkType: 'none',
     petId: null,
     noticeText: null,
@@ -331,6 +331,9 @@ function menuScrollTop() {
 /* 首屏轮播：每 5 秒切换；鼠标悬停在首屏时暂停。 */
 let slideTimer: ReturnType<typeof setInterval>;
 const heroHover = ref(false);
+// 轮播只给已轮到的图和下一张设置 src，避免首屏同时下载全部大图。
+const heroLoaded = ref(1);
+watch(slide, (i) => (heroLoaded.value = Math.max(heroLoaded.value, i + 1)));
 function startSlides() {
   clearInterval(slideTimer);
   slideTimer = setInterval(() => {
@@ -411,7 +414,8 @@ onUnmounted(() => {
             v-for="(b, i) in banners"
             :key="b.id"
             :class="['hm-shot', { on: i === slide }]"
-            :src="b.imageUrl"
+            :src="i <= heroLoaded ? b.imageUrl : undefined"
+            :fetchpriority="i === 0 ? 'high' : undefined"
             :alt="b.title"
             :aria-hidden="i !== slide"
           />
@@ -471,6 +475,7 @@ onUnmounted(() => {
               :class="{ on: i < litCount }"
               :src="part.src"
               alt=""
+              loading="lazy"
               aria-hidden="true"
             />
             <span v-else :class="{ on: i < litCount }" aria-hidden="true">{{ part.text }}</span>
@@ -487,9 +492,21 @@ onUnmounted(() => {
           </div>
           <div class="hm-wrap hm-steps-body">
             <div ref="frameEl" class="hm-frame" aria-hidden="true">
-              <img ref="firstShot" class="hm-fs" :src="photo(0)" alt="" />
-              <img class="hm-fs" :class="{ on: stepIndex >= 1 }" :src="photo(1)" alt="" />
-              <img class="hm-fs" :class="{ on: stepIndex >= 2 }" :src="photo(2)" alt="" />
+              <img ref="firstShot" class="hm-fs" :src="photo(0)" alt="" loading="lazy" />
+              <img
+                class="hm-fs"
+                :class="{ on: stepIndex >= 1 }"
+                :src="photo(1)"
+                alt=""
+                loading="lazy"
+              />
+              <img
+                class="hm-fs"
+                :class="{ on: stepIndex >= 2 }"
+                :src="photo(2)"
+                alt=""
+                loading="lazy"
+              />
             </div>
             <ol class="hm-caps">
               <li class="hm-cap" :class="{ on: stepIndex === 0 }">
