@@ -9,6 +9,9 @@
 - 隔离验收（备份 `backups/20261107-151632` 恢复到 `127.0.0.1:8190`，图形认证与通知为模拟）：`scripts/demo-browser.cjs` 11 项通过，含买家 24 小时 HttpOnly Cookie、预约提交、后台确认、线下交付、历史订单售后与私有附件匿名 404，页面无脚本错误。脚本已改为按 Cookie 调买家接口、选取任一示例宠物、现场生成诊断图片。
 - 上传图片瘦身：宠物图、轮播、社区配图、头像中长边超过 1920 的 JPEG/PNG 先缩放、再按 EXIF 方向摆正并去除 EXIF（含 GPS）；证据类文件不改动，WebP 原样保存。隔离副本实测 4000×3000 竖拍 JPEG（EXIF 6）存为 1440×1920、方向正确。
 - `hydrate` N+1 改为按子表批量 IN，宠物分页每页查询数与页大小无关。
+- 修复后台编辑在售宠物被误下架：体重列 DECIMAL 读出 `9.00`、请求解析为 `9.0`，按序列化文本比较被判为健康信息变化。改为数值比较，并补回归用例（Java 114 项）。
+- 新增 `backend/scripts/convert_pet_images_webp.py`：隔离副本实测 18 只在售宠物照片 5640KB → 2620KB，在售数量不变，重复执行无变更。生产需先部署上述修复再运行。
+- CI 新增 `acceptance` 作业：`start-demo-acceptance.py --fresh` 空库启动、`seed-acceptance.py` 补齐门店/协议/宠物、`demo-browser.cjs --core-only` 浏览器验收；本机已按同样步骤跑通（8 项），完整模式（11 项）同样复验通过。
 - 买家网站登录态改为 HttpOnly Cookie（`warmpaw_buyer`，SameSite=Lax，HTTPS 部署加 Secure），有效期 24 小时，关闭浏览器后仍保持登录；token 不再出现在登录响应体和浏览器存储里。管理端仍为 30 分钟 Bearer，小程序仍为 2 小时 Bearer。
 
 ## 2026-10-16 上线前收尾

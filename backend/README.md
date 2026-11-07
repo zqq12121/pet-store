@@ -70,7 +70,19 @@ python3 scripts/start-demo-acceptance.py backups/你的备份目录
 node scripts/demo-browser.cjs
 ```
 
-此流程恢复到全新 MySQL、Redis、Nacos 与应用副本，模拟图形认证及通知，验证真实 Gateway / Feign 调用；不向主库写验收订单。旧 `scripts/local_smoke.py` 和 `scripts/microservices_smoke.py` 保留历史验证码/支付流程，不适用于当前登录及预约验收。
+此流程恢复到全新 MySQL、Redis、Nacos 与应用副本，模拟图形认证及通知，验证真实 Gateway / Feign 调用；不向主库写验收订单。
+
+不需要备份的空库版本（CI 的 `acceptance` 作业就是这样跑的，只验收核心预约流程，不含历史订单售后）：
+
+```bash
+python3 scripts/start-demo-acceptance.py --fresh
+python3 scripts/seed-acceptance.py
+node scripts/demo-browser.cjs --core-only
+```
+
+已上传的宠物照片（JPEG/PNG）转 WebP：`python3 backend/scripts/convert_pet_images_webp.py --base https://你的域名/api/v1`
+默认只预览，加 `--apply` 才替换；需要本机 Pillow，管理员密码读环境变量 `PAW_ADMIN_PASSWORD` 或交互输入。
+已预约/已售及检疫过期的在售宠物会跳过；任何一只保存后状态变化立即停止。旧 `scripts/local_smoke.py` 和 `scripts/microservices_smoke.py` 保留历史验证码/支付流程，不适用于当前登录及预约验收。
 
 2026-09-12 微服务拆分时没有建表、迁移或清空数据；当时 20 条示例尚未上架。2026-10-09 已按练习项目授权补齐模拟资料并上架，见 [模拟资料](../docs/DEMO_MATERIALS.md)。详细职责、事务边界见 [微服务结构](ARCHITECTURE.md)。
 
