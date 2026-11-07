@@ -2,6 +2,7 @@ package com.warmpaw.service;
 
 import static com.warmpaw.common.Json.*;
 
+import com.warmpaw.common.ApiException;
 import com.warmpaw.repository.BusinessRepository;
 import java.nio.file.*;
 import java.time.*;
@@ -27,9 +28,11 @@ import org.springframework.transaction.support.TransactionTemplate;
  * 也就是说<b>启动时并不跑</b>，第一次要等一天。刚启动时业务数据可能还没就绪，
  * 立刻扫容易把"马上要被引用"的文件判成孤儿。
  *
- * <p><b>已知盲区</b>：引用扫描只覆盖 {@code pet/order/after_sale/shop/confirmation/user} 六张表，
- * 社区内容（{@code community_content}）里的图片不在其中。新增业务若要往实体里存文件 id，
- * 必须同步扩展这里的 {@code kinds}，否则对应文件会在一天后被当作孤儿清掉。
+ * <p><b>引用扫描范围</b>：{@code pet/order/after_sale/shop/confirmation/user/community_content}。
+ * 社区帖子与评价的配图在 2026-11-07 前不在扫描范围内，发布一天后会被误清；已补上。
+ * 新增业务若要往实体里存文件 id，必须同步扩展这里的 {@code kinds}，否则对应文件会在一天后被当作孤儿清掉。
+ *
+ * <p>除每日调度外，店长可在后台手动触发一次（{@link #cleanNow}），判据完全相同。
  */
 @Service
 public class MaintenanceService {
@@ -84,6 +87,23 @@ public class MaintenanceService {
   }
 
   /**
+   * 手动触发一次清理（店长后台用），与每日任务共用同一把锁与同一套判据。
+   *
+   * @return 本次清理的文件数
+   * @throws ApiException 409：另一轮清理正在进行
+   */
+  public int cleanNow() {
+    if (!schedulerLock.tryAcquire(TASK_CLEAN, LOCK_TTL))
+      throw new ApiException(409, "CLEANUP_IN_PROGRESS", "文件清理正在进行，请稍后再试");
+    try {
+      Integer cleaned = tx.execute(status -> cleanOnce());
+      return cleaned == null ? 0 : cleaned;
+    } finally {
+      schedulerLock.release(TASK_CLEAN);
+    }
+  }
+
+  /**
    * 执行一轮清理。四步：加锁 → 收集引用 → 逐条判断 → 删存储并改状态。
    *
    * <p>跳过条件（命中任一即保留）：状态不是 {@code ready}、创建时间不足 24 小时、被引用、
@@ -96,11 +116,13 @@ public class MaintenanceService {
    * <p>路径先 {@code normalize} 再校验父目录，防止 id 里藏 {@code ..} 越出存储根。
    * 任一步抛异常都不改状态、交给明天重试——绝不能"删失败了还标成已删"。
    */
-  private void cleanOnce() {
+  private int cleanOnce() {
+    int cleaned = 0;
     store.lock();
     Instant cutoff = Instant.now().minusSeconds(86400);
     Set<String> references = new HashSet<>();
-    for (String kind : List.of("pet", "order", "after_sale", "shop", "confirmation", "user"))
+    for (String kind :
+        List.of("pet", "order", "after_sale", "shop", "confirmation", "user", "community_content"))
       for (Map<String, Object> entity : store.list(kind)) collect(entity, references);
     for (Map<String, Object> file : store.list("file")) {
       String id = text(file, "id");
@@ -115,10 +137,12 @@ public class MaintenanceService {
         Files.deleteIfExists(target);
         file.put("status", "deleted");
         store.save(file);
+        cleaned++;
       } catch (Exception ignored) {
         /* 文件系统失败保留元数据，下次任务重试，不误报清理成功。 */
       }
     }
+    return cleaned;
   }
 
   /**

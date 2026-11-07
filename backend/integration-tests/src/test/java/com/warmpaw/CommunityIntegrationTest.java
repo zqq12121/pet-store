@@ -305,4 +305,26 @@ class CommunityIntegrationTest {
         new MockMultipartFile("file", "large.png", "image/png", new byte[5 * 1024 * 1024 + 1]), "community_image", null, buyerActor));
     assertEquals("FILE_TOO_LARGE", oversized.code);
   }
+
+  /** 文件清理：社区帖子引用的图片保留，无人引用的孤儿才删；只有店长能手动触发。 */
+  @Test void fileCleanupKeepsCommunityImagesAndRemovesOrphans() throws Exception {
+    var output = new ByteArrayOutputStream(); ImageIO.write(new BufferedImage(2, 2, BufferedImage.TYPE_INT_RGB), "png", output);
+    String used = text(files.upload(new MockMultipartFile("file", "used.png", "image/png", output.toByteArray()), "community_image", null, buyerActor), "id");
+    String orphan = text(files.upload(new MockMultipartFile("file", "orphan.png", "image/png", output.toByteArray()), "community_image", null, buyerActor), "id");
+    var body = postBody(); body.put("imageFileIds", List.of(used));
+    data(call("POST", "/community/contents", body, buyerToken), 201);
+    // 模拟两天前上传，越过 24 小时保护窗口。
+    new TransactionTemplate(manager).executeWithoutResult(s -> {
+      store.lock();
+      for (String id : List.of(used, orphan)) {
+        var f = store.get("file", id);
+        f.put("createdAt", java.time.Instant.now().minus(java.time.Duration.ofDays(2)).toString());
+        store.save(f);
+      }
+    });
+    assertEquals(403, call("POST", "/admin/maintenance/file-cleanup", null, buyerToken).getStatus());
+    assertTrue(number(data(call("POST", "/admin/maintenance/file-cleanup", null, adminToken), 200), "cleaned") >= 1);
+    assertEquals("ready", text(store.get("file", used), "status"));
+    assertEquals("deleted", text(store.get("file", orphan), "status"));
+  }
 }
