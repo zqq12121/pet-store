@@ -7,35 +7,27 @@ import com.warmpaw.common.Input;
 import com.warmpaw.repository.BusinessRepository;
 import com.warmpaw.service.AuthService;
 import com.warmpaw.service.CatalogReader;
-import com.warmpaw.service.PaymentService;
 import java.time.*;
 import java.util.*;
 import org.springframework.stereotype.Service;
 
 /**
- * 支付用例编排层：支付能力展示与受限的退款重试。
+ * 支付用例编排层：受限的退款重试。
  *
  * <p>真正的发起支付入口已下线（见 {@code OrderApplicationService#beginPayment}），
- * 这里只剩下两个能力：告诉前端"能不能付"、以及人工补救失败退款。
+ * 这里只剩人工补救失败退款。
  */
 @Service
 @org.springframework.transaction.annotation.Transactional(
     propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
 public class PaymentApplicationService {
   private final BusinessRepository store;
-  private final PaymentService payments;
   private final AuthService auth;
 
   public PaymentApplicationService(
-      BusinessRepository store, PaymentService payments, AuthService auth) {
+      BusinessRepository store, AuthService auth) {
     this.store = store;
-    this.payments = payments;
     this.auth = auth;
-  }
-
-  /** 公开的支付能力查询，全部场景当前均为关闭状态并附带原因。 */
-  public OperationResult capabilities() {
-    return new OperationResult(200, payments.capabilities());
   }
 
   /**

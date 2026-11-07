@@ -33,7 +33,7 @@ spring:
             - id: order-api
               uri: lb://order-server
               predicates:
-                - Path=/api/v1/orders,/api/v1/orders/**,/api/v1/after-sales,/api/v1/after-sales/**,/api/v1/payments/**,/api/v1/payment-capabilities,/api/v1/callbacks/**,/api/v1/demo/orders/**,/api/v1/dev/orders/**
+                - Path=/api/v1/orders,/api/v1/orders/**,/api/v1/after-sales,/api/v1/after-sales/**,/api/v1/payments/**,/api/v1/callbacks/**,/api/v1/demo/orders/**,/api/v1/dev/orders/**
             - id: catalog-account-files
               uri: lb://admin-server
               predicates:

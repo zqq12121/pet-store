@@ -10,8 +10,8 @@ COPY integration-tests/pom.xml ./integration-tests/pom.xml
 RUN --mount=type=cache,target=/root/.m2 mvn -B -DskipTests package
 
 FROM eclipse-temurin:25-jre-jammy
-# ffprobe 用于实际校验宠物视频，字体用于图片验证码。
-RUN apt-get update && apt-get install -y --no-install-recommends curl ffmpeg fonts-dejavu-core \
+# ffprobe 用于实际校验宠物视频。
+RUN apt-get update && apt-get install -y --no-install-recommends curl ffmpeg \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --uid 10001 --create-home app
 WORKDIR /app

@@ -1012,38 +1012,6 @@ class CommerceIntegrationTest {
   }
 
   @Test
-  void analyticsDeduplicatesAndRejectsForgedPayment() {
-    Map<String, Object> event =
-        map(
-            "eventId",
-            UUID.randomUUID().toString(),
-            "eventType",
-            "page_view",
-            "occurredAt",
-            Instant.now().toString(),
-            "pagePath",
-            "/",
-            "petId",
-            null,
-            "properties",
-            map("page", "home", "pathDepth", 0));
-    assertEquals(
-        1,
-        number(
-            call("POST", "/analytics/events", map("events", List.of(event)), buyer),
-            "acceptedCount"));
-    assertEquals(
-        1,
-        number(
-            call("POST", "/analytics/events", map("events", List.of(event)), buyer),
-            "duplicateCount"));
-    event.put("eventType", "order_paid");
-    assertCode(
-        "VALIDATION_ERROR",
-        () -> call("POST", "/analytics/events", map("events", List.of(event)), buyer));
-  }
-
-  @Test
   void realImageUploadAndPrivateLinksAreNotPublic() throws Exception {
     ByteArrayOutputStream output = new ByteArrayOutputStream();
     ImageIO.write(new BufferedImage(12, 12, BufferedImage.TYPE_INT_RGB), "png", output);
@@ -1126,8 +1094,7 @@ class CommerceIntegrationTest {
     assertEquals("新的昵称", call("PATCH", "/me", map("nickname", "新的昵称"), buyer).get("nickname"));
     assertEquals("新的昵称", call("GET", "/me", map(), buyer).get("nickname"));
     assertCode("VALIDATION_ERROR", () -> call("PATCH", "/me", map("role", "admin"), buyer));
-    for (String path : List.of("/shop", "/payment-capabilities"))
-      assertEquals(200, business.execute("GET", path, map(), map(), null, null, "test").status());
+    assertEquals(200, business.execute("GET", "/shop", map(), map(), null, null, "test").status());
   }
 
   @Test

@@ -77,10 +77,8 @@ def upload(purpose, token):
     return request('POST', '/admin/files', token=token, raw=data, content_type='multipart/form-data; boundary=' + boundary)['id']
 
 
-captcha = request('GET', '/auth/captchas?purpose=admin_login')
 password = (args.state_dir / 'local-admin-password.txt').read_text().strip()
-admin = request('POST', '/admin/auth/login', {'username': 'admin', 'password': password,
-                 'captchaId': captcha['captchaId'], 'captchaCode': local_code('captcha', captcha['captchaId'])})['accessToken']
+admin = request('POST', '/admin/auth/login', {'username': 'admin', 'password': password})['accessToken']
 for kind in ('live_pet_trade', 'pickup_confirmation'):
     versions = request('GET', '/admin/agreements?type=' + kind, token=admin)['items']
     if not any(item['status'] == 'published' for item in versions):
@@ -99,9 +97,7 @@ pet = request('POST', '/admin/pets', {'name': '本地测试宠物', 'category': 
         'publicImageFileIds': [proof], 'originalFileIds': [], 'validUntil': None}}, admin)
 pet = request('POST', '/admin/pets/' + pet['id'] + '/publish', {'version': pet['version'], 'healthyForSale': True,
               'quarantineVerified': True, 'reviewNote': '仅对模拟材料进行开发测试'}, admin)
-captcha = request('GET', '/auth/captchas?purpose=sms')
-sms = request('POST', '/auth/sms-codes', {'phone': args.phone, 'purpose': 'login', 'captchaId': captcha['captchaId'],
-              'captchaCode': local_code('captcha', captcha['captchaId'])})
+sms = request('POST', '/auth/sms-codes', {'phone': args.phone, 'purpose': 'login'})
 buyer = request('POST', '/auth/sms-login', {'phone': args.phone, 'smsRequestId': sms['smsRequestId'],
                 'smsCode': local_code('sms', sms['smsRequestId'])})['accessToken']
 preview = request('POST', '/orders/preview', {'petId': pet['id']}, buyer)

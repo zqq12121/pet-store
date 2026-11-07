@@ -24,8 +24,7 @@ import org.springframework.stereotype.Service;
  * {@code refund_fact} 以 {@code refund_id} 为键。同一笔流水重复回调只会命中已存在记录，
  * 不会重复改状态或重复加钱。
  *
- * <p><b>当前业务状态</b>：线上支付入口已停用，{@link #capabilities} 对所有场景返回 disabled，
- * 新预约一律走线下收款。本类保留完整实现，用于历史订单退款与将来重新开通。
+ * <p><b>当前业务状态</b>：线上支付入口已停用，新预约一律走线下收款。本类保留完整实现，用于历史订单退款与将来重新开通。
  */
 @Service
 public class PaymentService {
@@ -40,30 +39,6 @@ public class PaymentService {
     this.orders = orders;
     this.auth = auth;
     this.gateway = gateway;
-  }
-
-  /**
-   * 支付能力发现接口。
-   *
-   * <p>即使全部关闭也返回 200 和完整结构（每个场景带 {@code disabledReason}），
-   * 让前端能直接展示"为什么不能付"，而不是靠 404 猜。
-   */
-  public Map<String, Object> capabilities() {
-    return map(
-        "currency",
-        "CNY",
-        "methods",
-        List.of("jsapi", "h5").stream()
-            .map(
-                s ->
-                    map(
-                        "scene",
-                        s,
-                        "enabled",
-                        false,
-                        "disabledReason",
-                        "线上支付已停用，请预约到店付款"))
-            .toList());
   }
 
   /** 取订单关联的支付单实体；订单上的 {@code payment.paymentId} 为空时返回 null（表示从未发起支付）。 */

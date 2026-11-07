@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue';
-import { buyer, isDemo, randomId } from '../../../shared/api';
+import { buyer, randomId } from '../../../shared/api';
 import { useGraphCaptcha } from '../../../shared/useGraphCaptcha';
 import { loadWechatQr, wechatQrOptions } from '../../../shared/wechatQr';
 import MiniWechatQr from './MiniWechatQr.vue';
@@ -44,8 +44,8 @@ async function checkCapability() {
       '/auth/capabilities'
     );
     if (!disposed) {
-      enabled.value = !isDemo && result.wechatQrLogin === true;
-      miniEnabled.value = !isDemo && result.wechatMiniQrLogin === true;
+      enabled.value = result.wechatQrLogin === true;
+      miniEnabled.value = result.wechatMiniQrLogin === true;
     }
   } catch {
     if (!disposed) {

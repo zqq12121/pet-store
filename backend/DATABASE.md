@@ -25,7 +25,6 @@
 | 退回 | `after_sale_returns`、`after_sale_return_files` | 实物退回验收及证据 |
 | 换宠 | `exchange_plans`、`exchange_original_files` | 替换宠、方案状态、确认/交付时间和证据；功能开关仍默认关闭 |
 | 退款 | `refunds`、`refund_transactions` | 退款请求与已核实的退款事实，关联订单/售后 |
-| 访问统计 | `analytics_events`、`analytics_event_properties` | 身份范围内事件去重、页面/宠物访问和搜索属性 |
 | AI（结构就绪） | `ai_sessions`、`ai_messages`、`ai_timings` | 会话、消息、引用快照和耗时；未接入模型，不填充虚构数据 |
 | 知识库（结构就绪） | `knowledge_entries`、`knowledge_breeds`、`knowledge_jobs`、`knowledge_job_errors` | 知识正文、适用品种、导入/索引任务及错误；向量检索尚未实现 |
 | 基础设施 | `business_lock`、`idempotency`、`audit_log`、`schema_migrations` | 业务写锁、请求幂等快照、审计和迁移版本 |

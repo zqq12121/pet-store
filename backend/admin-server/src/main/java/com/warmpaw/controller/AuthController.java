@@ -143,28 +143,6 @@ public class AuthController {
   }
 
   /**
-   * 获取图形验证码（PNG base64）。
-   *
-   * <p>GET {@code /auth/captchas?purpose=sms|admin_login|password_login}。purpose 之外的取值
-   * 直接 400，防止调用方自定义用途绕过后续校验；同一 IP 每分钟最多 30 次。
-   *
-   * <p>鉴权：只做"可选身份校验"（actor 返回值未使用），未登录也可获取——登录页本身就需要它。
-   * 每次调用都会生成新验证码，不幂等；明文只画进图片，库里存哈希，120 秒过期且一次性。
-   *
-   * @param query 仅允许 {@code purpose} 一个参数
-   * @return 200 与 {@code captchaId}/{@code imageBase64}/{@code expiresIn}
-   */
-  @GetMapping("/auth/captchas")
-  public ResponseEntity<Object> captcha(
-      @RequestParam Map<String, Object> query, HttpServletRequest req) {
-    actor(req);
-    return ok(
-        200,
-        auth.captcha(
-            new Input(query, "purpose").choice("purpose", "sms,admin_login,password_login"), req.getRemoteAddr()));
-  }
-
-  /**
    * 登录能力探测（公开）：告诉登录页当前哪些第三方入口真正可用。
    *
    * <p>登录页只展示当前可用入口；配置存在不代表第三方已验收，因此这里返回的是

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { buyer, saveAuth, isDemo, isJavaLocal } from '../../../shared/api';
+import { buyer, saveAuth } from '../../../shared/api';
 import type { LoginResult } from '../../../shared/types';
 import { useLoad } from '../../../shared/useLoad';
 import { useGraphCaptcha } from '../../../shared/useGraphCaptcha';
@@ -70,7 +70,7 @@ async function sendCode() {
     if (phone.value === targetPhone) {
       smsRequestId.value = result.smsRequestId;
       smsNotice.value =
-        result.status === 'simulated' || isDemo
+        result.status === 'simulated'
           ? '模拟验证码已生成，请按页面提示获取。'
           : `短信平台已受理，请查看 ${result.phoneMasked} 收到的验证码，5分钟内有效。`;
     }
@@ -126,8 +126,6 @@ onUnmounted(() => clearInterval(timer));
     <form @submit.prevent="login">
       <h1 class="auth-title">{{ bindTicket ? '绑定手机号' : '登录茸茸星球' }}</h1>
       <p v-if="bindTicket" class="notice">请绑定手机号，完成本次微信网页授权。</p>
-      <p v-if="isJavaLocal" class="notice">本地联调：短信保存在开发收件箱，不发送真实短信。</p>
-      <p v-else-if="isDemo" class="notice">当前为演示环境，不发送真实短信。</p>
       <label class="auth-field"
         ><span class="phone-prefix" aria-hidden="true">+86</span
         ><input

@@ -15,8 +15,7 @@ export default defineConfig(({ mode }) => {
       port: 5173,
       strictPort: true,
       proxy: {
-        '/api': env.VITE_API_TARGET || 'http://127.0.0.1:8787',
-        '/demo-files': 'http://127.0.0.1:8787',
+        '/api': env.VITE_API_TARGET || 'http://127.0.0.1:8090',
       },
     },
     build: { outDir: '../dist/buyer', emptyOutDir: true },

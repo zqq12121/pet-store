@@ -5,15 +5,11 @@ import static com.warmpaw.common.Json.*;
 
 import com.warmpaw.common.*;
 import com.warmpaw.repository.BusinessRepository;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.nio.file.*;
 import java.security.*;
 import java.time.*;
 import java.util.*;
 import java.util.List;
-import javax.imageio.ImageIO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -172,46 +168,6 @@ public class AuthService {
   /** 取账号角色，缺省视为 {@code admin}（历史数据没有 role 字段时按店长处理，避免员工被误判为无权限）。 */
   private String accountRole(Map<String, Object> account) {
     return Objects.toString(account.get("role"), "admin");
-  }
-
-  /**
-   * 生成图像验证码（4 位数字），返回 base64 PNG。
-   *
-   * <p>用途限于 {@code sms} / {@code admin_login} / {@code password_login} 三种场景，
-   * 其它取值直接 400——防止调用方塞一个自定义 purpose 绕过后续校验。
-   *
-   * <p>限流：同一 IP 每分钟最多 30 次，够正常用户刷新，不够脚本枚举。
-   *
-   * <p>明文只画进图片；库里存的是 {@code hash(code)}，有效期 120 秒。
-   * 一次使用即失效（由 {@link GraphCaptchaService#verify} 负责 take）。
-   */
-  public Map<String, Object> captcha(String purpose, String ip) {
-    require(List.of("sms", "admin_login", "password_login").contains(purpose), 400, "VALIDATION_ERROR", "验证码用途不正确");
-    temp.limit("captcha:" + ip, 30, 60);
-    String id = id("captcha"), code = digits(4);
-    temp.put("captcha:" + id, write(map("purpose", purpose, "hash", hash(code))), 120);
-    try {
-      BufferedImage img = new BufferedImage(150, 52, BufferedImage.TYPE_INT_RGB);
-      Graphics2D g = img.createGraphics();
-      g.setColor(new Color(255, 244, 225));
-      g.fillRect(0, 0, 150, 52);
-      g.setFont(new Font(Font.MONOSPACED, Font.BOLD, 30));
-      g.setColor(new Color(130, 60, 30));
-      g.drawString(code, 25, 37);
-      g.dispose();
-      ByteArrayOutputStream out = new ByteArrayOutputStream();
-      ImageIO.write(img, "png", out);
-      devSecret("captcha", id, code);
-      return map(
-          "captchaId",
-          id,
-          "imageBase64",
-          "data:image/png;base64," + Base64.getEncoder().encodeToString(out.toByteArray()),
-          "expiresIn",
-          120);
-    } catch (Exception e) {
-      throw new IllegalStateException(e);
-    }
   }
 
   /**

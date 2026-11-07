@@ -164,20 +164,6 @@ export interface AfterSale {
   timeline?: { occurredAt: string; label: string; note: string | null }[];
   diagnosisFileIds?: string[];
 }
-export interface FileAsset {
-  id: string;
-  url?: string;
-  fileName?: string;
-  name?: string;
-}
-export interface Payment {
-  status: string;
-  scene: 'h5' | 'jsapi';
-  h5Url?: string;
-  invokeParams?: Record<string, string>;
-  orderStatus?: string;
-  nextPollAfter?: number;
-}
 export interface Source {
   title: string;
   sourceName: string;

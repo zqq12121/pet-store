@@ -629,35 +629,6 @@ CREATE TABLE IF NOT EXISTS pickup_health_checks (
   FOREIGN KEY (parent_id) REFERENCES pickup_confirmations(id)
 ) COMMENT='checks';
 
--- 访问统计事件
-CREATE TABLE IF NOT EXISTS analytics_events (
-  business_key VARCHAR(190) UNIQUE COMMENT '业务幂等唯一键或凭证摘要',
-  id VARCHAR(64) NOT NULL COMMENT 'id',
-  owner_id VARCHAR(64) COMMENT 'ownerId',
-  status VARCHAR(40) NOT NULL COMMENT 'status',
-  version INT NOT NULL COMMENT 'version',
-  created_at VARCHAR(40) NOT NULL COMMENT 'createdAt',
-  updated_at VARCHAR(40) NOT NULL COMMENT 'updatedAt',
-  event_id VARCHAR(36) COMMENT 'eventId',
-  event_type VARCHAR(40) COMMENT 'eventType',
-  occurred_at VARCHAR(40) COMMENT 'occurredAt',
-  page_path VARCHAR(200) COMMENT 'pagePath',
-  pet_id VARCHAR(64) COMMENT 'petId',
-  PRIMARY KEY (id),
-  UNIQUE (owner_id,event_id),
-  INDEX idx_analytics_pet (pet_id,event_type,occurred_at)
-) COMMENT='访问统计事件';
-
--- properties
-CREATE TABLE IF NOT EXISTS analytics_event_properties (
-  parent_id VARCHAR(64) NOT NULL COMMENT '所属主记录ID',
-  page VARCHAR(16) COMMENT 'page',
-  path_depth INT COMMENT 'pathDepth',
-  keyword VARCHAR(50) COMMENT 'keyword',
-  PRIMARY KEY (parent_id),
-  FOREIGN KEY (parent_id) REFERENCES analytics_events(id)
-) COMMENT='properties';
-
 -- AI会话（待实现业务）
 CREATE TABLE IF NOT EXISTS ai_sessions (
   business_key VARCHAR(190) UNIQUE COMMENT '业务幂等唯一键或凭证摘要',

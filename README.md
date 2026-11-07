@@ -33,7 +33,6 @@
 | `frontend/buyer-web/` | Vue 3 + TypeScript + Vite 买家端 |
 | `frontend/admin-web/` | Vue 3 + Element Plus 管理后台 |
 | `frontend/shared/` | 双端共用的请求、类型与 SSE 处理 |
-| `frontend/server/demo.mjs` | 前端自带的 Node 演示后端（仅演示，不连真实服务） |
 | `backend/common/` | 业务逻辑、持久化、安全与第三方服务接入 |
 | `backend/order-server/` | 订单、预约与短信通知队列 |
 | `backend/admin-server/` | 认证、宠物目录、门店及管理接口 |
@@ -208,7 +207,7 @@ cd frontend && npm run dev:admin
 
 - 启动脚本会先检查 8080 / 8081 / 8082 是否被占用，占用则直接退出，不会杀其他进程。
 - 这条路线需要本机已有 MySQL、Redis 和 `backend/.env`；容器方式不需要。
-- `npm run dev` 会同时拉起 8787 的 Node 演示后端，联调真实接口时**不要用**它，只用 `dev:buyer` / `dev:admin`。
+- `npm run dev` 同时启动买家端和后台两个 Vite 开发服务，接口代理到 `frontend/.env.local` 里的 `VITE_API_TARGET`。
 
 | 服务 | 开发地址 |
 | --- | --- |
@@ -329,7 +328,7 @@ docker compose exec web nginx -t
 | 文件存储 | `PAW_STORAGE`、`PAW_OSS_ENABLED`、`PAW_OSS_BUCKET`、`PAW_OSS_ENDPOINT`、`OSS_ACCESS_KEY_*` | 默认本机目录，可选私有 OSS |
 | 微信 | `PAW_WECHAT_APP_ID`、`PAW_WECHAT_WEB_APP_ID`、`PAW_WECHAT_MINI_APP_ID` 及对应 `SECRET` / 回调 | 三套凭据互相独立：公众号、开放平台网站扫码、小程序；未完整配置时前端隐藏入口 |
 | 端口 | `WEB_PORT` | 容器方式下网站的对外端口 |
-| 前端 | `VITE_API_TARGET`、`VITE_DEMO_MODE`、`VITE_ADMIN_BASE` | 决定前端连真实网关还是 Node 演示后端 |
+| 前端 | `VITE_API_TARGET`、`VITE_ADMIN_BASE` | 前端开发服务代理的网关地址、后台部署路径 |
 
 ### 配置原则
 

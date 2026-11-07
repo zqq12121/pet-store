@@ -45,7 +45,7 @@ mvn -f backend/pom.xml package
 
 ```sh
 cd frontend
-VITE_API_TARGET=http://127.0.0.1:8080 VITE_DEMO_MODE=false npm run dev:buyer -- --port 5180
+VITE_API_TARGET=http://127.0.0.1:8080 npm run dev:buyer -- --port 5180
 ```
 
 打开 `http://127.0.0.1:5180/ai`。5180 是本次联调端口；若 5173 空闲也可用默认端口。不要使用 `npm run dev` 中的 Node demo 来验收真实 AI。
@@ -86,7 +86,7 @@ VITE_API_TARGET=http://127.0.0.1:8080 VITE_DEMO_MODE=false npm run dev:buyer -- 
 
 ```sh
 cd frontend
-VITE_API_TARGET=http://127.0.0.1:8080 VITE_DEMO_MODE=false npm run dev:admin -- --port 5181
+VITE_API_TARGET=http://127.0.0.1:8080 npm run dev:admin -- --port 5181
 ```
 
 当前本机管理端入口为 `http://127.0.0.1:5181/admin/knowledge`；路径前缀由 `VITE_ADMIN_BASE` 配置。

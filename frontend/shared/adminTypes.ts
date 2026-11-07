@@ -87,15 +87,6 @@ export interface Knowledge {
   status: string;
   indexStatus: string;
 }
-export interface Job {
-  id: string;
-  status: string;
-  errorMessage?: string;
-  totalCount?: number;
-  successCount?: number;
-  failedCount?: number;
-  errors?: { row: number; message: string }[];
-}
 export interface AiCounts {
   sessionCount: number;
   questionCount: number;

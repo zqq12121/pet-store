@@ -2,9 +2,9 @@
 
 Vue 3 + TypeScript + Vite 买家网站（手机 / 电脑）与 Element Plus 店主管理后台。沿用已确认的 Figma 奶油白、暖橙和宠物照片设计。
 
-## 1. 启动演示
+## 1. 启动
 
-需要 Node.js 22.12+（开发验证使用 24.15）。在当前目录执行：
+需要 Node.js 22.12+（开发验证使用 24.15），并先按根目录 README 用 Docker Compose 启动后端（统一入口 `http://127.0.0.1:8090`）。在当前目录执行：
 
 ```bash
 npm ci
@@ -13,13 +13,8 @@ npm run dev
 
 - 买家端：http://127.0.0.1:5173
 - 店主后台：http://127.0.0.1:5174
-- 本地演示 API：127.0.0.1:8787，仅监听本机。
-- 停止：终端按 Ctrl+C。重启会重置订单、上传文件、账户和知识条目。
-
-演示买家：任意格式正确的手机号，例如 `13800000000`；图片码 `DEMO`，短信码 `123456`。
-演示店长：`admin / WarmPaw2026`，后台登录不需要人机验证。员工账号由店长在“员工管理”创建。
-员工可查看预约和宠物档案、办理收款交付及核销；店长保留经营、退款及员工管理权限。
-这些仅是本机测试值，不会发送真实短信，也不会扣款。
+- 两个开发服务都把 `/api` 代理到 `VITE_API_TARGET`（默认 `http://127.0.0.1:8090`）。
+- 停止：终端按 Ctrl+C。
 
 若 npm 提示原有缓存权限错误，可使用独立缓存运行 `npm ci --cache /private/tmp/warmpaw-npm-cache`，无需修改全局缓存权限。
 
@@ -34,19 +29,18 @@ npm run dev
 
 后台还可管理宠物档案、照片 / 视频、检疫图片、上下架、知识文章 / 问答对、导入任务、索引任务、门店及轮播。AI 页面支持游客提问、流式展示、来源、反馈及登录后的本人订单卡片。
 
-## 3. 切换 Spring Boot 后端
+## 3. 连接后端
 
 复制 `.env.example` 为 `.env.local`，按实际端口修改：
 
 ```dotenv
 VITE_API_TARGET=http://127.0.0.1:8090
-VITE_DEMO_MODE=false
 VITE_ADMIN_BASE=/
 ```
 
 上面的 `8090` 对应根目录 Docker Compose 的统一入口。只有按 `backend/README.md` 在宿主机单独启动 Java 网关时，才改用 `8080`；容器内的网关 `8080` 不直接发布到宿主机。
 
-分别启动两个前端，无需演示服务：
+也可以分别启动两个前端：
 
 ```bash
 npm run dev:buyer
@@ -54,8 +48,6 @@ npm run dev:admin
 ```
 
 重启 Vite 后生效。请求前缀统一为 `/api/v1`，以项目附带接口文档为对接契约。`shared/api.ts` 处理独立买家 / 管理员会话、响应包装、错误和幂等键；`shared/types.ts` / `adminTypes.ts` 定义页面需要的数据。
-
-真实模式隐藏演示登录提示和模拟支付按钮。生产构建默认真实模式；如需构建演示包，必须显式设置 `VITE_DEMO_MODE=true`。不得把演示包当作正式商城发布。
 
 微信 H5 / JSAPI、OAuth 绑定、真实短信、真实退款、OSS 上传、DeepSeek / RAG 及数据库事务需要后端实现并联调。电脑付款显示站内续付二维码和链接，手机需登录同一账户；正式域名需能由手机访问，本机 127.0.0.1 链接不能跨设备使用。
 
@@ -66,7 +58,6 @@ buyer-web/        买家 Vue 应用，页面按路由懒加载
 admin-web/        店主 Vue 应用
 shared/           类型、请求、加载状态、SSE 解析和测试
 public/images/    原设计采用的宠物照片
-server/demo.mjs   开发专用内存演示 API，非生产后端
 ```
 
 ```bash
@@ -93,12 +84,12 @@ location /api/ {
 }
 ```
 
-示例需放进实际 HTTPS 站点配置。不要部署 `server/demo.mjs` 或 `node_modules` 为静态资源。若后台与买家同域，用 `/admin/`，构建前设置 `VITE_ADMIN_BASE=/admin/`，后台产物放在站点 `admin` 子目录，并为 `/admin/` 配置 `try_files $uri $uri/ /admin/index.html`。
+示例需放进实际 HTTPS 站点配置。不要把 `node_modules` 部署为静态资源。若后台与买家同域，用 `/admin/`，构建前设置 `VITE_ADMIN_BASE=/admin/`，后台产物放在站点 `admin` 子目录，并为 `/admin/` 配置 `try_files $uri $uri/ /admin/index.html`。
 
 ## 6. 当前边界
 
 - 当前双端已接入 Spring Cloud 业务服务与独立 Python AI，默认 Compose 入口是 `http://localhost:8090/` 和 `/admin/`。项目用于简历展示；隔离演示见 [演示指南](../docs/DEMO_GUIDE.md)。
-- Node 开发演示适配器的 AI 是固定示例，索引重建只模拟任务，导入明确返回“不执行文件导入”。真实 Python 服务已实现 DeepSeek/RAG、知识导入与失败索引重试，参见 [AI 说明](../ai-service/README.md)。阿里云登录联调不能使用 Node 适配器。
+- Python AI 服务已实现 DeepSeek/RAG、知识导入与失败索引重试，参见 [AI 说明](../ai-service/README.md)。
 - 历史售后代码保留退款、退回与治疗费分担；换宠按接口文档默认关闭。本轮浏览器验收覆盖诊断上传与驳回审核，不代表真实退款已验收。
 - 20 只示例宠物的照片不代表真实品种或个体，健康、检疫与协议资料已生成并标注模拟，见 [模拟资料](../docs/DEMO_MATERIALS.md)。
 - 新订单采用到店预约，线上不扣款；交付后不开放在线售后，联系门店处理。诊断上传与在线售后审核用于保留的历史订单，演示时分开验证。

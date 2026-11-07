@@ -104,7 +104,6 @@ node scripts/demo-browser.cjs
 
 ```dotenv
 VITE_API_TARGET=http://127.0.0.1:8080
-VITE_DEMO_MODE=false
 ```
 
 写入 `frontend/.env.local` 后重启 Vite。原 Node 演示服务提示的固定 `DEMO` / `123456` **不适用于此后端**；请填写图片中的随机码，并从本机开发收件箱取短信码。AI 请求由网关转到独立 Python 服务；后台已提供 `/admin/agreements` 协议管理页，可创建、查看和发布版本。
@@ -188,7 +187,7 @@ sh scripts/start-docker-local.sh
 
 该脚本启用 `local,docker`，连接真实 MySQL/Redis，保留本地模拟短信和付款。它为 Docker Desktop 访问绑定 `0.0.0.0:8080`，属于本机开发配置，不是生产部署配置。先停止占用8080的本项目旧进程再启动。生产仍使用 `prod`，不启用模拟功能。
 
-前端本地 `.env.local` 已设置 `VITE_API_TARGET=http://127.0.0.1:8080`、`VITE_DEMO_MODE=true`、`VITE_JAVA_LOCAL=true`、`VITE_ADMIN_BASE=/admin/`。`VITE_JAVA_LOCAL` 只修正本地登录提示，不改变认证规则。源码修改后在 `frontend` 执行 `npm run build`，再将 `dist/buyer/` 内容更新到 Nginx 的 `/usr/share/nginx/html/warmpaw/`，将 `dist/admin/` 内容更新到其 `admin/` 子目录。站点配置保存在 `deploy/nginx-local.conf`，已安装到容器 `/etc/nginx/conf.d/warmpaw.conf`。源码变更不会自动更新 Nginx 静态页面。
+前端本地 `.env.local` 已设置 `VITE_API_TARGET=http://127.0.0.1:8080`、`VITE_ADMIN_BASE=/admin/`。源码修改后在 `frontend` 执行 `npm run build`，再将 `dist/buyer/` 内容更新到 Nginx 的 `/usr/share/nginx/html/warmpaw/`，将 `dist/admin/` 内容更新到其 `admin/` 子目录。站点配置保存在 `deploy/nginx-local.conf`，已安装到容器 `/etc/nginx/conf.d/warmpaw.conf`。源码变更不会自动更新 Nginx 静态页面。
 
 本次验证：
 
@@ -248,7 +247,7 @@ JSON 中 `status=simulated` 表示模拟通知，绝不调用短信平台；买�
 
 真实联调时，在 admin-server 进程环境中设置 `PAW_MOCK_PROVIDERS=false`，
 并保持 Redis 可用；local profile 默认模拟，但允许该变量显式覆盖。
-买家前端以 `VITE_DEMO_MODE=false` 启动并指向 Java 网关。
+买家前端指向 Java 网关启动。
 短信发送响应 `status=accepted` 仅表示平台受理，不代表运营商已送达；
 `status=simulated` 表示写入开发收件箱。密钥只配置在后端，不能加入 `VITE_*` 变量。
 预约通知及交付确认继续使用原 Dysmsapi 和各自模板。

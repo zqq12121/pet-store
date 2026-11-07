@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { admin, clearAuth, isDemo } from '../../shared/api';
+import { admin, clearAuth } from '../../shared/api';
 import { ElMessage } from 'element-plus';
 import { isStaff, managementAccount } from './access';
 // 接待导航只展示日常工作入口，经营配置保留在店长后台。
@@ -73,8 +73,5 @@ async function logout() {
       </header>
       <main><RouterView :key="route.path" /></main>
     </div>
-  </div>
-  <div v-if="isDemo" class="admin-demo">
-    演示环境 · 本地示例数据 · 不调用真实支付、短信或 AI 服务
   </div>
 </template>
