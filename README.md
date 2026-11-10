@@ -319,6 +319,7 @@ docker compose exec web nginx -t
 | --- | --- | --- |
 | 数据库与缓存 | `MYSQL_ROOT_PASSWORD`、`PAW_DB_PASSWORD`、`PAW_REDIS_PASSWORD`、`NACOS_AUTH_*` | 未填会导致容器启动失败 |
 | 管理员 | `PAW_ADMIN_PASSWORD` | 新库初始化时创建管理员，默认用户名 `admin`；不会重置已存在账号的密码 |
+| 登录令牌 | `PAW_JWT_SECRET` | JWT 签名密钥，至少 32 字节；order-server 与 admin-server 共用；未填容器启动失败，更换后所有用户需重新登录 |
 | 图形认证 | `PAW_CAPTCHA_APP_ID`、`PAW_CAPTCHA_APP_KEY` | 阿里云「图形认证方案」的 appId / appKey；未配置时登录明确失败，不回退图片验证码 |
 | 短信 | `PAW_SMS_ACCESS_KEY_ID`、`PAW_SMS_ACCESS_KEY_SECRET`、`PAW_PNVS_*`、`PAW_SMS_SIGN_NAME` | 登录与密码重置；未单独配置时成对复用 OSS 凭据 |
 | 预约通知模板 | `PAW_SMS_APPOINTMENT_*_TEMPLATE` | 提交、确认、取消、过期、交付五类模板，各自独立，不回退验证码模板 |

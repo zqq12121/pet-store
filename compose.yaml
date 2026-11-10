@@ -15,6 +15,7 @@ x-java-environment: &java-environment
   PAW_REDIS_PORT: 6379
   PAW_REDIS_PASSWORD: ${PAW_REDIS_PASSWORD:?请先配置 Redis 密码}
   PAW_ADMIN_PASSWORD: ${PAW_ADMIN_PASSWORD:?请先配置管理员初始密码}
+  PAW_JWT_SECRET: ${PAW_JWT_SECRET:?请先配置 JWT 签名密钥（至少 32 字节）}
   PAW_MOCK_PROVIDERS: "false"
   PAW_STORAGE: /app/data/files
   PAW_FFPROBE: /usr/bin/ffprobe

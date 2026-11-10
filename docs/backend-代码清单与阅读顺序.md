@@ -85,7 +85,7 @@ Controller          只做 HTTP 适配，不写业务
 
 | 优先级 | 文件 | 行数 | 业务 |
 | --- | --- | --- | --- |
-| P1 | `service/AuthService.java` | 752 | 认证与账号安全总入口：短信/密码/微信登录、不透明会话 token（库内只存 SHA-256 摘要）、验证码、改密改用户名。管理端会话 30 分钟、买家网站 24 小时（HttpOnly Cookie，见 `web/BuyerSessionCookie`）、小程序 2 小时 |
+| P1 | `service/AuthService.java` | 752 | 认证与账号安全总入口：短信/密码/微信登录、JWT 签发（`JwtService`）与撤销（Redis 黑名单 + 账号撤销时刻）、验证码、改密改用户名。管理端会话 30 分钟、买家网站 24 小时（HttpOnly Cookie，见 `web/BuyerSessionCookie`）、小程序 2 小时 |
 | P1 | `service/PasswordService.java` | 96 | 密码哈希与校验，从 AuthService 拆出的独立安全边界，无状态 |
 | P1 | `service/GraphCaptchaService.java` | 136 | 阿里云图形认证二次校验，HMAC-SHA256 签名后调云端；未配置直接失败，不回退 |
 | P1 | `service/SmsGateway.java` | 191 | 阿里云短信 RPC 签名发送。验证码走号码认证赠送模板；本地模式写进 `backend/data/local-inbox/` |

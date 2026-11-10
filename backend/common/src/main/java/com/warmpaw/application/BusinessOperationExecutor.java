@@ -97,29 +97,77 @@ public class BusinessOperationExecutor {
       AccessLevel access,
       boolean idempotent,
       java.util.function.Supplier<OperationResult> operation) {
-    String method = context.method(), path = context.path(), key = context.idempotencyKey();
+    return run(context, body, access, idempotent, true, operation);
+  }
+
+  /**
+   * 不加全局写锁的写事务，供已在事务外持有细粒度分布式锁的接口使用（目前只有预约下单）。
+   *
+   * <p>调用方必须自己保证并发安全：事务外先拿 {@link com.warmpaw.service.DistributedLock}，
+   * 事务内对争用资源做乐观锁条件更新。鉴权、幂等回放与落库和 {@link #execute} 完全相同。
+   */
+  @org.springframework.transaction.annotation.Transactional
+  public OperationResult executeWithoutGlobalLock(
+      RequestContext context,
+      Map<String, Object> body,
+      AccessLevel access,
+      boolean idempotent,
+      java.util.function.Supplier<OperationResult> operation) {
+    return run(context, body, access, idempotent, false, operation);
+  }
+
+  /**
+   * 幂等作用域：{@code hash(actorId + method + path + key)}。
+   *
+   * <p>四段用换行分隔：否则 ("ab","c") 与 ("a","bc") 会拼出同一个作用域。
+   * 公开出来是为了让 HTTP 层在事务外用同一个作用域做 Redis SETNX 占位。
+   */
+  public static String scope(RequestContext context) {
+    return hash(
+        context.actor().id()
+            + "\n"
+            + context.method()
+            + "\n"
+            + context.path()
+            + "\n"
+            + context.idempotencyKey());
+  }
+
+  /** 幂等键必须是 UUID 格式，否则 400。 */
+  public static void requireIdempotencyKey(String key) {
+    require(
+        key != null
+            && key.matches(
+                "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"),
+        400,
+        "VALIDATION_ERROR",
+        "请提供 UUID 格式的 Idempotency-Key");
+  }
+
+  /** 两个入口的公共实现；{@code globalLock} 决定写请求是否先取全局行锁。 */
+  private OperationResult run(
+      RequestContext context,
+      Map<String, Object> body,
+      AccessLevel access,
+      boolean idempotent,
+      boolean globalLock,
+      java.util.function.Supplier<OperationResult> operation) {
+    String path = context.path(), key = context.idempotencyKey();
     AuthService.Actor actor = context.actor();
     // admin 决定重放时给哪套视图；write 只看方法名——PUT/PATCH/DELETE 与 POST 一样要加锁。
     boolean admin = access == AccessLevel.ADMIN || access == AccessLevel.STAFF, write = !context.method().equals("GET");
     // 鉴权放在加锁之前：无权限的请求不该有机会排队占住全局锁，否则未授权流量也能把写吞吐拖死。
     access.check(context.actor());
     // 单店全局行锁，随本事务提交/回滚自动释放；只对写请求加。
-    if (write) store.lock();
+    if (write && globalLock) store.lock();
     // 取得写锁后再次校验，等待期间被停用或重置密码的员工不能继续交付。
     if (write && (access == AccessLevel.ADMIN || access == AccessLevel.STAFF))
       auth.requireActiveSession(actor);
     boolean idem = write && idempotent;
     String scope = null;
     if (idem) {
-      require(
-          key != null
-              && key.matches(
-                  "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"),
-          400,
-          "VALIDATION_ERROR",
-          "请提供 UUID 格式的 Idempotency-Key");
-      // 四段用换行分隔：否则 ("ab","c") 与 ("a","bc") 会拼出同一个作用域。
-      scope = hash(actor.id() + "\n" + method + "\n" + path + "\n" + key);
+      requireIdempotencyKey(key);
+      scope = scope(context);
       Map<String, Object> old = store.replay(scope);
       if (old != null) {
         // 同一个键配不同请求体属于客户端复用错误，必须报错而不是回放旧结果。

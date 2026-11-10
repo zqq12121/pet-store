@@ -14,6 +14,7 @@ spec.loader.exec_module(production)
 class ProductionCheckTest(unittest.TestCase):
     def fixture(self):
         env = {k: "test-only-password" for k in ("MYSQL_ROOT_PASSWORD", "PAW_DB_PASSWORD", "PAW_REDIS_PASSWORD", "PAW_ADMIN_PASSWORD")}
+        env["PAW_JWT_SECRET"] = "test-only-jwt-secret-0123456789abcdef"
         env.update(PAW_DOMAIN="shop.warmpaw.cn", ACME_EMAIL="ops@warmpaw.cn", DEEPSEEK_API_KEY="test-only",
                    PAW_CAPTCHA_APP_ID="test-captcha", PAW_CAPTCHA_APP_KEY="test-key",
                    PAW_SMS_SIGN_NAME="测试", OSS_ACCESS_KEY_ID="test-id", OSS_ACCESS_KEY_SECRET="test-secret")
@@ -36,6 +37,11 @@ class ProductionCheckTest(unittest.TestCase):
         env["PAW_WECHAT_MINI_APP_ID"] = "wx0123456789abcdef"
         self.assertTrue(any("小程序登录" in e for e in production.configuration_errors(env)))
 
+    def test_short_jwt_secret_blocks_readiness(self):
+        env = self.fixture()
+        env["PAW_JWT_SECRET"] = "short"
+        self.assertTrue(any("PAW_JWT_SECRET" in e for e in production.configuration_errors(env)))
+
     def test_partial_dedicated_credentials_do_not_fall_back(self):
         env = self.fixture()
         env["PAW_SMS_ACCESS_KEY_ID"] = "partial-id"
@@ -49,6 +55,7 @@ class ProductionCheckTest(unittest.TestCase):
 
     def test_mini_program_requires_own_credentials_but_not_sms_or_ai(self):
         env = {k: "test-only-password" for k in ("MYSQL_ROOT_PASSWORD", "PAW_DB_PASSWORD", "PAW_REDIS_PASSWORD", "PAW_ADMIN_PASSWORD")}
+        env["PAW_JWT_SECRET"] = "test-only-jwt-secret-0123456789abcdef"
         env.update(PAW_DOMAIN="shop.warmpaw.cn", ACME_EMAIL="ops@warmpaw.cn",
                    PAW_WECHAT_MINI_APP_ID="wx0123456789abcdef", PAW_WECHAT_MINI_APP_SECRET="test-only-secret")
         self.assertEqual([], production.configuration_errors(env, mini_program=True))

@@ -102,7 +102,7 @@ public class AdminEmployeeController {
    * <p>PUT {@code /admin/employees/{id}/status}，权限 ADMIN。body 为
    * {@code status=active|disabled} 与 {@code version}。
    *
-   * <p>无论启用还是停用都会 {@code revokeSessions}：停用要立刻踢下线，
+   * <p>无论启用还是停用都会撤销该员工已签发的 token（{@code auth.revokeAll}）：停用要立刻踢下线，
    * 重新启用也不恢复停用前的旧凭证——否则"先停用再启用"就成了绕过强制重新登录的手段。
    * 真正的下线还依赖 {@code identify} 的实时权限复核（disabled 即 401）。
    *

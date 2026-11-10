@@ -107,6 +107,44 @@ public class TemporaryStore {
   }
 
   /**
+   * 不存在才写入（SETNX + 过期时间），返回是否写入成功。
+   *
+   * <p>Redis 分支是一条 {@code SET key value NX EX seconds}，"判断不存在"和"写入"在服务端原子完成；
+   * 内存分支靠 {@code synchronized}。用途：分布式锁加锁、幂等键占位。
+   */
+  public synchronized boolean putIfAbsent(String key, String value, int seconds) {
+    if (enabled)
+      return Boolean.TRUE.equals(
+          redis.opsForValue().setIfAbsent("paw:" + key, value, Duration.ofSeconds(seconds)));
+    if (get(key) != null) return false; // get 会顺手清掉已过期的旧值
+    local.put(key, new Entry(value, Instant.now().plusSeconds(seconds)));
+    return true;
+  }
+
+  /**
+   * 值等于 {@code expected} 才删除，返回是否删除。
+   *
+   * <p>用于释放分布式锁：锁过期后可能已被别人拿走，直接 DEL 会误删别人的锁。
+   * Redis 分支用 Lua 把"比较 + 删除"合成一个原子操作。
+   */
+  public synchronized boolean removeIfEquals(String key, String expected) {
+    if (enabled) {
+      Long n =
+          redis.execute(
+              new org.springframework.data.redis.core.script.DefaultRedisScript<>(
+                  "if redis.call('GET',KEYS[1])==ARGV[1] then return redis.call('DEL',KEYS[1])"
+                      + " else return 0 end",
+                  Long.class),
+              java.util.List.of("paw:" + key),
+              expected);
+      return n != null && n > 0;
+    }
+    if (!expected.equals(get(key))) return false;
+    local.remove(key);
+    return true;
+  }
+
+  /**
    * 失败计数闸门：已连续失败 {@code max} 次则直接 429 拒绝本次尝试。
    *
    * <p>调用位置一律在<b>校验之前</b>（密码比对、验证码比对），所以 {@code max=5} 的实际语义是

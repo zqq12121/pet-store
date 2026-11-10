@@ -459,6 +459,58 @@ class CommerceIntegrationTest {
   }
 
   @Test
+  void sameBuyerConcurrentReservationsHaveOneWinner() throws Exception {
+    // 同一个买家同时预约两只不同的宠物：用户维度的分布式锁 + "仅 1 个有效预约"规则，只能成功一笔
+    Map<String, Object> first = orderBody(pet(), buyer), second = orderBody(pet(), buyer);
+    try (ExecutorService pool = Executors.newFixedThreadPool(2)) {
+      CountDownLatch start = new CountDownLatch(1);
+      List<Future<String>> results = new ArrayList<>();
+      for (var body : List.of(first, second))
+        results.add(
+            pool.submit(
+                () -> {
+                  start.await();
+                  try {
+                    call("POST", "/orders", body, buyer);
+                    return "OK";
+                  } catch (ApiException e) {
+                    return e.code;
+                  }
+                }));
+      start.countDown();
+      List<String> states = List.of(results.get(0).get(), results.get(1).get());
+      assertEquals(1, states.stream().filter("OK"::equals).count(), states.toString());
+      // 败者要么撞上用户锁，要么在锁释放后被"已有有效预约"规则拦下
+      assertTrue(
+          states.contains("RESERVATION_IN_PROGRESS") || states.contains("ACTIVE_APPOINTMENT_EXISTS"),
+          states.toString());
+    }
+  }
+
+  @Test
+  void stalePetWriteIsRejectedByOptimisticLock() {
+    Map<String, Object> p = pet();
+    // 模拟两个事务读到同一版本：第一个保存成功后，拿旧版本的第二个必须失败
+    Map<String, Object> a = store.get("pet", text(p, "id")), b = store.get("pet", text(p, "id"));
+    tx.execute(status -> {
+      a.put("name", "第一次修改");
+      store.save(a);
+      return null;
+    });
+    ApiException e =
+        assertThrows(
+            ApiException.class,
+            () ->
+                tx.execute(status -> {
+                  b.put("name", "基于旧版本的修改");
+                  store.save(b);
+                  return null;
+                }));
+    assertEquals(409, e.status);
+    assertEquals("第一次修改", store.get("pet", text(p, "id")).get("name"));
+  }
+
+  @Test
   void idempotencyReplaysAndRejectsDifferentBody() {
     Map<String, Object> p = pet(), b = orderBody(p, buyer);
     String key = UUID.randomUUID().toString();

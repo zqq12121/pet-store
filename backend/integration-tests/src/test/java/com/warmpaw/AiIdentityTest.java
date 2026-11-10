@@ -8,17 +8,16 @@ import com.warmpaw.common.ApiException;
 import com.warmpaw.controller.AuthController;
 import com.warmpaw.repository.BusinessRepository;
 import com.warmpaw.service.*;
-import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
-/** AI 身份桥接使用真实不透明凭证校验，不能接受伪造游客或管理员身份。 */
+/** AI 身份桥接使用真实 JWT 校验，不能接受伪造游客或管理员身份。 */
 class AiIdentityTest {
   @Test
   void validatesGuestAndBuyerWithoutExposingCredentials() {
     BusinessRepository store = mock(BusinessRepository.class);
     TemporaryStore temporary = new TemporaryStore(null, false);
-    AuthService auth = new AuthService(store, temporary, mock(SmsGateway.class), mock(GraphCaptchaService.class), new PasswordService(), true);
+    AuthService auth = new AuthService(store, temporary, mock(SmsGateway.class), mock(GraphCaptchaService.class), new PasswordService(), new com.warmpaw.service.JwtService("integration-test-only-jwt-secret-0123456789", true), true);
     GuestService guests = new GuestService(temporary, auth);
     AuthController controller = new AuthController(guests, auth, mock(GraphCaptchaService.class), new com.warmpaw.web.BuyerSessionCookie(false));
     MockHttpServletRequest request = new MockHttpServletRequest();
@@ -31,25 +30,27 @@ class AiIdentityTest {
     assertTrue(response.contains("guest"));
     assertFalse(response.contains(guestToken));
 
-    request.addHeader("Authorization", "Bearer buyer-token");
+    // 签发真实 JWT：买家 user_1
+    String buyerToken = text(auth.login(map("id", "user_1"), "buyer"), "accessToken");
+    request.addHeader("Authorization", "Bearer " + buyerToken);
     assertEquals(400, assertThrows(ApiException.class, () -> controller.aiIdentity(request)).status);
     request.removeHeader("X-Guest-Token");
-    when(store.byKey("session", hash("buyer-token"))).thenReturn(map(
-        "status", "active", "expiresAt", Instant.now().plusSeconds(60).toString(), "ownerId", "user_1", "role", "buyer"));
-    when(store.get("user", "user_1")).thenReturn(map("phone", "13800000000"));
+    when(store.find("user", "user_1")).thenReturn(map("phone", "13800000000"));
     response = write(controller.aiIdentity(request).getBody());
     assertTrue(response.contains("user_1"));
     assertFalse(response.contains("13800000000"));
-    assertFalse(response.contains("buyer-token"));
+    assertFalse(response.contains(buyerToken));
     assertEquals(403, assertThrows(ApiException.class, () -> controller.aiAdminIdentity(request)).status);
 
-    when(store.byKey("session", hash("buyer-token"))).thenReturn(map(
-        "status", "active", "expiresAt", Instant.now().plusSeconds(60).toString(), "ownerId", "admin_1", "role", "admin"));
-    when(store.get("admin", "admin_1")).thenReturn(map("phone", "13800000000"));
+    // 换成店长 admin_1 的 JWT
+    String adminToken = text(auth.login(map("id", "admin_1"), "admin"), "accessToken");
+    request.removeHeader("Authorization");
+    request.addHeader("Authorization", "Bearer " + adminToken);
+    when(store.find("admin", "admin_1")).thenReturn(map("phone", "13800000000"));
     assertEquals(403, assertThrows(ApiException.class, () -> controller.aiIdentity(request)).status);
     response = write(controller.aiAdminIdentity(request).getBody());
     assertTrue(response.contains("admin_1"));
-    assertFalse(response.contains("buyer-token"));
+    assertFalse(response.contains(adminToken));
     assertFalse(response.contains("13800000000"));
     request.addHeader("X-Guest-Token", guestToken);
     assertEquals(403, assertThrows(ApiException.class, () -> controller.aiAdminIdentity(request)).status);

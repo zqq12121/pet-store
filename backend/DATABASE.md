@@ -10,7 +10,7 @@
 
 | 文档业务 | 主表和关联表 | 数据用途 |
 |---|---|---|
-| 账号 | `users`、`admins`、`auth_sessions` | 用户、密码哈希、可撤销Token摘要、期限与角色 |
+| 账号 | `users`、`admins`、`auth_sessions` | 用户、密码哈希；`auth_sessions` 已不再写入（登录改为 JWT，撤销记录在 Redis），表保留以兼容旧数据 |
 | 微信身份 | `wechat_accounts`、`wechat_openid_claims` | appId/openid与用户绑定、唯一归属 |
 | 文件 | `file_assets` | 文件用途、大小、MIME、公开/私有权限及所属用户；文件内容仍在磁盘 |
 | 门店 | `shops`、`shop_banners` | 门店联系方式、自提规则和有序轮播图 |

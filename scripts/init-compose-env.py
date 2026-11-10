@@ -31,7 +31,7 @@ def main():
     for key in values:
         if sources.get(key):
             values[key] = sources[key]
-    for key in ("MYSQL_ROOT_PASSWORD", "PAW_DB_PASSWORD", "PAW_REDIS_PASSWORD", "PAW_ADMIN_PASSWORD", "NACOS_AUTH_IDENTITY_VALUE"):
+    for key in ("MYSQL_ROOT_PASSWORD", "PAW_DB_PASSWORD", "PAW_REDIS_PASSWORD", "PAW_ADMIN_PASSWORD", "PAW_JWT_SECRET", "NACOS_AUTH_IDENTITY_VALUE"):
         if not values.get(key):
             values[key] = secrets.token_urlsafe(32)
     values["NACOS_AUTH_TOKEN"] = base64.b64encode(secrets.token_bytes(48)).decode()

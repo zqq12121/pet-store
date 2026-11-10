@@ -15,11 +15,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 认证与账号安全：短信登录、密码登录、不透明会话token、验证码、改密/改用户名。
+ * 认证与账号安全：短信登录、密码登录、JWT 签发与撤销、验证码、改密/改用户名。
  *
- * <p><b>会话模型</b>：不签发 JWT，而是随机 32 字节 token，库里只存它的 SHA-256 摘要
- * （{@code session} 表按摘要做键）。好处是数据库泄露也拿不到可用 token，且退出登录可以真正撤销
- * ——JWT 的痛点正是"签出去就撤不回"，除非再维护一张黑名单表，那还不如直接存会话。
+ * <p><b>会话模型</b>：签发 JWT（HS256，见 {@link JwtService}），服务端不存会话，校验只看签名和过期时间。
+ * JWT 的痛点是"签出去就撤不回"，所以撤销信息放在 Redis（{@link TemporaryStore}）里：
+ *
+ * <ul>
+ *   <li><b>退出登录</b>：把这个 token 的 {@code jti} 加入黑名单，存活到 token 原本的过期时间；
+ *   <li><b>改密码、停用员工</b>：记录该账号的"撤销时刻"，此刻之前签发的 token 全部失效
+ *       （见 {@link #revokeAll}），相当于让这个账号所有设备重新登录。
+ * </ul>
  *
  * <p>会话有效期：管理端 30 分钟、买家网站 24 小时（靠 HttpOnly Cookie 保持，见 {@code BuyerSessionCookie}）、
  * 小程序 2 小时（{@link #MINI_PROGRAM_SECONDS}）。
@@ -43,9 +48,18 @@ public class AuthService {
    * @param id    账号 id（买家是 {@code user} 表主键，管理端是 {@code admin} 表主键）
    * @param role  {@code buyer} / {@code staff} / {@code admin}
    * @param phone 账号绑定手机号，可能为 null（纯微信账号）
-   * @param tokenHash 当前 token 的摘要，用于退出登录、改密后撤销会话
+   * @param tokenId 当前 JWT 的 {@code jti}，退出登录时拉黑它
+   * @param issuedAtMs token 签发时刻（毫秒），与账号的撤销时刻比较
    */
-  public record Actor(String id, String role, String phone, String tokenHash) {}
+  public record Actor(String id, String role, String phone, String tokenId, long issuedAtMs) {
+    /** 内部构造（测试、系统任务）用：签发时刻记为 0，账号一旦被撤销就视为失效，偏安全。 */
+    public Actor(String id, String role, String phone, String tokenId) {
+      this(id, role, phone, tokenId, 0L);
+    }
+  }
+
+  /** token 最长有效期（买家网站 24 小时）；撤销记录只需保留这么久，之后旧 token 本来就过期了。 */
+  private static final int MAX_TOKEN_SECONDS = 86400;
 
   private final BusinessRepository store;
   private final TemporaryStore temp;
@@ -54,6 +68,7 @@ public class AuthService {
   private final GraphCaptchaService graphCaptcha;
   /** 密码哈希与校验已拆到独立职责，见 {@link PasswordService} 的类注释。 */
   private final PasswordService passwords;
+  private final JwtService jwt;
   private final SecureRandom random = new SecureRandom();
 
   public AuthService(
@@ -62,7 +77,9 @@ public class AuthService {
       SmsGateway smsGateway,
       GraphCaptchaService graphCaptcha,
       PasswordService passwords,
+      JwtService jwt,
       @Value("${app.mock-providers}") boolean mock) {
+    this.jwt = jwt;
     this.store = store;
     this.temp = temp;
     this.mock = mock;
@@ -81,7 +98,7 @@ public class AuthService {
     return mock;
   }
 
-  /** 生成 32 字节 URL-safe 随机 token（无填充），用于会话与自提二维码 payload。 */
+  /** 生成 32 字节 URL-safe 随机 token（无填充），用于自提二维码等一次性 payload。 */
   public String randomToken() {
     byte[] bytes = new byte[32];
     random.nextBytes(bytes);
@@ -110,40 +127,62 @@ public class AuthService {
   /**
    * 从 Authorization 头解析当前用户。
    *
-   * <p>四个校验按顺序：
+   * <p>校验按顺序：
    *
    * <ol>
    *   <li>头为 null → 返回 null（匿名，合法）；
    *   <li>不是 {@code Bearer } 开头 → 401（格式错的凭证不该被当匿名）；
-   *   <li>会话不存在或状态非 active → 401（已退出、被撤销）；
-   *   <li>会话过期 → 401 {@code TOKEN_EXPIRED}（单独错误码让前端能提示"登录已过期"）；
+   *   <li>JWT 签名不对或被篡改 → 401；过期 → 401 {@code TOKEN_EXPIRED}（前端提示"登录已过期"）；
+   *   <li>已退出登录（jti 在黑名单）或签发于账号撤销时刻之前 → 401；
    * </ol>
    *
    * <p>管理端额外做一次"实时权限复核"：员工被停用或角色被降级后，已签发的会话必须立即失效。
    * 否则一个被开除的员工还能用旧 token 操作 30 分钟。
    *
-   * <p>注意库里存的是 token 摘要，查会话用 {@code hash(bearer)}，原文不落库。
+   * <p>账号仍要查一次库：取手机号，并对管理端账号做停用/角色复核。
    */
   public Actor identify(String bearer) {
     if (bearer == null) return null;
     require(bearer.startsWith("Bearer "), 401, "UNAUTHORIZED", "登录凭证无效");
-    String digest = hash(bearer.substring(7));
-    Map<String, Object> session = store.byKey("session", digest);
-    require(
-        session != null && "active".equals(text(session, "status")), 401, "UNAUTHORIZED", "请先登录");
-    require(
-        Instant.parse(text(session, "expiresAt")).isAfter(Instant.now()),
-        401,
-        "TOKEN_EXPIRED",
-        "登录已过期");
-    String user = text(session, "ownerId");
-    Map<String, Object> account =
-        store.get(List.of("admin", "staff").contains(text(session, "role")) ? "admin" : "user", user);
-    // 员工停用或角色改变后，已有会话不能继续使用。
-    if (List.of("admin", "staff").contains(text(session, "role")))
+    JwtService.Token token = jwt.parse(bearer.substring(7));
+    requireNotRevoked(token.id(), token.subject(), token.issuedAtMs());
+    String user = token.subject(), role = token.role();
+    boolean management = List.of("admin", "staff").contains(role);
+    Map<String, Object> account = store.find(management ? "admin" : "user", user);
+    require(account != null, 401, "UNAUTHORIZED", "请先登录");
+    // 员工停用或角色改变后，已有 token 不能继续使用。
+    if (management)
       require(!"disabled".equals(text(account, "status"))
-          && text(session, "role").equals(accountRole(account)), 401, "UNAUTHORIZED", "请重新登录");
-    return new Actor(user, text(session, "role"), text(account, "phone"), digest);
+          && role.equals(accountRole(account)), 401, "UNAUTHORIZED", "请重新登录");
+    return new Actor(user, role, text(account, "phone"), token.id(), token.issuedAtMs());
+  }
+
+  /**
+   * 撤销校验：token 已退出登录（jti 在黑名单），或签发时刻不晚于账号的撤销时刻，都是 401。
+   *
+   * <p>用 {@code <=} 而不是 {@code <}：撤销和签发落在同一毫秒时按"撤销在后"处理，宁可多让用户登录一次。
+   */
+  private void requireNotRevoked(String tokenId, String accountId, long issuedAtMs) {
+    require(temp.get("jwt-blacklist:" + tokenId) == null, 401, "UNAUTHORIZED", "请先登录");
+    String revokedBefore = temp.get("jwt-revoked-before:" + accountId);
+    require(
+        revokedBefore == null || issuedAtMs > Long.parseLong(revokedBefore),
+        401,
+        "UNAUTHORIZED",
+        "请重新登录");
+  }
+
+  /**
+   * 让某个账号此刻之前签发的全部 token 失效（改密码、停用员工时调用）。
+   *
+   * <p>记录的是撤销时刻（毫秒），保留 {@link #MAX_TOKEN_SECONDS} 秒——超过这个时间，
+   * 撤销前签发的 token 自己也过期了，记录可以自然消失。
+   */
+  public void revokeAll(String accountId) {
+    temp.put(
+        "jwt-revoked-before:" + accountId,
+        Long.toString(System.currentTimeMillis()),
+        MAX_TOKEN_SECONDS);
   }
 
   /**
@@ -320,7 +359,7 @@ public class AuthService {
    * 这不是笔误，而是为了让同一份前端代码能按角色读不同字段，同时不把管理端的
    * {@code role}/{@code displayName} 结构暴露给买家。
    *
-   * <p>库里存的是 {@code hash(token)}，返回给客户端的才是明文 token。
+   * <p>token 是 JWT，服务端不落库；撤销靠 Redis 黑名单和账号撤销时刻（见类注释）。
    */
   public Map<String, Object> login(Map<String, Object> account, String role) {
     return login(account, role, List.of("admin", "staff").contains(role) ? 1800 : 86400);
@@ -331,19 +370,9 @@ public class AuthService {
 
   /** 按指定有效期签发会话；目前只有小程序用它覆盖默认的买家 24 小时。 */
   public Map<String, Object> login(Map<String, Object> account, String role, int seconds) {
-    String token = randomToken();
+    // 签发 JWT，服务端不再写会话表
+    String token = jwt.issue(text(account, "id"), role, seconds);
     boolean management = List.of("admin", "staff").contains(role);
-    store.create(
-        "session",
-        text(account, "id"),
-        hash(token),
-        map(
-            "status",
-            "active",
-            "role",
-            role,
-            "expiresAt",
-            Instant.now().plusSeconds(seconds).toString()));
     return map(
         "accessToken",
         token,
@@ -392,21 +421,17 @@ public class AuthService {
   }
 
   /**
-   * 退出登录：把会话置为 {@code revoked}。
+   * 退出登录：把当前 token 的 {@code jti} 加入 Redis 黑名单。
    *
    * <p>未登录（{@code actor == null}）直接返回成功，不报错——退出操作应当幂等，
    * 客户端重试或 token 已过期时不该弹错误。
    *
-   * <p>这里只撤销当前这一个会话，不影响该账号在其它设备上的登录。
+   * <p>只拉黑当前这一个 token，不影响该账号在其它设备上的登录。黑名单保留
+   * {@link #MAX_TOKEN_SECONDS} 秒，覆盖任何 token 的剩余有效期。
    */
-  @Transactional
   public void logout(Actor actor) {
-    if (actor == null) return;
-    Map<String, Object> session = store.byKey("session", actor.tokenHash());
-    if (session != null) {
-      session.put("status", "revoked");
-      store.save(session);
-    }
+    if (actor == null || actor.tokenId() == null || actor.tokenId().isEmpty()) return;
+    temp.put("jwt-blacklist:" + actor.tokenId(), "1", MAX_TOKEN_SECONDS);
   }
 
   /**
@@ -531,16 +556,16 @@ public class AuthService {
    *   <li><b>撤销所有会话</b>——改密码的核心目的就是踢掉可能被盗用的登录态。
    * </ol>
    *
-   * <p>{@code role} 参数用于定位要撤销的是 {@code user} 还是 {@code admin} 域的会话。
+   * <p>撤销通过 {@link #revokeAll} 记录账号的撤销时刻，此前签发的 JWT 全部失效。
    */
-  private void savePassword(Map<String, Object> account, String password, String role) {
+  private void savePassword(Map<String, Object> account, String password) {
     checkCooldown(account, "passwordChangedAt", 7);
     require(!passwordMatches(password, text(account, "passwordHash")), 400,
         "PASSWORD_UNCHANGED", "新密码不能与原密码相同");
     account.put("passwordHash", passwordHash(password));
     account.put("passwordChangedAt", Instant.now().toString());
     store.save(account);
-    store.revokeSessions(text(account, "id"), role);
+    revokeAll(text(account, "id"));
     store.audit(text(account, "id"), "password_changed", text(account, "id"));
   }
 
@@ -564,7 +589,7 @@ public class AuthService {
     store.lock();
     Map<String, Object> user = store.byKey("user", phone);
     require(user != null, 400, "ACCOUNT_NOT_REGISTERED", "请先使用短信登录创建账号");
-    savePassword(user, password, "buyer");
+    savePassword(user, password);
     return map("message", "密码已更新，请重新登录");
   }
 
@@ -595,7 +620,7 @@ public class AuthService {
       temp.failed(key, 600);
       throw new ApiException(400, "PASSWORD_INVALID", "原密码不正确；尚未设置密码请使用手机号验证设置");
     }
-    savePassword(account, password, actor.role());
+    savePassword(account, password);
     temp.resetFailures(key);
     return map("message", "密码已更新，请重新登录");
   }
@@ -608,10 +633,8 @@ public class AuthService {
    * 不复查就会出现"已退出登录的请求仍然改掉了密码"。
    */
   public void requireActiveSession(Actor actor) {
-    Map<String, Object> session = store.byKey("session", actor.tokenHash());
-    require(session != null && "active".equals(text(session, "status"))
-        && Instant.parse(text(session, "expiresAt")).isAfter(Instant.now()),
-        401, "UNAUTHORIZED", "请重新登录");
+    require(actor != null, 401, "UNAUTHORIZED", "请重新登录");
+    requireNotRevoked(actor.tokenId(), actor.id(), actor.issuedAtMs());
     if (List.of("admin", "staff").contains(actor.role())) {
       Map<String, Object> account = store.get("admin", actor.id());
       require(!"disabled".equals(text(account, "status"))
@@ -666,7 +689,7 @@ public class AuthService {
    * <p>重置后撤销该员工全部会话（{@code savePassword} 内完成），员工必须用新密码重新登录。
    */
   public void resetStaffPassword(Map<String, Object> account, Map<String, Object> body) {
-    savePassword(account, newPassword(new Input(body, "newPassword,version")), "staff");
+    savePassword(account, newPassword(new Input(body, "newPassword,version")));
   }
 
   /**

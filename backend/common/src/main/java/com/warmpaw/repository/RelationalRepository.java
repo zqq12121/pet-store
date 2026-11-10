@@ -109,20 +109,6 @@ public class RelationalRepository {
   }
 
   /**
-   * 批量撤销某主体在某角色域下的全部会话。
-   *
-   * <p><b>刻意绕过模型层</b>直接写 SQL：这是"集合级"操作（一个 owner 对应 N 个会话），
-   * 而模型层只按单行 id 操作；若先 {@code list} 再逐条 {@code save}，
-   * 既慢又会在中途失败时留下"部分撤销"的状态。
-   *
-   * <p>注意不走 {@code save}，所以不更新 {@code updated_at}、不递增 {@code version}——
-   * 会话被撤销后本就不可再用，版本号没有意义。
-   */
-  public void revokeSessions(String owner, String role) {
-    jdbc.update("UPDATE auth_sessions SET status='revoked' WHERE owner_id=? AND role=?", owner, role);
-  }
-
-  /**
    * 单行查询的公共实现。
    *
    * <p>{@code SELECT *} 是安全的：列名不会进入响应，{@link #hydrate} 只按模型里声明过的字段取值，
@@ -615,24 +601,45 @@ public class RelationalRepository {
    */
   @Transactional
   public void update(Map<String, Object> entity) {
+    if (update(entity, null) != 1)
+      throw new IllegalStateException("Entity update did not match one row");
+  }
+
+  /**
+   * 乐观锁更新：{@code WHERE id=? AND version=?}，返回受影响行数。
+   *
+   * <p>返回 0 说明这行在读取之后已经被别人改过（版本号变了），调用方据此报冲突。
+   * 只有主表更新成功才替换子表，失败时什么都不写。
+   *
+   * @param expectedVersion 读取时的版本号；实体里的 {@code version} 应已由调用方加一
+   */
+  public int updateIfVersion(Map<String, Object> entity, long expectedVersion) {
+    return update(entity, expectedVersion);
+  }
+
+  /** {@code expectedVersion} 为 null 时只按主键更新，否则额外带版本条件。 */
+  private int update(Map<String, Object> entity, Long expectedVersion) {
     var m = model(kindOf(text(entity, "id")));
     validate(m, entity);
     var row = columns(m, entity);
     row.remove("id");
     List<Object> values = new ArrayList<>(row.values());
     values.add(entity.get("id"));
+    if (expectedVersion != null) values.add(expectedVersion);
     int n =
         jdbc.update(
             "UPDATE "
                 + m.get("table")
                 + " SET "
                 + row.keySet().stream().map(k -> k + "=?").collect(Collectors.joining(","))
-                + " WHERE id=?",
+                + " WHERE id=?"
+                + (expectedVersion != null ? " AND version=?" : ""),
             values.toArray());
-    if (n != 1) throw new IllegalStateException("Entity update did not match one row");
+    if (n != 1) return n;
     // 主表与一对多关系在同一事务替换，任何附件约束失败都会回滚。
     deleteChildren(m, text(entity, "id"));
     writeChildren(m, entity, text(entity, "id"));
+    return n;
   }
 
   /**

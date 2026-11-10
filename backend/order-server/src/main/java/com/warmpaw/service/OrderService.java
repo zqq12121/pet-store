@@ -232,6 +232,8 @@ public class OrderService {
     store.occupy(text(p, "id"), text(o, "id"));
     p.put("status", "reserved");
     p.put("activeOrderId", o.get("id"));
+    // 乐观锁：UPDATE pets ... WHERE id=? AND version=<本次读到的版本>。
+    // 读取之后若被别人改过（被预约、被后台修改），影响行数为 0 → 409 VERSION_CONFLICT，整个事务回滚。
     store.save(p);
     store.audit(actor.id(), "order.create", text(o, "id"));
     return o;

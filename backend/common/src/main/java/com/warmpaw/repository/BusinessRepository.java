@@ -3,6 +3,7 @@ package com.warmpaw.repository;
 import static com.warmpaw.common.ApiException.require;
 import static com.warmpaw.common.Json.*;
 
+import com.warmpaw.common.ApiException;
 import com.warmpaw.mapper.ResourceMapper;
 import java.time.Instant;
 import java.util.*;
@@ -131,11 +132,6 @@ public class BusinessRepository {
     return repository.userByUsername(username);
   }
 
-  /** 撤销某账号在指定角色域下的全部会话。改密、停用员工后必须调用。 */
-  public void revokeSessions(String owner, String role) {
-    repository.revokeSessions(owner, role);
-  }
-
   /** 取某类实体的全量列表。单店数据量小，业务层普遍在内存里过滤。 */
   public List<Map<String, Object>> list(String kind) {
     return repository.list(kind);
@@ -191,13 +187,26 @@ public class BusinessRepository {
   /**
    * 保存修改：刷新 {@code updatedAt} 并自增 {@code version}。
    *
-   * <p><b>注意乐观锁的实际形态</b>：版本号自增发生在应用层，UPDATE 语句本身不带
-   * {@code WHERE version = ?}。真正的并发保护来自全局锁（所有写都在锁内），
-   * 版本号主要用于"客户端拿着旧数据提交"这类跨请求场景，由
-   * {@link #version} 显式比对。
+   * <p><b>宠物走数据库乐观锁</b>：UPDATE 带 {@code WHERE version = 读取时的版本}，
+   * 影响行数为 0 说明读取之后已被别人改过，返回 409。原因是预约下单不再持有全局锁，
+   * 而是靠 Redis 分布式锁 + 这里的版本条件更新；其他仍在全局锁内的写操作（后台改宠物、
+   * 交付、售后）如果不带版本条件，可能把刚被预约的宠物状态覆盖回去。
+   *
+   * <p>其他实体仍只在应用层自增版本号，UPDATE 不带版本条件，并发保护来自全局锁；
+   * 版本号用于"客户端拿着旧数据提交"这类跨请求场景，由 {@link #version} 显式比对。
    */
   public void save(Map<String, Object> m) {
     m.put("updatedAt", Instant.now().toString());
+    if (m.get("version") instanceof Number && "pet".equals(repository.kindOf(text(m, "id")))) {
+      long expected = number(m, "version");
+      m.put("version", expected + 1);
+      if (repository.updateIfVersion(m, expected) != 1) {
+        // 回滚内存里的版本号，保持与数据库一致（事务随异常回滚）
+        m.put("version", expected);
+        throw new ApiException(409, "VERSION_CONFLICT", "数据已更新，请重新加载");
+      }
+      return;
+    }
     if (m.get("version") instanceof Number) m.put("version", number(m, "version") + 1);
     repository.update(m);
   }

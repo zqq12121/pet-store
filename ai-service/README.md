@@ -90,7 +90,7 @@ graph TD;
 
 推荐会复核候选宠物实时详情，仅展示 `on_sale && purchaseAllowed` 的个体。预约入口来自核验过的 ID，前端路由为 `/checkout/:petId`，仍由已有页面完成登录、表单校验、协议确认和提交。查询预约使用现有 `/orders` 接口，`reservation_confirmed` 不会被解释成付款或交付完成。
 
-同一请求只能使用买家 `Authorization` 或 `X-Guest-Token`。Java 每次核验不透明凭证；管理员身份不能查买家 AI 会话。游客登录后开启新的买家会话，不自动迁移游客历史。
+同一请求只能使用买家 `Authorization` 或 `X-Guest-Token`。Java 每次核验 JWT（签名、过期与撤销状态）；管理员身份不能查买家 AI 会话。游客登录后开启新的买家会话，不自动迁移游客历史。
 
 ## 知识维护与边界
 

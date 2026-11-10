@@ -3,7 +3,10 @@ package com.warmpaw.controller.buyer;
 import com.warmpaw.application.AccessLevel;
 import com.warmpaw.application.OrderApplicationService;
 import com.warmpaw.controller.support.ApiRequestExecutor;
+import com.warmpaw.service.DistributedLock;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -73,8 +76,29 @@ public class OrderController {
   public ResponseEntity<Object> create(
       @RequestBody(required = false) Map<String, Object> requestBody, HttpServletRequest request) {
     Map<String, Object> body = requestBody == null ? new java.util.LinkedHashMap<>() : requestBody;
-    return requests.execute(
-        request, body, AccessLevel.BUYER, true, context -> service.create(body, context.actor()));
+    // 不走全局写锁：事务外按"先用户、后宠物"的固定顺序加 Redis 分布式锁，
+    // 用户锁保证"每账号仅 1 个有效预约"，宠物锁保证"一只宠物只能被一人占位"。
+    return requests.executeLocked(
+        request,
+        body,
+        AccessLevel.BUYER,
+        context -> {
+          List<DistributedLock.Spec> locks = new ArrayList<>();
+          locks.add(
+              new DistributedLock.Spec(
+                  "reserve:user:" + context.actor().id(),
+                  "RESERVATION_IN_PROGRESS",
+                  "你有一个预约正在提交，请稍后再试"));
+          // petId 缺失时不加宠物锁，交给业务校验返回 400
+          if (body.get("petId") != null)
+            locks.add(
+                new DistributedLock.Spec(
+                    "reserve:pet:" + body.get("petId"),
+                    "PET_NOT_AVAILABLE",
+                    "手慢了，该宠物正在被其他人预约"));
+          return locks;
+        },
+        context -> service.create(body, context.actor()));
   }
 
   /**

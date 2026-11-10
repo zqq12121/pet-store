@@ -12,3 +12,6 @@ spring:
         enabled: false
     discovery:
       enabled: false
+app:
+  # 测试专用 JWT 签名密钥（≥32 字节）；生产通过 PAW_JWT_SECRET 注入。
+  jwt-secret: integration-test-only-jwt-secret-0123456789

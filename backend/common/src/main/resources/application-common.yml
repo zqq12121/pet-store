@@ -42,6 +42,8 @@ app:
   admin-password: ${PAW_ADMIN_PASSWORD:}
   mock-providers: ${PAW_MOCK_PROVIDERS:false}
   redis-enabled: true
+  # JWT 签名密钥，order-server 与 admin-server 必须相同；非 mock 模式下为空会启动失败。
+  jwt-secret: ${PAW_JWT_SECRET:}
   # 买家登录 Cookie 是否加 Secure；只有全站 HTTPS 时才能打开（compose.production.yaml 已设为 true）。
   auth-cookie-secure: ${PAW_AUTH_COOKIE_SECURE:false}
 management:

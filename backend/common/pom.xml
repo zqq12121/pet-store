@@ -36,6 +36,29 @@
       <artifactId>jackson-databind</artifactId>
       <version>2.21.4</version>
     </dependency>
+    <!-- 认证：Spring Security 过滤器链 + JWT（jjwt）。版本由 Boot BOM 管理 security，
+         jjwt 不在 BOM 里需显式指定；impl 与 jackson 只在运行期需要。 -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-api</artifactId>
+      <version>0.12.6</version>
+    </dependency>
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-impl</artifactId>
+      <version>0.12.6</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-jackson</artifactId>
+      <version>0.12.6</version>
+      <scope>runtime</scope>
+    </dependency>
     <!-- Prometheus 指标导出：版本由 Spring Boot BOM 管理。
          放在 common 里是因为 order-server 与 admin-server 都依赖本模块，
          避免两处重复声明；gateway 不依赖 common，需单独声明（见其 pom）。 -->

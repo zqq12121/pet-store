@@ -20,6 +20,8 @@ def configuration_errors(env, mini_program=False):
     for key in ("MYSQL_ROOT_PASSWORD", "PAW_DB_PASSWORD", "PAW_REDIS_PASSWORD", "PAW_ADMIN_PASSWORD"):
         if len(env.get(key, "")) < 12:
             errors.append(key + " 至少需要 12 位；既有数据库和管理员密码须单独验证")
+    if len(env.get("PAW_JWT_SECRET", "").encode()) < 32:
+        errors.append("PAW_JWT_SECRET 至少需要 32 字节；order-server 与 admin-server 必须一致")
     # 小程序只依赖浏览、微信登录和收藏，不要求短信、支付或 AI 配置。
     if mini_program:
         if not re.fullmatch(r"wx[0-9a-fA-F]{16}", env.get("PAW_WECHAT_MINI_APP_ID", "")):

@@ -20,8 +20,9 @@ import org.springframework.stereotype.Service;
  *   <li>库存锁复用订单的"一宠一锁"（{@code pet.active_order_id}），不另建预约库存表。
  * </ul>
  *
- * <p><b>事务边界</b>：本类所有写方法都假定调用方已开启事务并持有全局写锁
- * （{@code BusinessRepository.lock()}）。这里不标注 {@code @Transactional}，是因为状态流转要和
+ * <p><b>事务边界</b>：本类写方法都假定调用方已开启事务。{@link #create} 例外地不持有全局写锁，
+ * 而是由 HTTP 层在事务外加 Redis 分布式锁（用户 + 宠物），宠物状态用乐观锁条件更新；
+ * 其余写方法仍持有全局写锁（{@code BusinessRepository.lock()}）。这里不标注 {@code @Transactional}，是因为状态流转要和
  * 订单创建、库存占用处在同一个事务里，由 {@code OrderApplicationService} 统一控制。
  */
 @Service
@@ -54,8 +55,12 @@ public class AppointmentService {
         "petId,productVersion,expectedAmount,contactName,contactPhone,remark,agreementVersion,agreementContentHash,agreementAccepted,visitAt")
         .str("visitAt", 1, 40);
     Instant visit = AppointmentHours.validateVisit(value, text(catalog.shop(), "businessHours"), now);
-    expire(now);
-    require(store.list("order").stream().noneMatch(o -> actor.id().equals(text(o, "ownerId")) && active(o)),
+    // 预约下单不持有全局锁，所以这里不再顺手调用 expire(now) 清理别人的过期预约
+    // （那是对其他订单的写，会和持全局锁的后台操作竞争）。过期清理只由定时任务做；
+    // 这里把"已过截止时间但还没被清理"的预约视为无效，不阻止用户重新预约。
+    // 并发安全：同一用户的预约请求已被事务外的用户维度分布式锁串行化。
+    require(store.list("order").stream().noneMatch(o -> actor.id().equals(text(o, "ownerId")) && active(o)
+            && Instant.parse(text(o, "expiresAt")).isAfter(now)),
         409, "ACTIVE_APPOINTMENT_EXISTS", "你已有有效预约，请先取消或完成后再预约");
     // 内部复用原订单快照和一宠一锁，不创建微信支付单；事务提交前切换为预约状态。
     Map<String, Object> orderBody = new LinkedHashMap<>(body);
@@ -160,7 +165,8 @@ public class AppointmentService {
   /**
    * 批量过期清理：把超过 {@code expiresAt} 的进行中预约置为 {@code expired} 并释放库存。
    *
-   * <p>两个触发点：一分钟定时任务（{@link AppointmentSmsWorker} 同频调度）和每次创建预约前的顺手清理。
+   * <p>触发点：一分钟一次的定时任务（{@code PaymentWorker.reconcile}，持全局写锁执行）。
+ * 创建预约时不再顺手清理，因为预约下单不持有全局锁。
    * 只遍历订单全表而非增量查询，是因为单店数据量小，换取逻辑简单、无需额外索引。
    *
    * <p><b>注意</b>：这里不做权限校验，属于系统级维护操作，不能由 HTTP 入口直接触发。

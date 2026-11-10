@@ -163,7 +163,7 @@ public class EmployeeService {
   /**
    * 启用 / 停用员工。
    *
-   * <p>{@code revokeSessions} 在两种切换方向上都执行，不是只在停用时：如果重新启用后旧 token 还有效，
+   * <p>{@code auth.revokeAll} 在两种切换方向上都执行，不是只在停用时：如果重新启用后旧 token 还有效，
    * "停用 → 启用"就成了延长会话寿命的漏洞（被停用者只要掐着时间点恢复即可）。
    *
    * <p>审计动作按结果拼接（{@code employee.active} / {@code employee.disabled}），
@@ -175,8 +175,8 @@ public class EmployeeService {
     Map<String, Object> account = employee(id, input);
     account.put("status", input.choice("status", "active,disabled"));
     store.save(account);
-    // 停用必须撤销旧会话，重新启用也不能恢复停用前的凭证。
-    store.revokeSessions(id, "staff");
+    // 停用必须撤销旧 token，重新启用也不能恢复停用前的凭证。
+    auth.revokeAll(id);
     store.audit(actor.id(), "employee." + text(account, "status"), id);
     return profile(account);
   }
